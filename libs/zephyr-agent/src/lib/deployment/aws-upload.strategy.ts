@@ -103,7 +103,7 @@ async function uploadAssets(
   });
   if (upload_success && missingAssets.length) {
     const application_uid = zephyr_engine.application_uid;
-    await update_hash_list(application_uid, assetsMap);
+    await update_hash_list(application_uid, Object.keys(assetsMap));
   }
 
   return upload_success;

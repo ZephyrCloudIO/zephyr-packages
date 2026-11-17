@@ -32,6 +32,23 @@ function snapshotForTarget(snapshot: Snapshot, edgeUrl: string): Snapshot {
   };
 }
 
+/**
+ * Stored objects live only in the primary edge's bucket, and any other edge fails on an
+ * asset carrying `store`. Those edges get the bytes through the regular per-environment
+ * asset upload instead, so their snapshot must not point at the bucket.
+ */
+function withoutStore(snapshot: Snapshot): Snapshot {
+  const assets = Object.fromEntries(
+    Object.entries(snapshot.assets).map(([path, asset]) => {
+      if (!asset.store) return [path, asset];
+      const copy = { ...asset };
+      delete copy.store;
+      return [path, copy];
+    })
+  );
+  return { ...snapshot, assets };
+}
+
 /** Build a deterministic, deduplicated upload plan without changing snapshot identity. */
 export function createSnapshotUploadTargets(
   snapshot: Snapshot,
@@ -39,7 +56,7 @@ export function createSnapshotUploadTargets(
 ): SnapshotUploadTarget[] {
   const targets = new Map<string, SnapshotUploadTarget>();
 
-  const addTarget = (edgeUrl: string) => {
+  const addTarget = (edgeUrl: string, targetSnapshot: Snapshot) => {
     const canonicalUrl = canonicalEdgeUrl(edgeUrl);
     if (targets.has(canonicalUrl)) {
       return;
@@ -47,17 +64,18 @@ export function createSnapshotUploadTargets(
 
     targets.set(canonicalUrl, {
       edgeUrl,
-      snapshot: snapshotForTarget(snapshot, edgeUrl),
+      snapshot: snapshotForTarget(targetSnapshot, edgeUrl),
     });
   };
 
   // Keep the primary edge first; sort named environments so request order and duplicate
   // resolution do not depend on object insertion order from the API response.
-  addTarget(config.EDGE_URL);
+  addTarget(config.EDGE_URL, snapshot);
+  const environmentSnapshot = withoutStore(snapshot);
   for (const [, target] of Object.entries(config.ENVIRONMENTS ?? {}).sort(
     ([left], [right]) => left.localeCompare(right)
   )) {
-    addTarget(target.edgeUrl);
+    addTarget(target.edgeUrl, environmentSnapshot);
   }
 
   return [...targets.values()].map(({ edgeUrl, snapshot: targetSnapshot }) => ({

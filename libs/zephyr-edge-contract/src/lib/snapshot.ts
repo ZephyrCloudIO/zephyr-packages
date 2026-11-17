@@ -67,6 +67,21 @@ export interface SnapshotAsset {
   extname: string;
   hash: string;
   size: number;
+  /** Set when the bytes live outside the edge runtime's own storage. */
+  store?: SnapshotAssetStore;
+}
+
+/**
+ * Where a large asset's bytes live when the edge keeps them outside its own storage
+ * (Akamai: an Object Storage bucket, served through a 307 to `/__ze/o/{app}/{object}`).
+ */
+export interface SnapshotAssetStore {
+  /** Hash of the stored bytes: the object key under the application. */
+  object: string;
+  /** Length of the stored bytes, after compression. */
+  size: number;
+  /** The stored bytes are gzip and are served with `Content-Encoding: gzip`. */
+  encoding?: 'gzip';
 }
 
 export interface SnapshotMetadata {

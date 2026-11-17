@@ -9,7 +9,7 @@ export async function commonUploadStrategy(
   { snapshot, getDashData, assets: { assetsMap, missingAssets } }: UploadOptions
 ): Promise<string> {
   // Stored objects must exist before the snapshot that points at them is published.
-  const regularAssets = await uploadStoredAssets(
+  const { regularAssets, storedHashes } = await uploadStoredAssets(
     zephyr_engine,
     snapshot,
     assetsMap,
@@ -17,7 +17,11 @@ export async function commonUploadStrategy(
   );
   const [versionUrl] = await Promise.all([
     zeUploadSnapshot(zephyr_engine, { snapshot }),
-    uploadAssets(zephyr_engine, { assetsMap, missingAssets: regularAssets }),
+    uploadAssets(zephyr_engine, {
+      assetsMap,
+      missingAssets: regularAssets,
+      storedHashes,
+    }),
   ]);
 
   // Waits for the reply to check upload problems, but the reply is a simply

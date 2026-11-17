@@ -9,7 +9,7 @@ import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
 import { redactString, redactUrl, safeStringifyForLogging } from '../security/redaction';
 import { fetchWithRetries } from './fetch-with-retries';
-import { createHttpResponseError } from './http-failure';
+import { createHttpResponseError, NOT_IMPLEMENTED_MESSAGE } from './http-failure';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
 export type HttpResponse<T> =
@@ -126,7 +126,7 @@ export async function makeHttpRequest<T = void>(
 
     if (resText.trim() === 'Not Implemented') {
       throw new ZephyrError(ZeErrors.ERR_UNKNOWN, {
-        message: 'Not implemented yet. Please get in contact with our support.',
+        message: NOT_IMPLEMENTED_MESSAGE,
       });
     }
 

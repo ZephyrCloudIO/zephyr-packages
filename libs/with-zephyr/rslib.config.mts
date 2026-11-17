@@ -13,6 +13,9 @@ export default defineConfig({
       syntax: 'es2022',
       output: {
         autoExternal: false,
+        // Native napi package: its loader must resolve the platform binding from its own
+        // install location, which only works when it is not bundled.
+        externals: ['@swc-next/parser'],
         distPath: {
           root: 'dist',
         },

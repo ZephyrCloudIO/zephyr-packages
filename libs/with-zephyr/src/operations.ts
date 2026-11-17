@@ -2,11 +2,20 @@ import fs from 'fs';
 import type { BundlerConfig, BundlerOperationId, OperationResult } from './types.js';
 import { hasRstackZephyr, transformRstackSection } from './rstack.js';
 import {
-  findFirstMatchTextWithAstGrep,
-  rewriteWithAstGrep,
-  searchWithAstGrep,
-  type AstGrepLanguage,
-} from './engine/ast-grep.js';
+  applyEdits,
+  hasTrailingComma,
+  isCallTo,
+  isFunction,
+  isIdentifier,
+  isKeyValueProperty,
+  isModuleExportsAssignment,
+  parseFile,
+  propertyKeyName,
+  sliceList,
+  type AstNode,
+  type ParsedSource,
+  type TextEdit,
+} from './engine/ast.js';
 
 export interface OperationContext {
   filePath: string;
@@ -14,121 +23,183 @@ export interface OperationContext {
   dryRun: boolean;
 }
 
-interface RewriteAttempt {
-  pattern: string;
-  rewrite: string;
-  selector?: string;
-  language?: AstGrepLanguage;
-}
+/**
+ * Produces the edits for one rewrite attempt; an empty list means the attempt did not
+ * match.
+ */
+type RewriteAttempt = (parsed: ParsedSource) => TextEdit[];
 
-function tryRewrite(context: OperationContext, attempt: RewriteAttempt): OperationResult {
-  const result = rewriteWithAstGrep({
-    filePath: context.filePath,
-    pattern: attempt.pattern,
-    rewrite: attempt.rewrite,
-    selector: attempt.selector,
-    language: attempt.language,
-    updateAll: !context.dryRun,
-  });
-
-  if (result.status === 'match') {
-    return { status: 'changed' };
-  }
-
-  if (result.status === 'no-match') {
-    return { status: 'no-match' };
-  }
-
-  return {
-    status: 'error',
-    error: result.stderr || 'ast-grep rewrite failed',
-  };
-}
+const ZEPHYR_CALL = 'withZephyr()';
 
 function runRewriteSequence(
   context: OperationContext,
   attempts: RewriteAttempt[]
 ): OperationResult {
-  for (const attempt of attempts) {
-    const result = tryRewrite(context, attempt);
-    if (result.status !== 'no-match') {
-      return result;
+  try {
+    const parsed = parseFile(context.filePath);
+    for (const attempt of attempts) {
+      const edits = attempt(parsed);
+      if (edits.length === 0) continue;
+      if (!context.dryRun) {
+        const nextSource = applyEdits(parsed.source, edits);
+        if (nextSource !== parsed.source) fs.writeFileSync(context.filePath, nextSource);
+      }
+      return { status: 'changed' };
     }
+    return { status: 'no-match' };
+  } catch (error) {
+    return { status: 'error', error: (error as Error).message };
   }
-
-  return { status: 'no-match' };
 }
 
+function replaceNode(node: AstNode, text: string): TextEdit {
+  return { start: node.start, end: node.end, text };
+}
+
+/** List text with `item` appended, dropping any trailing comma. */
+function appendToList(
+  parsed: ParsedSource,
+  items: (AstNode | null)[],
+  item: string
+): string {
+  const existing = sliceList(parsed, items);
+  return existing ? `${existing}, ${item}` : item;
+}
+
+/** Object literal text with `property` added as the last entry. */
+function objectWithProperty(
+  parsed: ParsedSource,
+  object: AstNode,
+  property: string
+): string {
+  const existing = sliceList(parsed, object.properties);
+  return existing ? `{\n  ${existing},\n  ${property}\n}` : `{\n  ${property}\n}`;
+}
+
+/** `name: [...]` / `name: {...}` properties anywhere in the file, in document order. */
+function propertiesWithValue(
+  parsed: ParsedSource,
+  name: string,
+  valueType: 'ArrayExpression' | 'ObjectExpression'
+): AstNode[] {
+  return parsed
+    .ofType('Property')
+    .filter((node) => isKeyValueProperty(node, name) && node.value?.type === valueType);
+}
+
+/** Object literals passed as the only argument of `callee(...)`. */
+function soleObjectArguments(parsed: ParsedSource, callee: string): AstNode[] {
+  return parsed
+    .ofType('CallExpression')
+    .filter(
+      (call) =>
+        isCallTo(call, callee) &&
+        call.arguments.length === 1 &&
+        call.arguments[0].type === 'ObjectExpression'
+    )
+    .map((call) => call.arguments[0]);
+}
+
+function exportDefaultDeclarations(parsed: ParsedSource): AstNode[] {
+  return parsed
+    .ofType('ExportDefaultDeclaration')
+    .map((node) => node.declaration)
+    .filter(Boolean);
+}
+
+function exportDefaultObjects(parsed: ParsedSource): AstNode[] {
+  return exportDefaultDeclarations(parsed).filter(
+    (declaration) => declaration.type === 'ObjectExpression'
+  );
+}
+
+/**
+ * Add `key: value` to each object. Objects that already define `key` are skipped: a
+ * duplicate key would silently override the user's value.
+ */
+function addPropertyTo(
+  objects: (parsed: ParsedSource) => AstNode[],
+  key: string,
+  value: string
+) {
+  return (parsed: ParsedSource) =>
+    objects(parsed)
+      .filter(
+        (object) =>
+          !(object.properties as AstNode[]).some(
+            (property) =>
+              property.type === 'Property' && propertyKeyName(property) === key
+          )
+      )
+      .map((object) =>
+        replaceNode(object, objectWithProperty(parsed, object, `${key}: ${value}`))
+      );
+}
+
+function appendArrayPropertyEdit(
+  parsed: ParsedSource,
+  property: AstNode,
+  propertyName: string,
+  item: string
+): TextEdit {
+  return replaceNode(
+    property,
+    `${propertyName}: [${appendToList(parsed, property.value.elements, item)}]`
+  );
+}
+
+/**
+ * Append withZephyr() to `propertyName: [...]` arrays. Arrays are grouped by shape
+ * (empty, one item, several items, with or without a trailing comma, keyed off the first
+ * array in the file) and only the first non-empty group is rewritten, matching the
+ * ast-grep rewrite sequence this replaced.
+ */
 function appendToArrayProperty(
   context: OperationContext,
   propertyName: string
 ): OperationResult {
-  const matchText = findFirstMatchTextWithAstGrep({
-    filePath: context.filePath,
-    pattern: `{ ${propertyName}: [$$$ITEMS] }`,
-    selector: 'pair',
-  });
-
-  if (!matchText) {
-    return { status: 'no-match' };
-  }
-
-  const hasTrailingComma = /,\s*\]$/.test(matchText);
-  const attempts: RewriteAttempt[] = hasTrailingComma
-    ? [
-        {
-          pattern: `{ ${propertyName}: [$ONLY,] }`,
-          selector: 'pair',
-          rewrite: `${propertyName}: [$ONLY, withZephyr()]`,
-        },
-        {
-          pattern: `{ ${propertyName}: [$FIRST, $$$REST,] }`,
-          selector: 'pair',
-          rewrite: `${propertyName}: [$FIRST, $$$REST, withZephyr()]`,
-        },
-      ]
-    : [
-        {
-          pattern: `{ ${propertyName}: [] }`,
-          selector: 'pair',
-          rewrite: `${propertyName}: [withZephyr()]`,
-        },
-        {
-          pattern: `{ ${propertyName}: [$ONLY] }`,
-          selector: 'pair',
-          rewrite: `${propertyName}: [$ONLY, withZephyr()]`,
-        },
-        {
-          pattern: `{ ${propertyName}: [$FIRST, $$$REST] }`,
-          selector: 'pair',
-          rewrite: `${propertyName}: [$FIRST, $$$REST, withZephyr()]`,
-        },
-      ];
-
-  return runRewriteSequence(context, attempts);
+  return runRewriteSequence(context, [
+    (parsed) => {
+      const properties = propertiesWithValue(parsed, propertyName, 'ArrayExpression');
+      if (properties.length === 0) return [];
+      const trailing = (property: AstNode) =>
+        hasTrailingComma(parsed, property.value, property.value.elements);
+      const size = (property: AstNode) => property.value.elements.length;
+      const groups: ((property: AstNode) => boolean)[] = trailing(properties[0])
+        ? [
+            (property) => trailing(property) && size(property) === 1,
+            (property) => trailing(property) && size(property) >= 2,
+          ]
+        : [
+            (property) => size(property) === 0,
+            (property) => size(property) === 1,
+            (property) => size(property) >= 2,
+          ];
+      for (const group of groups) {
+        const selected = properties.filter(group);
+        if (selected.length > 0) {
+          return selected.map((property) =>
+            appendArrayPropertyEdit(parsed, property, propertyName, ZEPHYR_CALL)
+          );
+        }
+      }
+      return [];
+    },
+  ]);
 }
 
 function createArrayPropertyInDefineConfig(
   context: OperationContext,
   propertyName: string
 ): OperationResult {
+  const value = `[${ZEPHYR_CALL}]`;
   return runRewriteSequence(context, [
-    {
-      pattern: 'defineConfig({$$$PROPS})',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  ${propertyName}: [withZephyr()]
-}`,
-    },
-    {
-      pattern: 'export default {$$$PROPS}',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  ${propertyName}: [withZephyr()]
-}`,
-    },
+    addPropertyTo(
+      (parsed) => soleObjectArguments(parsed, 'defineConfig'),
+      propertyName,
+      value
+    ),
+    addPropertyTo(exportDefaultObjects, propertyName, value),
   ]);
 }
 
@@ -136,126 +207,173 @@ function createArrayPropertyInDefineConfigFunction(
   context: OperationContext,
   propertyName: string
 ): OperationResult {
+  // `defineConfig((env) => ({ ... }))`: the returned object literal.
+  const returnedObjects = (parsed: ParsedSource) =>
+    parsed
+      .ofType('CallExpression')
+      .filter((call) => isCallTo(call, 'defineConfig') && call.arguments.length === 1)
+      .map((call) => call.arguments[0])
+      .filter(
+        (callback) =>
+          callback.type === 'ArrowFunctionExpression' &&
+          callback.body.type === 'ParenthesizedExpression' &&
+          callback.body.expression.type === 'ObjectExpression'
+      )
+      .map((callback) => callback.body.expression);
   return runRewriteSequence(context, [
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS], $$$REST }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()], $$$REST }))`,
-    },
-    {
-      pattern: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS] }))`,
-      rewrite: `defineConfig(($$$ARGS) => ({ ${propertyName}: [$$$ITEMS, withZephyr()] }))`,
-    },
-    {
-      pattern: 'defineConfig(($$$ARGS) => ({$$$PROPS}))',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  ${propertyName}: [withZephyr()]
-}`,
-    },
+    addPropertyTo(returnedObjects, propertyName, `[${ZEPHYR_CALL}]`),
   ]);
 }
 
 function handleComposePlugins(context: OperationContext): OperationResult {
   return runRewriteSequence(context, [
-    {
-      pattern: 'composePlugins($$$PLUGINS, ($$$ARGS) => $BODY)',
-      rewrite: 'composePlugins($$$PLUGINS, withZephyr(), ($$$ARGS) => $BODY)',
-    },
-    {
-      pattern: 'composePlugins($$$PLUGINS, function($$$ARGS) { $$$BODY })',
-      rewrite: 'composePlugins($$$PLUGINS, withZephyr(), function($$$ARGS) { $$$BODY })',
-    },
-    {
-      pattern: 'composePlugins($$$PLUGINS)',
-      rewrite: 'composePlugins($$$PLUGINS, withZephyr())',
-    },
+    (parsed) =>
+      parsed
+        .ofType('CallExpression')
+        .filter((call) => isCallTo(call, 'composePlugins'))
+        .map((call) => {
+          const args: AstNode[] = call.arguments;
+          const terminal = isFunction(args.at(-1)) ? args.at(-1)! : undefined;
+          const plugins = terminal ? args.slice(0, -1) : args;
+          const parts = [sliceList(parsed, plugins), ZEPHYR_CALL, parsed.text(terminal)];
+          return replaceNode(
+            call,
+            `${parsed.text(call.callee)}(${parts.filter(Boolean).join(', ')})`
+          );
+        }),
   ]);
 }
 
+/** Wrap every `module.exports = value` right-hand side. */
+function wrapModuleExports(wrap: (value: string) => string): RewriteAttempt {
+  return (parsed) =>
+    parsed
+      .ofType('AssignmentExpression')
+      .filter(isModuleExportsAssignment)
+      .map((assignment) =>
+        replaceNode(assignment.right, wrap(parsed.text(assignment.right)))
+      );
+}
+
+/** Wrap every `export default` value accepted by `filter`. */
+function wrapExportDefault(
+  wrap: (value: string) => string,
+  filter: (declaration: AstNode) => boolean = () => true
+): RewriteAttempt {
+  return (parsed) =>
+    exportDefaultDeclarations(parsed)
+      .filter(filter)
+      .map((declaration) => replaceNode(declaration, wrap(parsed.text(declaration))));
+}
+
+const wrapWithZephyr = (value: string) => `${ZEPHYR_CALL}(${value})`;
+const wrapWithZephyrAsync = (value: string) =>
+  `(async () => { const __zephyrConfig = await ${value}; return ${ZEPHYR_CALL}(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig); })()`;
+
 function handleWrapModuleExports(context: OperationContext): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: 'module.exports = $VALUE',
-      rewrite: 'module.exports = withZephyr()($VALUE)',
-    },
-  ]);
+  return runRewriteSequence(context, [wrapModuleExports(wrapWithZephyr)]);
 }
 
 function handleWrapModuleExportsAsync(context: OperationContext): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: 'module.exports = $VALUE',
-      rewrite:
-        'module.exports = (async () => { const __zephyrConfig = await $VALUE; return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig); })()',
-    },
-  ]);
+  return runRewriteSequence(context, [wrapModuleExports(wrapWithZephyrAsync)]);
 }
 
 function handleWrapExportDefaultAsync(context: OperationContext): OperationResult {
-  return runRewriteSequence(context, [
-    {
-      pattern: 'export default $VALUE',
-      rewrite:
-        'export default (async () => { const __zephyrConfig = await $VALUE; return withZephyr()(typeof __zephyrConfig === "function" ? await __zephyrConfig() : __zephyrConfig); })()',
-    },
-  ]);
+  return runRewriteSequence(context, [wrapExportDefault(wrapWithZephyrAsync)]);
 }
 
 function handleWrapExportDefaultDefineConfig(context: OperationContext): OperationResult {
   return runRewriteSequence(context, [
-    {
-      pattern: 'export default defineConfig($$$ARGS)',
-      rewrite: 'export default withZephyr()(defineConfig($$$ARGS))',
-    },
+    wrapExportDefault(wrapWithZephyr, (declaration) =>
+      isCallTo(declaration, 'defineConfig')
+    ),
   ]);
 }
 
 function handleWrapExportDefaultObject(context: OperationContext): OperationResult {
   return runRewriteSequence(context, [
-    {
-      pattern: 'export default {$$$PROPS}',
-      rewrite: 'export default withZephyr()({$$$PROPS})',
-    },
+    wrapExportDefault(
+      wrapWithZephyr,
+      (declaration) => declaration.type === 'ObjectExpression'
+    ),
   ]);
 }
 
+function lineIndent(source: string, offset: number): string {
+  const lineStart = source.lastIndexOf('\n', offset - 1) + 1;
+  const indent = source.slice(lineStart, offset);
+  return /^\s*$/.test(indent) ? indent : '';
+}
+
+/**
+ * `module.exports = (config) => { ...; return config; }`: push withZephyr() into
+ * `config.plugins`.
+ */
 function handleRollupFunction(context: OperationContext): OperationResult {
   return runRewriteSequence(context, [
-    {
-      pattern: 'module.exports = ($PARAM) => { $$$BEFORE return $RET; $$$AFTER }',
-      rewrite:
-        'module.exports = ($PARAM) => { $$$BEFORE $PARAM.plugins.push(withZephyr()); return $RET; $$$AFTER }',
-    },
-    {
-      pattern: 'module.exports = function($PARAM) { $$$BEFORE return $RET; $$$AFTER }',
-      rewrite:
-        'module.exports = function($PARAM) { $$$BEFORE $PARAM.plugins.push(withZephyr()); return $RET; $$$AFTER }',
-    },
-    {
-      pattern: 'module.exports = ($PARAM) => { $$$BODY }',
-      rewrite:
-        'module.exports = ($PARAM) => { $$$BODY $PARAM.plugins.push(withZephyr()); }',
-    },
-    {
-      pattern: 'module.exports = function($PARAM) { $$$BODY }',
-      rewrite:
-        'module.exports = function($PARAM) { $$$BODY $PARAM.plugins.push(withZephyr()); }',
-    },
+    (parsed) =>
+      parsed
+        .ofType('AssignmentExpression')
+        .filter(isModuleExportsAssignment)
+        .map((assignment) => assignment.right)
+        .filter(
+          (callback) =>
+            (callback.type === 'ArrowFunctionExpression' ||
+              callback.type === 'FunctionExpression') &&
+            callback.params.length === 1 &&
+            isIdentifier(callback.params[0]) &&
+            callback.body.type === 'BlockStatement'
+        )
+        .map((callback) => {
+          const push = `${callback.params[0].name}.plugins.push(${ZEPHYR_CALL});`;
+          const statements: AstNode[] = callback.body.body;
+          const returned = statements.find(
+            (statement) => statement.type === 'ReturnStatement' && statement.argument
+          );
+          if (returned) {
+            const indent = lineIndent(parsed.source, returned.start);
+            const separator = indent ? `\n${indent}` : ' ';
+            return {
+              start: returned.start,
+              end: returned.start,
+              text: `${push}${separator}`,
+            };
+          }
+          const last = statements.at(-1);
+          if (last) {
+            const indent = lineIndent(parsed.source, last.start);
+            return {
+              start: last.end,
+              end: last.end,
+              text: indent ? `\n${indent}${push}` : ` ${push}`,
+            };
+          }
+          const open = callback.body.start + 1;
+          return { start: open, end: open, text: ` ${push} ` };
+        }),
   ]);
 }
 
 function handleRollupArray(context: OperationContext): OperationResult {
+  // `export default [{ ..., plugins: [...] }, ...]`: only the first build entry.
   const specific = runRewriteSequence(context, [
-    {
-      pattern: 'export default [{ $$$A, plugins: [$$$ITEMS], $$$B }, $$$REST]',
-      rewrite:
-        'export default [{ $$$A, plugins: [$$$ITEMS, withZephyr()], $$$B }, $$$REST]',
-    },
-    {
-      pattern: 'export default [{ plugins: [$$$ITEMS], $$$B }, $$$REST]',
-      rewrite: 'export default [{ plugins: [$$$ITEMS, withZephyr()], $$$B }, $$$REST]',
-    },
+    (parsed) =>
+      exportDefaultDeclarations(parsed)
+        .filter(
+          (declaration) =>
+            declaration.type === 'ArrayExpression' &&
+            declaration.elements[0]?.type === 'ObjectExpression'
+        )
+        .flatMap((declaration) =>
+          declaration.elements[0].properties.filter(
+            (property: AstNode) =>
+              isKeyValueProperty(property, 'plugins') &&
+              property.value.type === 'ArrayExpression'
+          )
+        )
+        .map((property) =>
+          appendArrayPropertyEdit(parsed, property, 'plugins', ZEPHYR_CALL)
+        ),
   ]);
 
   if (specific.status !== 'no-match') {
@@ -275,36 +393,26 @@ function handlePluginsArrayOrCreate(context: OperationContext): OperationResult 
 }
 
 function handleNuxtModulesOrCreate(context: OperationContext): OperationResult {
-  const moduleName = context.config.plugin;
+  const moduleItem = `"${context.config.plugin}"`;
   const appendResult = runRewriteSequence(context, [
-    {
-      pattern: '{ modules: [$$$ITEMS] }',
-      selector: 'pair',
-      rewrite: `modules: [$$$ITEMS, "${moduleName}"]`,
-    },
+    (parsed) =>
+      propertiesWithValue(parsed, 'modules', 'ArrayExpression').map((property) =>
+        appendArrayPropertyEdit(parsed, property, 'modules', moduleItem)
+      ),
   ]);
 
   if (appendResult.status !== 'no-match') {
     return appendResult;
   }
 
+  const modules = `[${moduleItem}]`;
   return runRewriteSequence(context, [
-    {
-      pattern: 'defineNuxtConfig({$$$PROPS})',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  modules: ["${moduleName}"]
-}`,
-    },
-    {
-      pattern: 'export default {$$$PROPS}',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  modules: ["${moduleName}"]
-}`,
-    },
+    addPropertyTo(
+      (parsed) => soleObjectArguments(parsed, 'defineNuxtConfig'),
+      'modules',
+      modules
+    ),
+    addPropertyTo(exportDefaultObjects, 'modules', modules),
   ]);
 }
 
@@ -341,38 +449,29 @@ function handleRsbuildAssetPrefix(context: OperationContext): OperationResult {
     return { status: 'no-match' };
   }
 
+  const assetPrefix = 'assetPrefix: "auto"';
   const addToExistingOutput = runRewriteSequence(context, [
-    {
-      pattern: '{ output: {$$$OUTPUT_PROPS} }',
-      selector: 'pair',
-      rewrite: `output: {
-  $$$OUTPUT_PROPS,
-  assetPrefix: "auto"
-}`,
-    },
+    (parsed) =>
+      propertiesWithValue(parsed, 'output', 'ObjectExpression').map((property) =>
+        replaceNode(
+          property,
+          `output: ${objectWithProperty(parsed, property.value, assetPrefix)}`
+        )
+      ),
   ]);
 
   if (addToExistingOutput.status !== 'no-match') {
     return addToExistingOutput;
   }
 
+  const output = `{ ${assetPrefix} }`;
   return runRewriteSequence(context, [
-    {
-      pattern: 'defineConfig({$$$PROPS})',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  output: { assetPrefix: "auto" }
-}`,
-    },
-    {
-      pattern: 'export default {$$$PROPS}',
-      selector: 'object',
-      rewrite: `{
-  $$$PROPS,
-  output: { assetPrefix: "auto" }
-}`,
-    },
+    addPropertyTo(
+      (parsed) => soleObjectArguments(parsed, 'defineConfig'),
+      'output',
+      output
+    ),
+    addPropertyTo(exportDefaultObjects, 'output', output),
   ]);
 }
 
@@ -509,21 +608,16 @@ export function hasZephyrCall(
     }
   }
 
-  const result = searchWithAstGrep({
-    filePath,
-    pattern: 'withZephyr()',
-  });
-
-  if (result.status === 'match') {
-    return { status: 'changed' };
+  try {
+    const parsed = parseFile(filePath);
+    const found = parsed
+      .ofType('CallExpression')
+      .some((call) => isCallTo(call, 'withZephyr') && call.arguments.length === 0);
+    return { status: found ? 'changed' : 'no-match' };
+  } catch (error) {
+    return {
+      status: 'error',
+      error: (error as Error).message || 'Failed to analyze file',
+    };
   }
-
-  if (result.status === 'no-match') {
-    return { status: 'no-match' };
-  }
-
-  return {
-    status: 'error',
-    error: result.stderr || 'Failed to analyze file with ast-grep',
-  };
 }

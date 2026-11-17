@@ -533,6 +533,29 @@ describe('Ast-grep Operations', () => {
       expect(next).not.toContain(',,');
     });
 
+    it('should not add a duplicate output key when output is not an inline object', () => {
+      const filePath = path.join(tempDir, 'rsbuild.config.ts');
+      fs.writeFileSync(
+        filePath,
+        `
+        const sharedOutput = { distPath: { root: 'build' } };
+        export default defineConfig({
+          output: sharedOutput,
+        });
+      `
+      );
+
+      const result = runBundlerOperation('rsbuild-asset-prefix', {
+        filePath,
+        config: createConfig('rsbuild-asset-prefix', 'run-all', 'zephyr-rsbuild-plugin'),
+        dryRun: false,
+      });
+
+      expect(result.status).toBe('no-match');
+      const next = fs.readFileSync(filePath, 'utf8');
+      expect(next.match(/\boutput\s*:/g)).toHaveLength(1);
+    });
+
     it('should not overwrite existing output.assetPrefix', () => {
       const filePath = path.join(tempDir, 'rsbuild.config.ts');
       fs.writeFileSync(

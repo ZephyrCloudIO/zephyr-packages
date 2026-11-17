@@ -4,7 +4,9 @@
 
 `with-zephyr` is a codemod CLI that adds Zephyr integration to supported project config files.
 
-As of this version, transformations are driven by **ast-grep operations** (not Babel AST visitors).
+Transformations parse configs with **`@swc-next/parser`** into ESTree, index the tree with
+**`@swc-next/walker`**, and rewrite source text by node span (no reprinting), so untouched code
+keeps its formatting and comments.
 Each bundler defines an ordered operation strategy, and the CLI applies the first successful
 operation (or all operations for run-all bundlers such as RSBuild and Parcel).
 
@@ -31,7 +33,7 @@ libs/with-zephyr/
 │   │   └── repack.ts
 │   │
 │   ├── engine/
-│   │   └── ast-grep.ts        # ast-grep napi runner (search/rewrite)
+│   │   └── ast.ts             # swc-next parse, parent index, AST predicates, text edits
 │   │
 │   ├── operations.ts          # Operation handlers and orchestration
 │   ├── package-manager.ts     # Package manager detection + installs
@@ -74,20 +76,25 @@ Example (conceptual):
 
 Handler behavior:
 
-1. Try one or more ast-grep rewrite attempts.
+1. Try one or more rewrite attempts against the parsed file.
 2. Return `changed`, `no-match`, or `error`.
 3. Respect bundler strategy:
    - `first-success`: stop after first `changed`
    - `run-all`: apply all and aggregate
 
-### ast-grep Runtime
+### AST Engine
 
-`src/engine/ast-grep.ts` provides a small abstraction over ast-grep execution:
+`src/engine/ast.ts` is the shared layer over swc-next:
 
-- Language detection (`js` / `ts` / `json`) from file path
-- `searchWithAstGrep` and `rewriteWithAstGrep`
-- In-process matching and rewrite using `@ast-grep/napi`
-- Template-based rewrite interpolation for `$VAR` / `$$$VAR`
+- `parseFile` / `parseSource`: language and source type come from the file path
+  (`langFromPath` / `sourceTypeFromPath`); syntax errors throw
+- `ParsedSource`: one walker pass records every node and its parent, so `parent`,
+  `ancestors`, and `ofType` queries never re-walk the tree
+- ESTree predicates such as `isCallTo`, `isKeyValueProperty`, and `isModuleExportsAssignment`
+- `applyEdits`: splice `{ start, end, text }` edits into the original source
+
+`@swc-next/parser` is a native napi package and must stay external in `rslib.config.mts`;
+bundled, its loader cannot find the platform binding from `dist/`.
 
 ## CLI Flow
 
@@ -97,7 +104,7 @@ Handler behavior:
 4. Skip files already containing `withZephyr()`.
 5. Install missing plugin packages (unless dry run).
 6. For each file:
-   - Apply bundler operations via ast-grep.
+   - Apply bundler operations.
    - Ensure import/require insertion when the integration needs one.
 7. Print summary (`Processed` / `Skipped` / `Errors`).
 
@@ -115,7 +122,7 @@ Important types in `src/types.ts`:
 ## Testing
 
 - `codemod.test.ts`: end-to-end CLI behavior and output summary
-- `transformers.test.ts`: operation-level ast-grep behavior
+- `transformers.test.ts`: operation-level rewrite behavior
 - `bundler-configs.test.ts`: bundler schema validity and expected defaults
 - `package-manager.test.ts`: package manager and install detection behavior
 
@@ -123,7 +130,8 @@ Important types in `src/types.ts`:
 
 Primary runtime dependencies:
 
-- `@ast-grep/napi`
+- `@swc-next/parser`
+- `@swc-next/walker`
 - `chalk`
 - `commander`
 - `glob`

@@ -2321,8 +2321,8 @@ importers:
         specifier: catalog:module-federation
         version: 2.9.0
       '@module-federation/runtime-core':
-        specifier: 2.9.0
-        version: 2.9.0
+        specifier: 2.9.3
+        version: 2.9.3
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)

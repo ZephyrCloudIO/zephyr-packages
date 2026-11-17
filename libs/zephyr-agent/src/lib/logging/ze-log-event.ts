@@ -120,6 +120,8 @@ export function logger(props: LoggerOptions): ZeLogger {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
               },
+              // Log upload is optional and its failure is swallowed below, so a 401
+              // here must never invalidate the credential the deployment still needs.
               credentialToken: token,
             },
             safeStringifyForLogging(

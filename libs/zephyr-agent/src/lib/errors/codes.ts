@@ -416,13 +416,6 @@ Please check your network connection and try again.
     kind: 'build',
   },
 
-  ERR_GET_APP_CONFIG: {
-    id: '035',
-    message:
-      'Error when getting application configuration from API. Could not find application configuration. Please try again after removing ~/.zephyr folder.',
-    kind: 'build',
-  },
-
   ERR_GIT_COMMIT_HASH: {
     id: '036',
     message:

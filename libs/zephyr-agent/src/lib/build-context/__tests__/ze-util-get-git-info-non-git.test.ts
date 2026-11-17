@@ -214,6 +214,7 @@ describe('getGitInfo - non-git environments', () => {
       {
         headers: { Authorization: 'Bearer new-token' },
         credentialToken: 'new-token',
+        invalidateCredentialOn401: true,
       }
     );
   });
@@ -303,6 +304,7 @@ describe('getGitInfo - non-git environments', () => {
     expect(makeRequest.mock.calls[1]?.[1]).toEqual({
       headers: { Authorization: 'Bearer refreshed-token' },
       credentialToken: 'refreshed-token',
+      invalidateCredentialOn401: true,
     });
   });
 

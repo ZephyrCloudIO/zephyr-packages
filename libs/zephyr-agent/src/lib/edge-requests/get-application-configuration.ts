@@ -76,6 +76,9 @@ async function loadApplicationConfiguration(
   }>(application_config_url, {
     headers: { Authorization: `Bearer ${token}` },
     credentialToken: token,
+    // Every deployment reads the application configuration, so this is where a revoked
+    // credential is detected and cleared.
+    invalidateCredentialOn401: true,
   });
 
   if (!ok || !data?.value || data.value.application_uid !== application_uid) {

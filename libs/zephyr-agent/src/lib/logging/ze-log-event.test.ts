@@ -22,6 +22,7 @@ rs.mock('./debug', () => ({
   brightYellowBgName: '',
 }));
 
+import { ZeErrors, ZephyrError } from '../errors';
 import { logger } from './ze-log-event';
 
 describe('remote Zephyr logging', () => {
@@ -65,5 +66,33 @@ describe('remote Zephyr logging', () => {
     expect(body).toContain('[REDACTED]');
     expect(body).not.toContain(signature);
     expect(body).not.toContain(bearer);
+  });
+
+  it('does not let a rejected log upload invalidate the deployment credential', async () => {
+    mocks.makeRequest.mockResolvedValue([
+      false,
+      new ZephyrError(ZeErrors.ERR_AUTH_ERROR, { message: 'Unauthorized' }),
+    ]);
+
+    const logEvent = logger({
+      application_uid: 'app.project.org',
+      buildId: 'build-id',
+      git: {
+        name: 'Developer',
+        email: 'developer@example.com',
+        branch: 'main',
+        commit: 'commit-id',
+        tags: [],
+      },
+    });
+
+    logEvent({ level: 'info', action: 'build:done', message: 'built' });
+
+    await rs.waitFor(() => expect(mocks.makeRequest).toHaveBeenCalledTimes(1));
+
+    // http-request enforces the cleanup rule; the logger's obligation is to never claim
+    // that a rejected log upload proves the credential is dead.
+    const [, options] = mocks.makeRequest.mock.calls[0];
+    expect(options).not.toMatchObject({ invalidateCredentialOn401: true });
   });
 });

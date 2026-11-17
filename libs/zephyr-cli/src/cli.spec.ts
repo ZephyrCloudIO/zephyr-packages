@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@rstest/core';
-import { parseArgs } from './cli';
+import { isJsonDeploy, parseArgs } from './cli';
 
 describe('parseArgs build target', () => {
   it('accepts tap-app before a run command', () => {
@@ -151,5 +151,24 @@ describe('parseArgs deploy result format', () => {
     expect(() => parseArgs(['deploy', './dist', '--format', 'yaml'])).toThrow(
       '--format must be either json or text.'
     );
+  });
+});
+
+describe('isJsonDeploy', () => {
+  it('detects deploy with --format json, before or after other options', () => {
+    expect(isJsonDeploy(['deploy', './dist', '--format', 'json'])).toBe(true);
+    expect(
+      isJsonDeploy(['--target', 'web', 'deploy', './dist', '--format', 'json'])
+    ).toBe(true);
+  });
+
+  it('ignores other commands and text output', () => {
+    expect(isJsonDeploy(['deploy', './dist'])).toBe(false);
+    expect(isJsonDeploy(['deploy', 'd', '--format', 'json', '--format', 'text'])).toBe(
+      false
+    );
+    expect(isJsonDeploy(['deploy', './dist', '--format', 'text'])).toBe(false);
+    expect(isJsonDeploy(['doctor', '.', '--format', 'json'])).toBe(false);
+    expect(isJsonDeploy(['npm', 'run', 'deploy', '--format', 'json'])).toBe(false);
   });
 });

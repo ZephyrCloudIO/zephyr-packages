@@ -1,6 +1,7 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 import {
   assertZephyrBuildTarget,
+  handleGlobalError,
   isZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildTarget,
@@ -9,7 +10,12 @@ import {
   withZephyr as rspackWithZephyr,
   type ZephyrBuildHooks,
 } from 'zephyr-rspack-plugin';
-import { coordinateXPackCompilers, disableZephyrForXpack } from 'zephyr-xpack-internal';
+import {
+  coordinateXPackCompilers,
+  disableZephyrForXpack,
+  restorePlugins,
+  snapshotPlugins,
+} from 'zephyr-xpack-internal';
 
 export interface ZephyrRsbuildPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
@@ -45,15 +51,18 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             disableZephyrForXpack(bundlerConfigs);
             return;
           }
-          const engine = await ZephyrEngine.create({
-            builder: 'rspack',
-            context: bundlerConfigs[0]?.context,
-            target,
-          });
-          if (target !== undefined) {
-            engine.env.target = target;
-          }
+          let pluginSnapshot: ReturnType<typeof snapshotPlugins> | undefined;
+          let engine: ZephyrEngine | undefined;
           try {
+            pluginSnapshot = snapshotPlugins(bundlerConfigs);
+            engine = await ZephyrEngine.create({
+              builder: 'rspack',
+              context: bundlerConfigs[0]?.context,
+              target,
+            });
+            if (target !== undefined) {
+              engine.env.target = target;
+            }
             const { coordinator, compilers } = coordinateXPackCompilers(
               engine,
               bundlerConfigs,
@@ -87,8 +96,10 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
               }
             }
           } catch (error: unknown) {
-            if (engine.hasActiveBuild) engine.build_failed();
-            throw error;
+            // Without ZE_FAIL_BUILD the bundle is built without Zephyr.
+            if (pluginSnapshot) restorePlugins(bundlerConfigs, pluginSnapshot);
+            if (engine?.hasActiveBuild) engine.build_failed();
+            handleGlobalError(error);
           }
         },
       });

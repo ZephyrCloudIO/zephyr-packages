@@ -3,7 +3,8 @@ import {
   type UploadAgentPluginOptions,
 } from '../xpack-extract/ze-xpack-upload-agent';
 import type { Source } from 'zephyr-edge-contract';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { handleGlobalError, ZeErrors, ZephyrError } from 'zephyr-agent';
+import { emitDeploymentDone } from '../lifecycle-events';
 import type { XStats } from '../xpack.types';
 import type { XPackParticipantDependencyPaths } from '../xpack-extract/xpack-build-coordinator';
 import * as path from 'node:path';
@@ -115,7 +116,13 @@ export function setupZeDeploy<
         if (pluginOptions.zephyr_engine.hasActiveBuild !== false) {
           pluginOptions.zephyr_engine.build_failed();
         }
-        throw error;
+        // Unless the build must fail (ZE_FAIL_BUILD or failBuild) a Zephyr failure (for example an unreachable build-id
+        // service) must not fail the bundle. Skip the upload and keep the output.
+        handleGlobalError(error, { failBuild: pluginOptions.failBuild });
+        // Reached only when the failure was logged. Nobody awaiting onDeploymentDone()
+        // should wait for a build that will never publish.
+        emitDeploymentDone();
+        return;
       }
     }
 
@@ -174,15 +181,21 @@ export function setupZeDeploy<
   compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
     const compilationGeneration = generation++;
     if (pluginOptions.coordinator) {
-      if (!pluginOptions.participant) {
-        throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
-          message: 'A coordinated xpack build requires a participant name',
-        });
+      try {
+        if (!pluginOptions.participant) {
+          throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+            message: 'A coordinated xpack build requires a participant name',
+          });
+        }
+        pluginOptions.coordinator.beginParticipant(
+          pluginOptions.participant,
+          compilationGeneration
+        );
+      } catch (error: unknown) {
+        handleGlobalError(error, { failBuild: pluginOptions.failBuild });
+        emitDeploymentDone();
+        return;
       }
-      pluginOptions.coordinator.beginParticipant(
-        pluginOptions.participant,
-        compilationGeneration
-      );
     }
     compilation.hooks.processAssets.tapPromise(
       {

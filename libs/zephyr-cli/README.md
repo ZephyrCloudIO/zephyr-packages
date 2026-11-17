@@ -92,6 +92,23 @@ With `--format json`, a successful deploy prints
 none; `targetUrls` lists the tag and environment URLs that now serve it. Tools that
 deploy on a user's behalf should read this line instead of parsing logs.
 
+When the deploy fails, `--format json` still prints exactly one JSON document on stdout,
+the logs stay on stderr, and the exit code is 1:
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "ok": false,
+  "error": { "code": "ZE20014", "reason": "ZE50001", "kind": "unreachable", "message": "…" }
+}
+```
+
+`code` is the Zephyr error code. `reason` is the code of the root cause when a wrapper
+error hides it, and is absent otherwise. `kind` is the category of the root cause:
+`unreachable` (Zephyr cannot be reached, or failed on its side), `auth`, `forbidden`,
+`config`, `build`, `deploy`, `browser` or `unknown`. The message has no colors and no
+secrets. The exit code, not a field, tells a failure from a success.
+
 ### Watch Command
 
 Publish the initial output and then publish each settled output change without

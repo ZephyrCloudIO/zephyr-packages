@@ -255,7 +255,7 @@ export class XPackBuildCoordinator {
   private readonly dependents = new Map<string, Set<string>>();
   private readonly lastSuccessful = new Map<string, XPackBuildContribution>();
   private readonly localGenerations = new Map<string, LocalGenerationState>();
-  private readonly rejectedLocalGenerations = new Map<string, Set<number>>();
+  private readonly rejectedLocalGenerations = new Map<string, Map<number, unknown>>();
   private readonly pendingRecoveryParticipants = new Set<string>();
   private readonly participantBaseHrefs = new Map<string, string>();
   private readonly preparationPromises = new Map<number, Promise<void>>();
@@ -419,17 +419,11 @@ export class XPackBuildCoordinator {
 
     const rejected = this.rejectedLocalGenerations.get(participant);
     if (rejected?.has(localGeneration)) {
+      const error = rejected.get(localGeneration);
       rejected.delete(localGeneration);
-      if (this.activeBuild && !this.activeBuild.session.isTerminal) {
-        this.activeBuild.session.abort(
-          `Rejected failed xpack generation ${localGeneration} for "${participant}"`
-        );
-      }
-      throw xpackError(
-        `XPack generation ${localGeneration} for "${participant}" belongs to a failed logical build`
-      );
+      throw error;
     }
-    for (const rejectedGeneration of rejected ?? []) {
+    for (const rejectedGeneration of rejected?.keys() ?? []) {
       if (rejectedGeneration < localGeneration) rejected?.delete(rejectedGeneration);
     }
 
@@ -508,7 +502,7 @@ export class XPackBuildCoordinator {
       active.dirtyParticipants.delete(contribution.participant);
       return await this.publishIfReady(active);
     } catch (error) {
-      this.rememberFailedBuild(active);
+      this.rememberFailedBuild(active, error);
       if (!session.isTerminal) {
         session.fail(contribution.participant, error);
       }
@@ -519,13 +513,17 @@ export class XPackBuildCoordinator {
   /** Fail and release the shared generation when a child never reaches contribution. */
   failParticipant(participant: string, error: unknown): void {
     this.assertParticipant(participant);
-    if (this.activeBuild?.session.status === 'failed') return;
+    if (
+      this.activeBuild?.session.status === 'failed' ||
+      this.activeBuild?.session.status === 'aborted'
+    )
+      return;
     const active =
       !this.activeBuild || this.activeBuild.session.isTerminal
         ? this.createBuild()
         : this.activeBuild;
     active.dirtyParticipants.add(participant);
-    this.rememberFailedBuild(active);
+    this.rememberFailedBuild(active, error);
     active.session.fail(participant, error);
   }
 
@@ -643,7 +641,7 @@ export class XPackBuildCoordinator {
     return true;
   }
 
-  private rememberFailedBuild(active: ActiveXPackBuild): void {
+  private rememberFailedBuild(active: ActiveXPackBuild, error: unknown): void {
     const affected = new Set([
       ...active.dirtyParticipants,
       ...active.startedParticipants,
@@ -657,10 +655,10 @@ export class XPackBuildCoordinator {
       if (rejectedGeneration === undefined) continue;
       let rejected = this.rejectedLocalGenerations.get(participant);
       if (!rejected) {
-        rejected = new Set();
+        rejected = new Map();
         this.rejectedLocalGenerations.set(participant, rejected);
       }
-      rejected.add(rejectedGeneration);
+      rejected.set(rejectedGeneration, error);
     }
   }
 

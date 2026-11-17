@@ -117,7 +117,7 @@ describe('fetchWithRetries', () => {
     }
 
     const serialized = JSON.stringify(error);
-    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
     expect(serialized).toContain('DNS lookup failed');
     expect(serialized).toContain('missing.example.com');
     expect(serialized).toContain('ENOTFOUND');
@@ -149,7 +149,7 @@ describe('fetchWithRetries', () => {
     }
 
     const serialized = JSON.stringify(error);
-    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
     expect(serialized).toContain('DNS lookup failed');
     expect(serialized).toContain(proxyHostname);
     expect(mocks.proxyAgent).toHaveBeenCalledWith(proxyUrl);
@@ -200,6 +200,43 @@ describe('fetchWithRetries', () => {
 
     expect(response.status).toBe(204);
     expect(mocks.axiosInstance).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ['ECONNREFUSED', 'connect ECONNREFUSED 127.0.0.1:1', 'network'],
+    ['ECONNABORTED', 'timeout of 30000ms exceeded', 'timeout'],
+    ['ETIMEDOUT', 'connect ETIMEDOUT', 'timeout'],
+  ])(
+    'reports %s as the unreachable class, not a config error',
+    async (code, message, failure) => {
+      mocks.axiosInstance.mockRejectedValue({ code, message });
+
+      let error: unknown;
+      try {
+        await fetchWithRetries(url, { method: 'GET' }, 0);
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
+      expect((error as ZephyrError<'ERR_ZEPHYR_UNREACHABLE'>).code).toBe('ZE50001');
+      expect((error as ZephyrError<'ERR_ZEPHYR_UNREACHABLE'>).data).toMatchObject({
+        failure,
+      });
+    }
+  );
+
+  it('keeps a caller abort out of the unreachable class', async () => {
+    mocks.axiosInstance.mockRejectedValue({ code: 'ERR_CANCELED', message: 'canceled' });
+
+    let error: unknown;
+    try {
+      await fetchWithRetries(url, { method: 'GET' }, 0);
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
   });
 
   it('stops retrying when the overall deadline is exhausted', async () => {

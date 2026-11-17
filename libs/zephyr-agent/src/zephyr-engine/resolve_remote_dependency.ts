@@ -156,7 +156,7 @@ async function request_remote_dependency({
 
     // Check response status
     if (!res.ok) {
-      // Zephyr failing (5xx, 408) is not a problem with the remote, so say so.
+      // Zephyr failing to serve the lookup is not a problem with the remote, so say so.
       if (isUnreachableStatus(res.status)) {
         throw createHttpResponseError({
           method: 'GET',

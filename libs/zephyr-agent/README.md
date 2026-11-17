@@ -166,14 +166,14 @@ integrations read the variable only.
 `getZephyrErrorCategory(error)` reports what an error means, from the code of its root
 cause:
 
-| Category                     | Meaning                                                                                            | Next step                 |
-| ---------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------- |
-| `unreachable`                | Zephyr cannot be reached or failed on its side: network, DNS, timeout, HTTP 5xx or 408 (`ZE50001`) | Retry later               |
-| `auth`                       | Credentials are missing, invalid or expired                                                        | Refresh the credentials   |
-| `forbidden`                  | Credentials are valid but the account lacks access                                                 | Change access             |
-| `config`                     | The project or Zephyr configuration is wrong (most HTTP 4xx responses are `ZE40035`)               | Correct the configuration |
-| `build`, `deploy`, `browser` | A failure in that stage                                                                            | See the message           |
-| `unknown`                    | Not classified                                                                                     |                           |
+| Category                     | Meaning                                                                                                                             | Next step                 |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `unreachable`                | Zephyr cannot be reached, failed on its side, or is limiting requests: network, DNS, timeout, HTTP 5xx, 408, 425 or 429 (`ZE50001`) | Retry later               |
+| `auth`                       | Credentials are missing, invalid or expired                                                                                         | Refresh the credentials   |
+| `forbidden`                  | Credentials are valid but the account lacks access                                                                                  | Change access             |
+| `config`                     | The project or Zephyr configuration is wrong (other HTTP 4xx responses are `ZE40035`)                                               | Correct the configuration |
+| `build`, `deploy`, `browser` | A failure in that stage                                                                                                             | See the message           |
+| `unknown`                    | Not classified                                                                                                                      |                           |
 
 `isZephyrUnreachableError(error)` is the shortcut for `unreachable`. A wrapper error such
 as `ZE20014` keeps the code of its cause in `reason`, so an outage behind it is still

@@ -3,7 +3,11 @@ import axios from 'axios';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { isCI } from 'ci-info';
 import { ZeErrors, ZephyrError } from '../errors';
-import { createHttpResponseError, createUnreachableError } from './http-failure';
+import {
+  createHttpResponseError,
+  createUnreachableError,
+  isUnreachableStatus,
+} from './http-failure';
 import {
   redactString,
   redactUrl,
@@ -25,7 +29,6 @@ const RETRY_ERROR_CODES = [
   'EPIPE',
 ];
 const RETRY_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
-const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
 
 function hasIdempotencyKey(headers: HeadersInit | undefined): boolean {
   if (!headers) return false;
@@ -119,10 +122,6 @@ function isRetryableNetworkError(error: unknown): boolean {
     message.includes('network') ||
     message.includes('timeout')
   );
-}
-
-function isRetryableStatus(status: number): boolean {
-  return RETRYABLE_STATUS_CODES.has(status) || status >= 500;
 }
 
 async function waitForRetry(
@@ -343,7 +342,7 @@ export async function fetchWithRetries(
 
       if (
         attempt < maxRetries &&
-        isRetryableStatus(response.status) &&
+        isUnreachableStatus(response.status) &&
         (await waitForRetry(
           attempt,
           deadline,

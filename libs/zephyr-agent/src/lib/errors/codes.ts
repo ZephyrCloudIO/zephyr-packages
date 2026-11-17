@@ -12,7 +12,7 @@ export const ZeErrorCategories = {
   browser: '30',
   /** Module Federation/Config related error */
   config: '40',
-  /** Zephyr could not be reached or failed on its side (network, DNS, timeout, HTTP 5xx). */
+  /** Zephyr could not serve a valid request: network, DNS, timeout, HTTP 5xx, rate limit. */
   unreachable: '50',
 } as const satisfies {
   [name: string]: `${Digit}${Digit}`;
@@ -356,7 +356,10 @@ Git username or email is not configured
     kind: 'deploy',
   },
 
-  /** 5xx, 408 and network failures use {@linkcode ZeErrors.ERR_ZEPHYR_UNREACHABLE}. */
+  /**
+   * Statuses worth a retry (5xx, 408, 425, 429) use
+   * {@linkcode ZeErrors.ERR_ZEPHYR_UNREACHABLE}.
+   */
   ERR_HTTP_ERROR: {
     id: '035',
     message: `

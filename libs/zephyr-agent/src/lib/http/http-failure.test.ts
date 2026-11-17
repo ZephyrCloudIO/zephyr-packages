@@ -10,7 +10,7 @@ import {
 const url = 'https://api.example.com/v2/thing';
 
 describe('createHttpResponseError', () => {
-  it.each([500, 502, 503, 504, 599, 408])(
+  it.each([500, 502, 503, 504, 599, 408, 425, 429])(
     'classifies HTTP %i as unreachable (ZE50001)',
     (status) => {
       const error = createHttpResponseError({ method: 'GET', url, status, content: '' });
@@ -22,7 +22,7 @@ describe('createHttpResponseError', () => {
     }
   );
 
-  it.each([400, 404, 409, 422, 429])(
+  it.each([400, 404, 409, 422])(
     'keeps HTTP %i as the stable ERR_HTTP_ERROR (ZE40035)',
     (status) => {
       const error = createHttpResponseError({ method: 'GET', url, status, content: 'x' });
@@ -86,10 +86,28 @@ describe('createHttpResponseError', () => {
   });
 });
 
+describe('rate limiting', () => {
+  it('reports a 429 as unreachable with its own wording, not as a config error', () => {
+    const error = createHttpResponseError({
+      method: 'GET',
+      url,
+      status: 429,
+      content: '',
+    });
+
+    expect(error.code).toBe('ZE50001');
+    expect(error.data).toEqual({ failure: 'rate_limited', status: 429 });
+    expect(error.message).toContain('HTTP 429 (too many requests)');
+    expect(error.message).toContain('Zephyr is limiting requests');
+  });
+});
+
 describe('isUnreachableStatus', () => {
-  it('is true for 5xx and 408 only', () => {
+  it('is true for 5xx and the statuses that are worth a retry', () => {
     expect(isUnreachableStatus(500)).toBe(true);
     expect(isUnreachableStatus(408)).toBe(true);
+    expect(isUnreachableStatus(425)).toBe(true);
+    expect(isUnreachableStatus(429)).toBe(true);
     expect(isUnreachableStatus(499)).toBe(false);
     expect(isUnreachableStatus(401)).toBe(false);
     expect(isUnreachableStatus(200)).toBe(false);

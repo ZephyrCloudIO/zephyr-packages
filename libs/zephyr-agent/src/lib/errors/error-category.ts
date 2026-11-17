@@ -4,8 +4,9 @@ import { ZephyrError } from './zephyr-error';
 /**
  * What a person or an agent should conclude from an error, whatever code carries it.
  *
- * - `unreachable`: Zephyr could not be reached or failed on its side (network, DNS,
- *   timeout, HTTP 5xx). Nothing to fix locally. Retry later.
+ * - `unreachable`: Zephyr could not be reached, failed on its side, or is limiting requests
+ *   (network, DNS, timeout, HTTP 5xx, 408, 425, 429). Nothing to fix locally. Retry
+ *   later.
  * - `auth`: the credentials are missing, invalid or expired. Refresh them.
  * - `forbidden`: the credentials are valid but the account lacks access. Change access.
  * - `config`: the project or Zephyr configuration is wrong. Correct it.

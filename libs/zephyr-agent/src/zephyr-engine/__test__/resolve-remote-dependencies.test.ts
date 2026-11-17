@@ -3,6 +3,7 @@ import * as actualResolver from '../resolve_remote_dependency' with {
   rstest: 'importActual',
 };
 
+import { logFn } from '../../lib/logging/ze-log-event';
 import { ZephyrEngine } from '../index';
 
 const mocks = rs.hoisted(() => ({
@@ -70,5 +71,59 @@ describe('ZephyrEngine.resolve_remote_dependencies ${target} selectors', () => {
       ])) ?? [];
 
     expect(resolved).toMatchObject({ name: 'remote', version: 'dev-${target}' });
+  });
+});
+
+describe('ZephyrEngine.resolve_remote_dependencies label fallback', () => {
+  beforeEach(() => {
+    mocks.resolve.mockReset();
+    rs.mocked(logFn).mockClear();
+  });
+
+  function resolveTo(entity_name: string | undefined): void {
+    mocks.resolve.mockImplementation(async ({ version }: { version: string }) => ({
+      name: 'remote.project.org',
+      version,
+      application_uid: 'remote.project.org',
+      default_url: 'https://remote.example',
+      remote_entry_url: 'https://remote.example/remoteEntry.js',
+      library_type: 'var',
+      entity_type: 'environment',
+      entity_name,
+    }));
+  }
+
+  it('warns when the label resolves to the default environment', async () => {
+    resolveTo('production');
+
+    await engine().resolve_remote_dependencies([
+      { name: 'remote.project.org', version: 'DEMO' },
+    ]);
+
+    expect(logFn).toHaveBeenCalledWith(
+      'warn',
+      expect.stringContaining('requested "DEMO" for target "ios"'),
+      'build:warn:dependency_resolution'
+    );
+  });
+
+  it('does not warn when the label matched', async () => {
+    resolveTo('DEMO');
+
+    await engine().resolve_remote_dependencies([
+      { name: 'remote.project.org', version: 'DEMO' },
+    ]);
+
+    expect(logFn).not.toHaveBeenCalledWith('warn', expect.anything(), expect.anything());
+  });
+
+  it('does not warn when an older resolver omits entity_name', async () => {
+    resolveTo(undefined);
+
+    await engine().resolve_remote_dependencies([
+      { name: 'remote.project.org', version: 'DEMO' },
+    ]);
+
+    expect(logFn).not.toHaveBeenCalledWith('warn', expect.anything(), expect.anything());
   });
 });

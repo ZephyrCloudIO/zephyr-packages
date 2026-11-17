@@ -52,6 +52,7 @@ import {
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
 import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
+import { describeLabelFallback } from './describe_label_fallback';
 import {
   type ZeResolvedDependency,
   create_dependency_build_context,
@@ -388,6 +389,16 @@ export class ZephyrEngine {
       }
 
       ze_log.remotes(`Resolved dependency: ${tuple[1].default_url}`);
+
+      const label_fallback = describeLabelFallback({
+        dependency: dep.name,
+        selector: requested,
+        target: platform,
+        resolved: tuple[1],
+      });
+      if (label_fallback) {
+        logFn('warn', label_fallback, 'build:warn:dependency_resolution');
+      }
 
       if (dep.name === tuple[1].name) {
         return tuple[1].version === requested && requested !== selector

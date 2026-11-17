@@ -165,9 +165,9 @@ catalogs:
     '@module-federation/enhanced': 2.9.0
     '@module-federation/metro': 2.9.3
     '@module-federation/rsbuild-plugin': 2.9.3
-    '@module-federation/runtime': 2.9.0
+    '@module-federation/runtime': 2.9.3
   module-federation-vite:
-    '@module-federation/runtime': 2.9.0
+    '@module-federation/runtime': 2.9.3
     '@module-federation/vite': 1.21.2
   metro:
     metro: ^0.87.0

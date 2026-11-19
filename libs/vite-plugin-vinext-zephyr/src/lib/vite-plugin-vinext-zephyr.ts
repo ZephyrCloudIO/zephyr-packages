@@ -312,7 +312,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
               });
             },
             finish: () => zephyrEngine.build_finished(),
-            onFailure: () => zephyrEngine.build_failed(),
+            onFailure: (_identity, error) => void zephyrEngine.build_failed(error),
           });
 
           let outputParticipant = 'vinext-output';
@@ -353,7 +353,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           if (engineCreated) {
             try {
               const zephyrEngine = await zephyr_engine_defer;
-              zephyrEngine.build_failed();
+              await zephyrEngine.build_failed(error);
             } catch {
               // Engine initialization failed before any reusable build state existed.
             }

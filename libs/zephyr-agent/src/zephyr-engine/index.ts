@@ -50,13 +50,22 @@ import {
   createManifestContent,
 } from '../lib/transformers/ze-create-manifest';
 import { maybeShowOutdatedPluginWarning } from '../lib/version/outdated-plugin-warning';
-import { resolveZephyrPluginPackageName } from '../lib/version/plugin-package-name';
+import {
+  resolveZephyrPluginIdentity,
+  resolveZephyrPluginPackageName,
+  type ZephyrPluginIdentity,
+} from '../lib/version/plugin-package-name';
 import { getZephyrAgentVersion } from '../lib/version/zephyr-agent-version';
 import {
   type ZeResolvedDependency,
   create_dependency_build_context,
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
+import {
+  engineLogContext,
+  reportBuildFailure,
+  withEngineRequestIdentity,
+} from './engine-telemetry';
 import type {
   ZephyrEngineBuilderTypes,
   ZephyrEngineOptions,
@@ -175,6 +184,8 @@ export class ZephyrEngine {
   } = { isCI, target: 'web', env: ZE_ENV(), ssr: false };
   buildProperties: BuildProperties = { output: './dist' };
   builder: ZephyrEngineBuilderTypes;
+  /** Plugin package and version, for log context and the User-Agent. */
+  plugin_identity: ZephyrPluginIdentity = {};
 
   // resolved dependencies
   federated_dependencies: ZeResolvedDependency[] | null = null;
@@ -197,6 +208,9 @@ export class ZephyrEngine {
   ze_env_vars_hash: string | null = null;
   // Version of worker engine that processed snapshot upload
   worker_version: string | null = null;
+  // Whether `build:failed` was already sent for the current logger's build. It outlives
+  // the build reset so a plugin's later `build_failed(error)` cannot report it twice.
+  build_failure_reported = false;
 
   /** Whether this engine still owns state that must be finished or rolled back. */
   get hasActiveBuild(): boolean {
@@ -266,6 +280,11 @@ export class ZephyrEngine {
       options.builder
     );
     void maybeShowOutdatedPluginWarning(pluginPackageName);
+    ze.plugin_identity = resolveZephyrPluginIdentity(
+      ze.npmProperties,
+      options.builder,
+      context
+    );
 
     ze_log.init('Initializing: git info...');
     ze.gitProperties = await getGitInfo(context, zephyrConfig);
@@ -310,7 +329,7 @@ export class ZephyrEngine {
       // start_new_build completed, so any later initialization/logging failure owns an
       // active build identity that must not escape through a rejected create() call.
       if (ze.hasActiveBuild) {
-        ze.build_failed();
+        await ze.build_failed(error);
       }
       throw error;
     }
@@ -368,13 +387,15 @@ export class ZephyrEngine {
       const selector = ze_dependency?.version ?? dep.version;
       const requested = applyTargetPlaceholder(selector, platform);
       const tuple = await ZeUtils.PromiseTuple(
-        resolve_remote_dependency({
-          application_uid: dep_application_uid,
-          version: requested,
-          platform,
-          build_context,
-          dependencyUrlMode: this.zephyrConfig.dependencyUrlMode,
-        })
+        withEngineRequestIdentity(this, () =>
+          resolve_remote_dependency({
+            application_uid: dep_application_uid,
+            version: requested,
+            platform,
+            build_context,
+            dependencyUrlMode: this.zephyrConfig.dependencyUrlMode,
+          })
+        )
       );
 
       // If you couldn't resolve remote dependency, skip replacing it
@@ -422,6 +443,14 @@ export class ZephyrEngine {
       logger({
         level: 'warn',
         action: 'build:error:dependency_resolution',
+        data: {
+          failed_count: resolution_errors.length,
+          dependencies: resolution_errors.map(({ dep, error }) => ({
+            name: dep.name,
+            version: dep.version,
+            error_code: ZephyrError.is(error) ? error.code : null,
+          })),
+        },
         message: `Failed to resolve remote dependencies:
 ${errorSummary}\n
 More information on remote dependency resolution please check:
@@ -501,10 +530,12 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           application_uid,
           buildId: resolvedBuildId,
           git: ze.gitProperties.git,
+          context: () => engineLogContext(ze),
         });
       }
     );
     ze.logger = initializedLogger;
+    ze.build_failure_reported = false;
 
     // snapshotId is a flat version of application_uid and build_id
     const snapshotId = Promise.all([ze.application_configuration, buildId]).then(
@@ -570,11 +601,13 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
           });
         }
 
+        const deployDurationMs = Date.now() - zeStart;
         logger({
           level: 'trace',
           action: 'deploy:url',
+          data: { outcome: 'deployed', duration_ms: deployDurationMs, url: versionUrl },
           message: `Deployed to ${cyanBright('Zephyr')}'s edge in ${yellow(
-            `${Date.now() - zeStart}`
+            `${deployDurationMs}`
           )}ms.\n\n${cyanBright(versionUrl)}`,
         });
       }
@@ -583,17 +616,39 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         logger({
           level: 'trace',
           action: 'deploy:url',
+          data: {
+            duration_ms: buildStatsTime,
+            targets_count: targetUrls.length,
+            urls: targetUrls,
+          },
           message: `\nUpdated ${greenBright(targetUrls.length.toString())} targets in ${yellow(buildStatsTime?.toString())}ms\n- ${targetUrls.join('\n- ')}`,
         });
       }
+
+      // The final URL is the event most worth keeping; don't let the process exit first.
+      await logger.flush?.();
     } finally {
       resetBuildState(this);
     }
   }
 
-  /** Discard every value owned by a failed/aborted logical build generation. */
-  build_failed(): void {
+  /**
+   * Discard every value owned by a failed/aborted logical build generation.
+   *
+   * With an `error`, it also reports `build:failed` for the active build (once per
+   * build). The reset happens synchronously; the returned promise only waits, briefly,
+   * for log delivery and never rejects, so callers may ignore it.
+   */
+  build_failed(error?: unknown): Promise<void> {
+    let reported: Promise<void>;
+    try {
+      // Runs before the reset: it needs to know whether this build is still active.
+      reported = reportBuildFailure(this, error);
+    } catch {
+      reported = Promise.resolve();
+    }
     resetBuildState(this);
+    return reported;
   }
 
   /**
@@ -731,7 +786,10 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       // upload
       const platform = (await zephyr_engine.application_configuration).PLATFORM;
       const strategy = getUploadStrategy(platform);
-      zephyr_engine.version_url = await strategy(zephyr_engine, upload_options);
+      // Every Zephyr request of the upload carries this build's identity.
+      zephyr_engine.version_url = await withEngineRequestIdentity(zephyr_engine, () =>
+        strategy(zephyr_engine, upload_options)
+      );
 
       const application_uid = zephyr_engine.application_uid;
       await setAppDeployResult(application_uid, {
@@ -758,7 +816,7 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
         }
       }
     } catch (error: unknown) {
-      zephyr_engine.build_failed();
+      await zephyr_engine.build_failed(error);
       throw error;
     }
   }

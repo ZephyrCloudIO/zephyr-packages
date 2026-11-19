@@ -62,19 +62,24 @@ export async function zeUploadSnapshot(
   const versionUrl = edgeTodo?.urls?.version;
 
   if (!versionUrl) {
+    const error = new ZephyrError(ZeErrors.ERR_SNAPSHOT_UPLOADS_NO_RESULTS);
     logger({
       level: 'error',
       action: 'snapshot:upload:failed',
+      data: { outcome: 'failed', duration_ms: Date.now() - zeStart, build_env: buildEnv },
+      error,
       message: `failed uploading of ${buildEnv} snapshot to zephyr`,
     });
 
-    throw new ZephyrError(ZeErrors.ERR_SNAPSHOT_UPLOADS_NO_RESULTS);
+    throw error;
   }
 
+  const durationMs = Date.now() - zeStart;
   logger({
     level: 'info',
     action: 'snapshot:upload:done',
-    message: `Uploaded ${green(buildEnv)} snapshot in ${yellow(`${Date.now() - zeStart}`)}ms`,
+    data: { outcome: 'uploaded', duration_ms: durationMs, build_env: buildEnv },
+    message: `Uploaded ${green(buildEnv)} snapshot in ${yellow(`${durationMs}`)}ms`,
   });
 
   return versionUrl;

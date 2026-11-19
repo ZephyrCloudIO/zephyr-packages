@@ -8,9 +8,6 @@ rs.mock('zephyr-agent', () => ({
     init: rs.fn(),
     misc: rs.fn(),
   },
-  ZephyrError: {
-    format: (error: unknown) => (error instanceof Error ? error.message : String(error)),
-  },
 }));
 
 interface TestCompiler {
@@ -30,15 +27,17 @@ function testCompiler(): TestCompiler {
 }
 
 describe('logBuildSteps', () => {
-  it('handles logger initialization rejection in the failed hook', async () => {
-    const loggerFailure = new Error('logger initialization failed');
+  it('logs the failure timing without reporting build:failed itself', async () => {
     const compiler = testCompiler();
+    const remoteLogger = rs.fn();
+    const build_failed = rs.fn();
 
     logBuildSteps(
       {
         pluginName: 'ZePlugin',
         zephyr_engine: {
-          logger: Promise.reject(loggerFailure),
+          logger: Promise.resolve(remoteLogger),
+          build_failed,
         } as never,
       },
       compiler
@@ -48,34 +47,11 @@ describe('logBuildSteps', () => {
     failedHook(new Error('compiler failed'));
     await new Promise<void>((resolve) => setImmediate(resolve));
 
+    // setupZeDeploy's `failed` hook owns the single `build_failed(error)` report.
+    expect(remoteLogger).not.toHaveBeenCalled();
+    expect(build_failed).not.toHaveBeenCalled();
     expect(ze_log.misc).toHaveBeenCalledWith(
-      'Unable to report the failed build through the Zephyr logger:',
-      'logger initialization failed'
-    );
-  });
-
-  it('handles a failed logger write without creating an unhandled promise', async () => {
-    const compiler = testCompiler();
-    const writeFailure = new Error('logger write failed');
-    logBuildSteps(
-      {
-        pluginName: 'ZePlugin',
-        zephyr_engine: {
-          logger: Promise.resolve(() => {
-            throw writeFailure;
-          }),
-        } as never,
-      },
-      compiler
-    );
-
-    const failedHook = (compiler.hooks.failed.tap as Mock).mock.calls[0][1];
-    failedHook(new Error('compiler failed'));
-    await new Promise<void>((resolve) => setImmediate(resolve));
-
-    expect(ze_log.misc).toHaveBeenCalledWith(
-      'Unable to report the failed build through the Zephyr logger:',
-      'logger write failed'
+      expect.stringMatching(/^build failed in \d+ms$/)
     );
   });
 });

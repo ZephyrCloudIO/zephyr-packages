@@ -98,7 +98,7 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             }
           } catch (error: unknown) {
             if (pluginSnapshot) restorePlugins(bundlerConfigs, pluginSnapshot);
-            if (engine?.hasActiveBuild) engine.build_failed();
+            if (engine?.hasActiveBuild) await engine.build_failed(error);
             handleGlobalError(error);
           }
         },

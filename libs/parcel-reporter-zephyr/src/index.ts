@@ -4,7 +4,9 @@ import {
   handleGlobalError,
   isZephyrDisabled,
   logZephyrDisabled,
+  ZeErrors,
   ZephyrEngine,
+  ZephyrError,
   type ZephyrBuildHooks,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
@@ -26,6 +28,18 @@ export interface ZephyrParcelReporterOptions {
   mfConfigs?: ZephyrModuleFederationConfig[];
   /** Build-stat metadata paired with every entry in `mfConfigs`. */
   federation?: ZephyrModuleFederationBuildMetadata[];
+}
+
+/** Turns Parcel's failure diagnostics into the error reported as `build:failed`. */
+function buildFailureError(
+  diagnostics: readonly { message?: string }[] | undefined
+): ZephyrError<'ERR_DEPLOY_LOCAL_BUILD'> {
+  const details = (diagnostics ?? [])
+    .map((diagnostic) => diagnostic.message)
+    .filter((message): message is string => !!message);
+  return new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+    message: details.length > 0 ? details.join('\n') : 'Parcel build failed.',
+  });
 }
 
 function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
@@ -79,7 +93,7 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
             {
               const zephyr_engine = await zephyr_engine_defer;
               if (zephyr_engine.hasActiveBuild) {
-                zephyr_engine.build_failed();
+                await zephyr_engine.build_failed(buildFailureError(event.diagnostics));
               }
             }
             break;

@@ -236,9 +236,10 @@ export async function uploadOutputToZephyr(
     await zephyrEngine.build_finished();
 
     return { deploymentUrl, entrypoint };
-  } finally {
+  } catch (error) {
     if (buildInProgress && zephyrEngine.hasActiveBuild !== false) {
-      zephyrEngine.build_failed();
+      await zephyrEngine.build_failed(error);
     }
+    throw error;
   }
 }

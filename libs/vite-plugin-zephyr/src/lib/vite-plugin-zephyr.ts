@@ -521,7 +521,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
         partialClaims.map(({ claimId }) => claimId)
       );
     } catch (error) {
-      zephyrEngine.build_failed();
+      await zephyrEngine.build_failed(error);
       if (partialClaims.length > 0) {
         try {
           await rollbackPartialAssetMapClaimBatch(
@@ -1066,7 +1066,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
           directBuildFailed = true;
           try {
             const zephyr_engine = await zephyr_engine_defer;
-            zephyr_engine.build_failed();
+            await zephyr_engine.build_failed(error);
           } catch {
             // Engine initialization failed before any reusable build state existed.
           }
@@ -1248,7 +1248,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
               });
             },
             finish: () => zephyrEngine.build_finished(),
-            onFailure: () => zephyrEngine.build_failed(),
+            onFailure: (_identity, error) => void zephyrEngine.build_failed(error),
           });
 
           const outputParticipant = uniqueParticipant(
@@ -1284,7 +1284,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
         } catch (error) {
           try {
             const zephyrEngine = await zephyr_engine_defer;
-            zephyrEngine.build_failed();
+            await zephyrEngine.build_failed(error);
           } catch {
             // Engine initialization failed before any reusable build state existed.
           }

@@ -86,6 +86,7 @@ describe('rollup Zephyr lifecycle', () => {
 
     expect(handleGlobalError).toHaveBeenCalledWith(uploadFailure);
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.build_failed).toHaveBeenCalledWith(uploadFailure);
     expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(2);
     expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
   });
@@ -93,9 +94,12 @@ describe('rollup Zephyr lifecycle', () => {
   it('releases the active generation when Rollup reports a build error', async () => {
     const plugin = withZephyr();
     await plugin.buildStart({ input: 'src/index.ts' } as never);
-    await plugin.buildEnd(new Error('compile failed'));
+    const compileFailure = new Error('compile failed');
+    await plugin.buildEnd(compileFailure);
 
+    // The engine reports build:failed with this error (see zephyr-agent).
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.build_failed).toHaveBeenCalledWith(compileFailure);
   });
 
   it('passes tap-app into the engine before Rollup starts a build', async () => {

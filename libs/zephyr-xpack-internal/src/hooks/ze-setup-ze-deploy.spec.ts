@@ -216,6 +216,7 @@ describe('setupZeDeploy', () => {
 
       await expect(processAssetsCallback({})).rejects.toBe(startFailure);
       expect(buildFailed).toHaveBeenCalledTimes(1);
+      expect(buildFailed).toHaveBeenCalledWith(startFailure);
       expect(xpack_zephyr_agent).not.toHaveBeenCalled();
     });
 
@@ -400,7 +401,7 @@ describe('setupZeDeploy', () => {
     expect(xpack_zephyr_agent).not.toHaveBeenCalled();
   });
 
-  it('rolls back a direct engine when compilation fails before upload', () => {
+  it('rolls back a direct engine and reports the compiler error once', () => {
     const buildFailed = rs.fn();
 
     setupZeDeploy(
@@ -415,8 +416,11 @@ describe('setupZeDeploy', () => {
     );
 
     const failedCallback = (compiler.hooks.failed.tap as Mock).mock.calls[0][1];
-    failedCallback(new Error('compile failed'));
+    const compileFailure = new Error('compile failed');
+    failedCallback(compileFailure);
 
+    // build_failed(error) is the single build:failed report for webpack-family builds.
     expect(buildFailed).toHaveBeenCalledTimes(1);
+    expect(buildFailed).toHaveBeenCalledWith(compileFailure);
   });
 });

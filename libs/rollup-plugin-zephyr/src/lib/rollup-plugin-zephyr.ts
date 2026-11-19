@@ -170,7 +170,7 @@ export function withZephyr(options: ZephyrRollupPluginOptions = {}) {
       try {
         const zephyr_engine = await zephyr_engine_defer;
         if (zephyr_engine.hasActiveBuild !== false) {
-          zephyr_engine.build_failed();
+          await zephyr_engine.build_failed(error);
         }
       } catch (engineError: unknown) {
         handleGlobalError(engineError);
@@ -206,6 +206,10 @@ export function withZephyr(options: ZephyrRollupPluginOptions = {}) {
         buildInProgress = false;
         await zephyr_engine.build_finished();
       } catch (error) {
+        if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+          buildInProgress = false;
+          await zephyr_engine?.build_failed(error);
+        }
         handleGlobalError(error);
       } finally {
         if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {

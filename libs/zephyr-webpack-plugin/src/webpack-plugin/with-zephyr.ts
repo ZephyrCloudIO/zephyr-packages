@@ -100,7 +100,7 @@ export function withZephyr(zephyrPluginOptions?: ZephyrWebpackPluginOptions) {
     } catch (error: unknown) {
       // A half-configured compiler array would wait for compilers that never report.
       if (pluginSnapshot) restorePlugins(config, pluginSnapshot);
-      if (engine?.hasActiveBuild) engine.build_failed();
+      if (engine?.hasActiveBuild) await engine.build_failed(error);
       handleGlobalError(error, { failBuild: zephyrPluginOptions?.failBuild });
     }
     return config;
@@ -163,7 +163,7 @@ async function _zephyr_configuration(
       throw error;
     }
     if (zephyr_engine?.hasActiveBuild !== false) {
-      zephyr_engine?.build_failed();
+      await zephyr_engine?.build_failed(error);
     }
     handleGlobalError(error, { failBuild: _zephyrOptions?.failBuild });
   }

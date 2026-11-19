@@ -144,7 +144,7 @@ export class ZephyrMetroPlugin {
       return this.#config.mfConfig;
     } catch (error: unknown) {
       if (engineInitialized && this.zephyr_engine.hasActiveBuild !== false) {
-        this.zephyr_engine.build_failed();
+        await this.zephyr_engine.build_failed(error);
       }
       throw error;
     }
@@ -176,6 +176,12 @@ export class ZephyrMetroPlugin {
       });
       buildInProgress = false;
       await this.zephyr_engine.build_finished();
+    } catch (error) {
+      if (buildInProgress && this.zephyr_engine.hasActiveBuild !== false) {
+        buildInProgress = false;
+        await this.zephyr_engine.build_failed(error);
+      }
+      throw error;
     } finally {
       if (buildInProgress && this.zephyr_engine.hasActiveBuild !== false) {
         this.zephyr_engine.build_failed();

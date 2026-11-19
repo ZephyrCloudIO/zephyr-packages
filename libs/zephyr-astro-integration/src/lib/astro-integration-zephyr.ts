@@ -333,6 +333,10 @@ export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
           buildInProgress = false;
           await zephyr_engine.build_finished();
         } catch (error) {
+          if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+            buildInProgress = false;
+            await zephyr_engine?.build_failed(error);
+          }
           handleGlobalError(error);
         } finally {
           if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {

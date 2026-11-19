@@ -38,6 +38,7 @@ describe('CLI upload lifecycle', () => {
     });
 
     expect(engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(engine.build_failed).toHaveBeenCalledWith(uploadFailure);
     expect(engine.start_new_build).toHaveBeenCalledTimes(2);
     expect(engine.build_finished).toHaveBeenCalledTimes(1);
   });

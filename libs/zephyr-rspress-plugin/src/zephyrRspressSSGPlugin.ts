@@ -67,7 +67,7 @@ export const zephyrRspressSSGPlugin = <
         try {
           const zephyr_engine = await zephyr_engine_defer;
           if (zephyr_engine.hasActiveBuild) {
-            zephyr_engine.build_failed();
+            await zephyr_engine.build_failed(error);
           }
         } catch {
           // The original initialization/build failure is the actionable error below.

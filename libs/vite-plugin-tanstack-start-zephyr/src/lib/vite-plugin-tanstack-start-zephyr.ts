@@ -345,7 +345,7 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
               });
             },
             finish: () => zephyr_engine.build_finished(),
-            onFailure: () => zephyr_engine.build_failed(),
+            onFailure: (_identity, error) => void zephyr_engine.build_failed(error),
           });
 
           const outputParticipant = uniqueParticipant(
@@ -395,7 +395,7 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
           if (engineCreated) {
             try {
               const zephyr_engine = await zephyr_engine_defer;
-              zephyr_engine.build_failed();
+              await zephyr_engine.build_failed(error);
             } catch {
               // Engine initialization failed before any reusable build state existed.
             }

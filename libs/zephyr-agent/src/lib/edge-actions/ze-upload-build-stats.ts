@@ -1,15 +1,21 @@
 import {
   ZE_API_ENDPOINT,
   ze_api_gateway,
+  type BuildStatsResponse,
   type ZephyrBuildStats,
 } from 'zephyr-edge-contract';
 import { createHash } from 'node:crypto';
+import { deployDeniedError, isDeniedOutcome } from '../deployment/deploy-denied';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { getToken } from '../node-persist/token';
 
-/** @returns Array of deployed tags and envs. Empty array when waitForDeployments is false */
+/**
+ * @returns Array of deployed tags and envs. Empty array when waitForDeployments is false
+ * @throws {@link ZephyrError} `ERR_DEPLOY_DENIED` when a permission profile denied the
+ *   deploy: the version is kept, and none of the app's tags or environments moved.
+ */
 export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<string[]> {
   // Add dots here to indicate this is an async operation
   ze_log.upload('Uploading build stats to Zephyr...', dashData);
@@ -21,7 +27,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
     .update(`${dashData.id}\0${dashData.app.buildId}`)
     .digest('hex');
 
-  const [ok, cause, res] = await makeRequest<{ status: string; targets?: string[] }>(
+  const [ok, cause, res] = await makeRequest<BuildStatsResponse>(
     url,
     {
       method: 'POST',
@@ -36,6 +42,11 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
     JSON.stringify(dashData)
   );
 
+  // A refusal from a permission profile is final: report it as is.
+  if (!ok && ZephyrError.is(cause, ZeErrors.ERR_DEPLOY_DENIED)) {
+    throw cause;
+  }
+
   if (!ok || res.status !== 'ok') {
     throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
       type: 'build stats',
@@ -44,6 +55,15 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
         url: url.toString(),
       },
     });
+  }
+
+  // The API kept the version but moved nothing of the app (zephyr-cloud-io #4004).
+  if (isDeniedOutcome(res.outcome)) {
+    throw deployDeniedError(
+      dashData.app?.name ?? dashData.id,
+      res.outcome,
+      res.ignoredEnvs
+    );
   }
 
   ze_log.upload('Build stats uploaded to Zephyr...');

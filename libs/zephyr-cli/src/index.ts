@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { cwd } from 'node:process';
-import { ZeErrors, ZephyrError } from 'zephyr-agent';
+import { setAuthOrigin, ZeErrors, ZephyrError } from 'zephyr-agent';
 import { isJsonDeploy, parseArgs } from './cli';
 import { deployCommand } from './commands/deploy';
 import { doctorCommand } from './commands/doctor';
@@ -11,6 +11,7 @@ import { createFailureDocument } from './lib/failure-document';
 import { reserveStdout } from './lib/stdout';
 
 async function main(): Promise<void> {
+  setAuthOrigin('cli');
   const args = process.argv.slice(2);
   // Keep stdout to the one JSON document; logs and login prompts go to stderr.
   const writeJson = isJsonDeploy(args) ? reserveStdout() : undefined;

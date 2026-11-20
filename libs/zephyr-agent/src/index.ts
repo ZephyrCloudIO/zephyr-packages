@@ -39,9 +39,20 @@ export {
   type UploadOutputToZephyrResult,
 } from './lib/upload-output-to-zephyr';
 
+// security
+export { redactString } from './lib/security/redaction';
+
 // errors
 export { ZeErrors, ZephyrError, type ZephyrErrorOperation } from './lib/errors';
-export { handleGlobalError, type HandleGlobalErrorOptions } from './lib/errors';
+export {
+  getZephyrErrorCategory,
+  getZephyrErrorCodeCategory,
+  handleGlobalError,
+  isZephyrUnreachableError,
+  shouldFailBuild,
+  type HandleGlobalErrorOptions,
+  type ZephyrErrorCategory,
+} from './lib/errors';
 
 // Project configuration
 export {
@@ -111,6 +122,10 @@ export {
   resolvePreflightCredentials,
   type PreflightCredentials,
 } from './lib/node-persist/token';
+
+// The access token a build used. Post-build tools (e.g. the preview environment action)
+// call it in the same job to reuse the cached ZE_CI_TOKEN exchange.
+export { getToken } from './lib/node-persist/token';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';

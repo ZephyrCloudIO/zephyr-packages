@@ -9,6 +9,9 @@ export {
 } from './lib/build-target';
 export type {
   GatewayPublishRequest,
+  PublishGrantClaims,
+  PublishGrantTokenUse,
+  PublishGrantVersion,
   PublishRequest,
   PublishTarget,
   PublishTargets,

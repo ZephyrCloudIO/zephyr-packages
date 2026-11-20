@@ -470,6 +470,18 @@ Also check:
     kind: 'build',
   },
 
+  /**
+   * A permission profile denied the upload's deploy (zephyr-cloud-io #4005): the version
+   * is kept, and none of the app's tags or environments moved.
+   */
+  ERR_DEPLOY_DENIED: {
+    id: '038',
+    message: `
+{{ message }}
+`,
+    kind: 'build',
+  },
+
   ERR_RESOLVE_REMOTES: {
     id: '001',
     message: `

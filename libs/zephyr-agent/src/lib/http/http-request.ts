@@ -4,6 +4,10 @@ import {
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
+import {
+  environmentDeniedError,
+  isEnvironmentDeniedResponse,
+} from '../deployment/deploy-denied';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
@@ -117,6 +121,13 @@ export async function makeHttpRequest<T = void>(
     }
 
     if (response.status === 403) {
+      // A permission profile refused the write: report the denied environments, not a
+      // generic access error (zephyr-cloud-io #4005).
+      const forbidden = safe_json_parse<unknown>(resText);
+      if (isEnvironmentDeniedResponse(forbidden)) {
+        throw environmentDeniedError(forbidden);
+      }
+
       throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
         message: 'The authenticated account does not have access to this target.',
       });

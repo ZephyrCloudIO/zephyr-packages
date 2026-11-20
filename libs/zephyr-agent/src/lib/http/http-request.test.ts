@@ -186,6 +186,40 @@ describe('Pure HTTP Request Functions', () => {
       expect(mockCleanTokens).not.toHaveBeenCalled();
     });
 
+    it('reports a 403 ENVIRONMENT_DENIED as a deploy denial with the environments', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 403,
+        text: async () =>
+          JSON.stringify({
+            status: 'denied',
+            code: 'ENVIRONMENT_DENIED',
+            message: 'Deploy denied',
+            environments: [
+              {
+                environment: { id: 'env-1', name: 'production', type: 'production' },
+                profile: { id: 'profile-1', name: 'web / production' },
+                requiredRole: 'member',
+                reason: 'no_grant',
+                contacts: [{ id: 'user-1', name: 'Ada Admin' }],
+                moreContacts: 0,
+              },
+            ],
+          }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://zeapi.example.com/build-stats')
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10038' });
+      expect((error as Error).message).toContain(
+        'production  profile "web / production"  needs Member'
+      );
+      expect(mockCleanTokens).not.toHaveBeenCalled();
+    });
+
     it('should handle network errors', async () => {
       mockFetchWithRetries.mockRejectedValueOnce(new Error('Network error'));
 

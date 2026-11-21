@@ -3,6 +3,7 @@ import type { MockInstance, Mock } from '@rstest/core';
 import path from 'node:path';
 
 import { setupZeDeploy } from './ze-setup-ze-deploy';
+import { onDeploymentDone } from '../lifecycle-events';
 import { xpack_zephyr_agent } from '../xpack-extract/ze-xpack-upload-agent';
 
 rs.mock('../xpack-extract/ze-xpack-upload-agent', () => ({
@@ -180,27 +181,73 @@ describe('setupZeDeploy', () => {
     await expect(processAssetsCallback({})).rejects.toThrow('deploy failed');
   });
 
-  it('rolls back when starting a direct generation fails', async () => {
+  describe('when starting a direct generation fails', () => {
+    const originalFailBuild = process.env['ZE_FAIL_BUILD'];
     const startFailure = new Error('build ID failed');
-    const buildFailed = rs.fn();
-    setupZeDeploy(
-      {
-        pluginName: 'ZePlugin',
-        zephyr_engine: {
-          hasActiveBuild: true,
-          start_new_build: rs.fn().mockRejectedValue(startFailure),
-          build_failed: buildFailed,
-        } as never,
-        mfConfig: undefined,
-      },
-      compiler as never
-    );
-    const processAssetsCallback = (compilation.hooks.processAssets.tapPromise as Mock)
-      .mock.calls[0][1];
 
-    await expect(processAssetsCallback({})).rejects.toBe(startFailure);
-    expect(buildFailed).toHaveBeenCalledTimes(1);
-    expect(xpack_zephyr_agent).not.toHaveBeenCalled();
+    afterEach(() => {
+      if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+      else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    });
+
+    function processAssetsAfterStartFailure(failBuild?: boolean) {
+      const buildFailed = rs.fn();
+      setupZeDeploy(
+        {
+          pluginName: 'ZePlugin',
+          failBuild,
+          zephyr_engine: {
+            hasActiveBuild: true,
+            start_new_build: rs.fn().mockRejectedValue(startFailure),
+            build_failed: buildFailed,
+          } as never,
+          mfConfig: undefined,
+        },
+        compiler as never
+      );
+      const processAssetsCallback = (compilation.hooks.processAssets.tapPromise as Mock)
+        .mock.calls[0][1];
+      return { buildFailed, processAssetsCallback };
+    }
+
+    it('rolls back and fails the build when ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const { buildFailed, processAssetsCallback } = processAssetsAfterStartFailure();
+
+      await expect(processAssetsCallback({})).rejects.toBe(startFailure);
+      expect(buildFailed).toHaveBeenCalledTimes(1);
+      expect(xpack_zephyr_agent).not.toHaveBeenCalled();
+    });
+
+    it('rolls back, skips the upload and keeps the build green otherwise', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const { buildFailed, processAssetsCallback } = processAssetsAfterStartFailure();
+
+      await expect(processAssetsCallback({})).resolves.toBeUndefined();
+      expect(buildFailed).toHaveBeenCalledTimes(1);
+      expect(xpack_zephyr_agent).not.toHaveBeenCalled();
+    });
+
+    it('settles onDeploymentDone() waiters when the failure is only logged', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const { processAssetsCallback } = processAssetsAfterStartFailure();
+      const done = onDeploymentDone();
+
+      await processAssetsCallback({});
+
+      await expect(done).resolves.toBeUndefined();
+    });
+
+    it('lets the failBuild option override ZE_FAIL_BUILD', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const quiet = processAssetsAfterStartFailure(false);
+      await expect(quiet.processAssetsCallback({})).resolves.toBeUndefined();
+
+      delete process.env['ZE_FAIL_BUILD'];
+      (compilation.hooks.processAssets.tapPromise as Mock).mockClear();
+      const loud = processAssetsAfterStartFailure(true);
+      await expect(loud.processAssetsCallback({})).rejects.toBe(startFailure);
+    });
   });
 
   it('propagates finalized index upload failures through afterEmit', async () => {

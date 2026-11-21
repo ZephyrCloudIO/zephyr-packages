@@ -32,6 +32,16 @@ export interface GatewayPublishRequest {
   jwt: string;
   /** Per-environment variables - map of hostname to variables for all deploys */
   envVarSetEnvMap?: Record<string, Record<string, string>>;
+  /**
+   * RS256 JWT signed by the Zephyr API (token_use=zephyr_publish_grant). The edge writes
+   * only hostnames listed in the grant.
+   */
+  publishGrant?: string;
+  /**
+   * RS256 JWTs signed by the Zephyr API (token_use=zephyr_publish_grant), one per edge
+   * destination. The edge writes only hostnames listed in the grant.
+   */
+  publishGrants?: string[];
 }
 
 export interface StageZeroPublishRequest {
@@ -40,6 +50,13 @@ export interface StageZeroPublishRequest {
   targets: PublishTarget[];
   /** Per-environment variables - map of hostname to variables for all deploys */
   environmentVariables?: Record<string, Record<string, string>>;
+  /**
+   * RS256 JWT signed by the Zephyr API (token_use=zephyr_publish_grant). The edge writes
+   * only hostnames listed in the grant.
+   *
+   * The edge receives one grant per request.
+   */
+  publishGrant?: string;
 }
 
 export interface PublishRequest {
@@ -67,4 +84,51 @@ export interface PublishRequest {
 
   // this is can_write_jwt
   jwt: string;
+
+  /**
+   * RS256 JWT signed by the Zephyr API (token_use=zephyr_publish_grant). The edge writes
+   * only hostnames listed in the grant.
+   */
+  publishGrant?: string;
+  /**
+   * RS256 JWTs signed by the Zephyr API (token_use=zephyr_publish_grant), one per edge
+   * destination. The edge writes only hostnames listed in the grant.
+   */
+  publishGrants?: string[];
+}
+
+/** Value of the `token_use` claim that marks a JWT as a publish grant. */
+export type PublishGrantTokenUse = 'zephyr_publish_grant';
+
+/**
+ * Claims format version (`ver`). Edges refuse versions they do not know, so the API signs
+ * a new version only once every enforcing edge understands it.
+ */
+export type PublishGrantVersion = 1;
+
+/**
+ * Claims the Zephyr API signs into a publish grant. A grant names exactly what one
+ * publish may change, so the edge does not trust destinations built by clients.
+ */
+export interface PublishGrantClaims {
+  /** Claims format version. */
+  ver: PublishGrantVersion;
+  token_use: PublishGrantTokenUse;
+  /** Unique grant id, for logs and audit. */
+  jti: string;
+  /**
+   * Issued-at time in seconds since epoch. Orders grants for the same hostname: the edge
+   * refuses a grant older than the one that last wrote a hostname.
+   */
+  iat: number;
+  /** Expiry time in seconds since epoch. */
+  exp: number;
+  /** Actor uid the API allowed to publish. */
+  sub?: string;
+  application_uid: string;
+  snapshot_id: string;
+  /** Exact hostnames the API allowed for this publish. */
+  hostnames: string[];
+  /** Edge origin the gateway must publish to. */
+  edge_url: string;
 }

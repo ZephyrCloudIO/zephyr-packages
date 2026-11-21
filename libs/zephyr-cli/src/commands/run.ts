@@ -161,13 +161,12 @@ export async function runCommand(options: RunOptions): Promise<void> {
     outputDir = resolve(cwd, detectedCommands[0].outputDir);
   }
 
-  // If we couldn't detect the output directory, stop here
   if (!outputDir) {
-    console.error('[ze-cli] ');
-    console.error('[ze-cli] Could not detect output directory. Skipping upload.');
-    console.error('[ze-cli] Please use "ze-cli deploy <dir>" to upload manually.');
-    console.error('[ze-cli] ');
-    return;
+    throw new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+      message:
+        'Could not detect the output directory, so the build was not uploaded. ' +
+        'Run "ze-cli deploy <dir>" to upload it.',
+    });
   }
 
   log('info', `Using output directory: ${relative(cwd, outputDir) || '.'}`);

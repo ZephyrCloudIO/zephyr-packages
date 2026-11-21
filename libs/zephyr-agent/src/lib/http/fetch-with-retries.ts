@@ -4,6 +4,11 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { isCI } from 'ci-info';
 import { ZeErrors, ZephyrError } from '../errors';
 import {
+  createHttpResponseError,
+  createUnreachableError,
+  isUnreachableStatus,
+} from './http-failure';
+import {
   redactString,
   redactUrl,
   safeStringifyForLogging,
@@ -24,7 +29,6 @@ const RETRY_ERROR_CODES = [
   'EPIPE',
 ];
 const RETRY_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
-const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
 
 function hasIdempotencyKey(headers: HeadersInit | undefined): boolean {
   if (!headers) return false;
@@ -120,10 +124,6 @@ function isRetryableNetworkError(error: unknown): boolean {
   );
 }
 
-function isRetryableStatus(status: number): boolean {
-  return RETRYABLE_STATUS_CODES.has(status) || status >= 500;
-}
-
 async function waitForRetry(
   retryIndex: number,
   deadline: number,
@@ -208,12 +208,22 @@ function toResponse(response: {
   } as Response;
 }
 
+function isTimeoutError(candidate: HttpLikeError): boolean {
+  return (
+    candidate.code === 'ETIMEDOUT' ||
+    candidate.code === 'ECONNABORTED' ||
+    String(candidate.message ?? '')
+      .toLowerCase()
+      .includes('timeout')
+  );
+}
+
 function normalizeRequestError(error: unknown, url: URL, method: string): Error {
   if (error instanceof ZephyrError) return error;
 
   const candidate = toHttpLikeError(error);
   if (candidate.response) {
-    return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+    return createHttpResponseError({
       status: candidate.response.status,
       url: redactUrl(url),
       content:
@@ -232,24 +242,31 @@ function normalizeRequestError(error: unknown, url: URL, method: string): Error 
       failedHostname = candidate.cause.hostname;
     }
 
-    return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-      status: -1,
+    return createUnreachableError({
+      failure: 'dns',
       url: redactUrl(url),
-      content: `DNS lookup failed for hostname "${redactString(failedHostname)}" (ENOTFOUND). Verify the hostname's DNS record.`,
+      detail: `DNS lookup failed for hostname "${redactString(failedHostname)}" (ENOTFOUND)`,
       method,
     });
   }
 
-  if (isRetryableNetworkError(error) || candidate.code === 'ERR_CANCELED') {
+  if (candidate.code === 'ERR_CANCELED') {
     return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
       status: -1,
       url: redactUrl(url),
-      content:
-        candidate.code === 'ERR_CANCELED'
-          ? 'Request canceled'
-          : redactString(
-              `Request failed after retries: ${candidate.code ?? candidate.message}`
-            ),
+      content: 'Request canceled',
+      method,
+    });
+  }
+
+  if (isRetryableNetworkError(error)) {
+    const timedOut = isTimeoutError(candidate);
+    return createUnreachableError({
+      failure: timedOut ? 'timeout' : 'network',
+      url: redactUrl(url),
+      detail: redactString(
+        `${timedOut ? 'The request timed out' : 'The request failed'} after retries (${candidate.code ?? candidate.message})`
+      ),
       method,
     });
   }
@@ -325,7 +342,7 @@ export async function fetchWithRetries(
 
       if (
         attempt < maxRetries &&
-        isRetryableStatus(response.status) &&
+        isUnreachableStatus(response.status) &&
         (await waitForRetry(
           attempt,
           deadline,

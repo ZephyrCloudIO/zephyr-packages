@@ -1,4 +1,4 @@
-import { formatWorkerBundlerTargetError } from 'zephyr-edge-contract';
+import { assertZephyrBundlerBuildTarget } from 'zephyr-edge-contract';
 
 export const NATIVE_BUILD_TARGETS = ['ios', 'android'] as const;
 
@@ -32,7 +32,8 @@ export function assertNativeBuildTarget(
   }
 
   if (target === 'worker') {
-    throw new TypeError(formatWorkerBundlerTargetError(source));
+    // Always throws the shared worker message that points to ze-cli.
+    assertZephyrBundlerBuildTarget(target, source);
   }
 
   throw new TypeError(

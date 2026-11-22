@@ -8,21 +8,20 @@ export const ZEPHYR_BUILD_TARGETS = [
 
 export type ZephyrBuildTarget = (typeof ZEPHYR_BUILD_TARGETS)[number];
 
+export type ZephyrBundlerBuildTarget = Exclude<ZephyrBuildTarget, 'worker'>;
+
+function isBundlerBuildTarget(
+  target: ZephyrBuildTarget
+): target is ZephyrBundlerBuildTarget {
+  return target !== 'worker';
+}
+
 /**
  * Targets that bundler plugins (webpack, rspack, vite, metro, ...) can publish. `worker`
  * is accepted by ze-cli only, so it is deliberately absent here.
  */
-export const ZEPHYR_BUNDLER_BUILD_TARGETS = ['web', 'ios', 'android', 'tap-app'] as const;
-
-export type ZephyrBundlerBuildTarget = (typeof ZEPHYR_BUNDLER_BUILD_TARGETS)[number];
-
-// Compile-time guard: the bundler list must stay equal to the public list minus `worker`.
-type IsExact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
-const bundlerTargetsMatchPublicTargets: IsExact<
-  ZephyrBundlerBuildTarget,
-  Exclude<ZephyrBuildTarget, 'worker'>
-> = true;
-void bundlerTargetsMatchPublicTargets;
+export const ZEPHYR_BUNDLER_BUILD_TARGETS: readonly ZephyrBundlerBuildTarget[] =
+  ZEPHYR_BUILD_TARGETS.filter(isBundlerBuildTarget);
 
 export function isZephyrBuildTarget(value: unknown): value is ZephyrBuildTarget {
   return (
@@ -51,7 +50,7 @@ export function assertZephyrBuildTarget(
 }
 
 /** Message shared by every bundler plugin when it is given the `worker` target. */
-export function formatWorkerBundlerTargetError(optionName: string): string {
+function formatWorkerBundlerTargetError(optionName: string): string {
   return `${optionName} does not support "worker" in bundler plugins. Publish worker builds with ze-cli (ze-cli deploy <directory> --target worker). Worker support in bundler plugins may come later.`;
 }
 

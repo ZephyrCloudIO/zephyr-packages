@@ -2,7 +2,7 @@
 //
 //   Scenario: the public entry point exposes the build-target API
 //     Given the package index
-//     Then it exports the bundler build-target guard, its message helper and lists
+//     Then it exports the bundler build-target guard, and its list
 //     And the guard rejects worker while the public list accepts it
 //
 // The remaining type-export scenarios check that each public type is importable.
@@ -39,7 +39,6 @@ import type {
 } from '../index';
 import {
   assertZephyrBundlerBuildTarget,
-  formatWorkerBundlerTargetError,
   isZephyrBuildTarget,
   ZEPHYR_BUNDLER_BUILD_TARGETS,
 } from '../index';
@@ -226,8 +225,6 @@ describe('type exports', () => {
     const target: ZephyrBundlerBuildTarget = 'tap-app';
     expect(ZEPHYR_BUNDLER_BUILD_TARGETS).toContain(target);
     expect(isZephyrBuildTarget('worker')).toBe(true);
-    expect(() => assertZephyrBundlerBuildTarget('worker', 'x')).toThrow(
-      formatWorkerBundlerTargetError('x')
-    );
+    expect(() => assertZephyrBundlerBuildTarget('worker', 'x')).toThrow('ze-cli');
   });
 });

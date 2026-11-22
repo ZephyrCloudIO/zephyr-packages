@@ -24,7 +24,6 @@ import { describe, expect, it } from '@rstest/core';
 import {
   assertZephyrBuildTarget,
   assertZephyrBundlerBuildTarget,
-  formatWorkerBundlerTargetError,
   isZephyrBuildTarget,
   ZEPHYR_BUILD_TARGETS,
   ZEPHYR_BUNDLER_BUILD_TARGETS,
@@ -46,10 +45,8 @@ describe('ZephyrBuildTarget', () => {
     expect(isZephyrBuildTarget('worker')).toBe(true);
   });
 
-  it('keeps the bundler list equal to the public list minus worker', () => {
-    expect(ZEPHYR_BUNDLER_BUILD_TARGETS).toEqual(
-      ZEPHYR_BUILD_TARGETS.filter((target) => target !== 'worker')
-    );
+  it('keeps the bundler list equal to the four legacy targets in order', () => {
+    expect(ZEPHYR_BUNDLER_BUILD_TARGETS).toEqual(['web', 'ios', 'android', 'tap-app']);
   });
 
   it('rejects unsupported target values', () => {
@@ -86,7 +83,9 @@ describe('assertZephyrBundlerBuildTarget', () => {
     const run = () => assertZephyrBundlerBuildTarget('worker', 'withZephyr({ target })');
     expect(run).toThrow(TypeError);
     const message = messageOf(run);
-    expect(message).toBe(formatWorkerBundlerTargetError('withZephyr({ target })'));
+    expect(message).toBe(
+      'withZephyr({ target }) does not support "worker" in bundler plugins. Publish worker builds with ze-cli (ze-cli deploy <directory> --target worker). Worker support in bundler plugins may come later.'
+    );
     expect(message).toContain('withZephyr({ target })');
     expect(message).toContain('ze-cli');
     expect(message).toContain('--target worker');

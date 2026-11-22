@@ -160,7 +160,9 @@ describe('Rsbuild withZephyr compiler coordination', () => {
           hook = options.handler;
         },
       } as never);
-      return hook!;
+      if (!hook)
+        throw new Error('Expected onBeforeCreateCompiler handler to be registered');
+      return hook;
     }
 
     afterEach(() => {

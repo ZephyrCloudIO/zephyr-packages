@@ -437,6 +437,11 @@ test('an earlier pre buildApp plugin is rejected before anything can publish', a
   expect(mocks.events).toEqual([]);
 });
 
+test('rejects the worker target with a ze-cli pointer through the real guard', () => {
+  expect(() => withZephyr({ target: 'worker' as never })).toThrow(/ze-cli/);
+  expect(() => withZephyr({ target: 'web' })).not.toThrow();
+});
+
 function applicationConfig(failServer = false): InlineConfig {
   const framework: Plugin = {
     name: 'fixture-framework',

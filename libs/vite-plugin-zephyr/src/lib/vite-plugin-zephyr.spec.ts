@@ -244,13 +244,18 @@ type TestWriteBundle = (
   bundle: Record<string, never>
 ) => Promise<void>;
 
+function defined<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`Expected ${what} to be defined`);
+  return value;
+}
+
 function writeBundleHandler(plugin: Plugin): TestWriteBundle {
-  const hook = plugin.writeBundle!;
+  const hook = defined(plugin.writeBundle, 'plugin.writeBundle');
   return (typeof hook === 'function' ? hook : hook.handler) as TestWriteBundle;
 }
 
 function closeBundleHandler(plugin: Plugin): () => Promise<void> {
-  const hook = plugin.closeBundle!;
+  const hook = defined(plugin.closeBundle, 'plugin.closeBundle');
   return (typeof hook === 'function' ? hook : hook.handler) as () => Promise<void>;
 }
 
@@ -682,7 +687,10 @@ describe('vite-plugin-zephyr', () => {
     ]);
 
     const plugins = withZephyr({ mfConfig }) as Plugin[];
-    const plugin = plugins.find((candidate) => candidate.name === 'with-zephyr')!;
+    const plugin = defined(
+      plugins.find((candidate) => candidate.name === 'with-zephyr'),
+      'with-zephyr plugin'
+    );
     const config = resolvedConfig({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
@@ -718,7 +726,8 @@ describe('vite-plugin-zephyr', () => {
 
   test('keeps an SDK-owned TAP manifest from public/static output without regeneration', async () => {
     const sdkStaticManifest = asset('zephyr-manifest.json', 'sdk-manifest-lock');
-    sdkStaticManifest['sdk-manifest-lock']!.buffer = '{"sdk":"locked"}';
+    defined(sdkStaticManifest['sdk-manifest-lock'], 'sdk manifest asset').buffer =
+      '{"sdk":"locked"}';
     const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
     const config = resolvedConfig(
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
@@ -982,8 +991,9 @@ describe('vite-plugin-zephyr', () => {
     const writeBundle = writeBundleHandler(plugin);
     const desktopAssets = asset('sdk/desktop/runtime.js', 'desktop-sdk-lock');
     const workerAssets = asset('sdk/worker/runtime.js', 'worker-sdk-lock');
-    desktopAssets['desktop-sdk-lock']!.buffer = 'desktop SDK bytes';
-    workerAssets['worker-sdk-lock']!.buffer = 'worker SDK bytes';
+    defined(desktopAssets['desktop-sdk-lock'], 'desktop asset').buffer =
+      'desktop SDK bytes';
+    defined(workerAssets['worker-sdk-lock'], 'worker asset').buffer = 'worker SDK bytes';
     mocks.extractAssets
       .mockResolvedValueOnce(desktopAssets)
       .mockResolvedValueOnce(workerAssets);

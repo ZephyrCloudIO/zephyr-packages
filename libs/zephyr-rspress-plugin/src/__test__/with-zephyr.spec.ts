@@ -16,31 +16,43 @@
 // The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { withZephyr } from '../with-zephyr';
 
-const rspressPluginMock = rs.fn((_: any) => ({ name: 'mock-ssg-plugin' }));
+type RspressConfigHook = NonNullable<ReturnType<typeof withZephyr>['config']>;
+type RspressConfigArg = Parameters<RspressConfigHook>[0];
+
+/** The tests feed minimal Rspress config objects, so narrow them once here. */
+function asConfig(value: object): RspressConfigArg {
+  return value as unknown as RspressConfigArg;
+}
+
+const rspressPluginMock = rs.fn((..._args: unknown[]) => ({ name: 'mock-ssg-plugin' }));
 
 rs.mock('../zephyrRspressSSGPlugin', () => ({
-  zephyrRspressSSGPlugin: (...args: any[]) => rspressPluginMock(...args),
+  zephyrRspressSSGPlugin: (...args: unknown[]) => rspressPluginMock(...args),
 }));
 
-const rsbuildPluginMock = rs.fn(() => ({ name: 'mock-rsbuild-plugin' }));
+const rsbuildPluginMock = rs.fn((..._args: unknown[]) => ({
+  name: 'mock-rsbuild-plugin',
+}));
 const portableFederationPlugin = { name: 'mock-mf-public-path-plugin' };
-let onModuleFederationPlugins: ((plugins: any[]) => void) | undefined;
-const moduleFederationPublicPathPluginMock = rs.fn((options?: any) => {
+let onModuleFederationPlugins: ((plugins: unknown[]) => void) | undefined;
+const moduleFederationPublicPathPluginMock = rs.fn((...args: unknown[]) => {
+  const options = args[0] as
+    | { onModuleFederationPlugins?: (plugins: unknown[]) => void }
+    | undefined;
   onModuleFederationPlugins = options?.onModuleFederationPlugins;
   return portableFederationPlugin;
 });
 
 rs.mock('../internal/assets/moduleFederationPublicPathPlugin', () => ({
-  moduleFederationPublicPathPlugin: (...args: any[]) =>
+  moduleFederationPublicPathPlugin: (...args: unknown[]) =>
     moduleFederationPublicPathPluginMock(...args),
 }));
 
 rs.mock('zephyr-rsbuild-plugin', () => ({
-  withZephyr: (...args: any[]) => rsbuildPluginMock(...args),
+  withZephyr: (...args: unknown[]) => rsbuildPluginMock(...args),
 }));
 
 describe('withZephyr', () => {
@@ -83,7 +95,7 @@ describe('withZephyr', () => {
 
     const removePlugin = rs.fn();
     const result = await plugin.config?.(
-      config as any,
+      asConfig(config),
       { addPlugin, removePlugin },
       false
     );
@@ -106,7 +118,7 @@ describe('withZephyr', () => {
 
     const plugin = withZephyr();
     const result = await plugin.config?.(
-      config as any,
+      asConfig(config),
       { addPlugin, removePlugin },
       false
     );
@@ -121,7 +133,7 @@ describe('withZephyr', () => {
   it('forwards tap-app to both the SSG and Rsbuild publication paths', async () => {
     const ssgConfig = { ssg: true, outDir: 'dist' };
     await withZephyr({ target: 'tap-app' }).config?.(
-      ssgConfig as any,
+      asConfig(ssgConfig),
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
@@ -135,7 +147,7 @@ describe('withZephyr', () => {
 
     const builderConfig = { ssg: false, builderConfig: { plugins: [] } };
     await withZephyr({ target: 'tap-app' }).config?.(
-      builderConfig as any,
+      asConfig(builderConfig),
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
@@ -145,7 +157,7 @@ describe('withZephyr', () => {
   it('retains every SSG compiler federation plugin for publication', async () => {
     const config = { ssg: true, outDir: 'dist' };
     await withZephyr({ target: 'tap-app' }).config?.(
-      config as any,
+      asConfig(config),
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
@@ -178,7 +190,7 @@ describe('withZephyr', () => {
 
     const plugin = withZephyr();
     const result = await plugin.config?.(
-      config as any,
+      asConfig(config),
       { addPlugin, removePlugin },
       false
     );
@@ -202,7 +214,7 @@ describe('withZephyr', () => {
     const plugin = withZephyr();
 
     await expect(
-      plugin.config?.(config as any, { addPlugin, removePlugin }, false)
+      plugin.config?.(asConfig(config), { addPlugin, removePlugin }, false)
     ).rejects.toThrow('SSG plugin failed');
   });
 
@@ -213,7 +225,7 @@ describe('withZephyr', () => {
 
     const plugin = withZephyr();
     const result = await plugin.config?.(
-      config as any,
+      asConfig(config),
       { addPlugin, removePlugin },
       false
     );
@@ -234,14 +246,14 @@ describe('withZephyr', () => {
 
     const plugin = withZephyr();
     const result = await plugin.config?.(
-      config as any,
+      asConfig(config),
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );
 
     const pluginCount =
       result?.builderConfig?.plugins?.filter(
-        (p: { name: string }) => p.name === 'mock-rsbuild-plugin'
+        (p: unknown) => (p as { name?: string }).name === 'mock-rsbuild-plugin'
       ).length ?? 0;
     expect(pluginCount).toBe(2);
   });
@@ -258,7 +270,7 @@ describe('withZephyr', () => {
 
       const plugin = withZephyr();
       const result = await plugin.config?.(
-        config as any,
+        asConfig(config),
         { addPlugin, removePlugin },
         false
       );
@@ -280,7 +292,7 @@ describe('withZephyr', () => {
 
       const plugin = withZephyr();
       const result = await plugin.config?.(
-        config as any,
+        asConfig(config),
         { addPlugin: rs.fn(), removePlugin: rs.fn() },
         false
       );
@@ -297,7 +309,9 @@ describe('withZephyr', () => {
   describe('ssg object config', () => {
     beforeEach(() => {
       // Reset mock to default behavior after error test
-      rspressPluginMock.mockImplementation((_: any) => ({ name: 'mock-ssg-plugin' }));
+      rspressPluginMock.mockImplementation((..._args: unknown[]) => ({
+        name: 'mock-ssg-plugin',
+      }));
     });
 
     it('should enable SSG plugin when ssg is an object', async () => {
@@ -309,7 +323,7 @@ describe('withZephyr', () => {
 
       const plugin = withZephyr();
       const result = await plugin.config?.(
-        config as any,
+        asConfig(config),
         { addPlugin, removePlugin: rs.fn() },
         false
       );
@@ -327,7 +341,11 @@ describe('withZephyr', () => {
       };
 
       const plugin = withZephyr();
-      await plugin.config?.(config as any, { addPlugin, removePlugin: rs.fn() }, false);
+      await plugin.config?.(
+        asConfig(config),
+        { addPlugin, removePlugin: rs.fn() },
+        false
+      );
 
       expect(rsbuildPluginMock).toHaveBeenCalled();
       expect(addPlugin).not.toHaveBeenCalled();
@@ -358,7 +376,7 @@ describe('withZephyr with ZE_DISABLED=true', () => {
     const config = { ssg: true, outDir: 'dist' };
 
     const result = await withZephyr().config?.(
-      config as any,
+      asConfig(config),
       { addPlugin, removePlugin: rs.fn() },
       false
     );
@@ -380,7 +398,7 @@ describe('withZephyr with ZE_DISABLED=true', () => {
     const config = { ssg: false, builderConfig: { plugins: [] } };
 
     const result = await withZephyr().config?.(
-      config as any,
+      asConfig(config),
       { addPlugin: rs.fn(), removePlugin: rs.fn() },
       false
     );

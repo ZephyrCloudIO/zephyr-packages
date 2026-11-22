@@ -95,6 +95,11 @@ describe('TanStack Start TAP output transport', () => {
     mocks.publish.mockResolvedValue(undefined);
   });
 
+  it('rejects the worker target with a ze-cli pointer through the real guard', () => {
+    expect(() => withZephyr({ target: 'worker' as never })).toThrow(/ze-cli/);
+    expect(() => withZephyr({ target: 'web' })).not.toThrow();
+  });
+
   it('passes tap-app to the output loader before assets are mapped', async () => {
     const plugin = withZephyr({ target: 'tap-app', ...TAP_FEDERATION_METADATA });
     (plugin.configResolved as (config: unknown) => void)({

@@ -1,4 +1,4 @@
-import type { ZephyrBuildHooks, ZephyrBuildTarget } from 'zephyr-agent';
+import type { ZephyrBuildHooks, ZephyrBundlerBuildTarget } from 'zephyr-agent';
 import type {
   ZephyrModuleFederationBuildMetadata,
   ZephyrModuleFederationConfig,
@@ -35,7 +35,7 @@ export interface NuxtLike {
 
 export interface ZephyrNuxtOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   /** Every JSON-serializable Module Federation config emitted by the package SDK. */
   mfConfigs?: ZephyrModuleFederationConfig[];
   /** Dashboard metadata paired with each entry in `mfConfigs`. */

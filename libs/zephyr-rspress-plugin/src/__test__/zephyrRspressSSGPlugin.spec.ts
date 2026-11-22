@@ -1,3 +1,19 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { Mock } from '@rstest/core';
 
@@ -64,6 +80,17 @@ describe('zephyrRspressSSGPlugin', () => {
     expect(() =>
       zephyrRspressSSGPlugin({ outDir: 'custom-out' }, { target: 'desktop' as never })
     ).toThrow('zephyrRspressSSGPlugin({ target }) must be one of');
+    expect(ZephyrEngine.defer_create).not.toHaveBeenCalled();
+  });
+
+  it('rejects the worker target and points to ze-cli before creating an SSG engine', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () =>
+      zephyrRspressSSGPlugin({ outDir: 'custom-out' }, { target: 'worker' });
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('zephyrRspressSSGPlugin({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
     expect(ZephyrEngine.defer_create).not.toHaveBeenCalled();
   });
 

@@ -1,10 +1,10 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   handleGlobalError,
   isZephyrDisabled,
   ZephyrEngine,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import {
   withZephyr as rspackWithZephyr,
@@ -20,7 +20,7 @@ import {
 
 export interface ZephyrRsbuildPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   snapshotType?: 'csr' | 'ssr';
@@ -32,7 +32,7 @@ type RspackWithZephyrConfig = Parameters<ReturnType<typeof rspackWithZephyr>>[0]
 export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin {
   const target = options?.target;
   if (target !== undefined) {
-    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(target, 'withZephyr({ target })');
   }
   return {
     name: 'zephyr-rsbuild-plugin',

@@ -8,8 +8,9 @@ import {
   ZephyrEngine,
   ZephyrError,
   type ZephyrBuildHooks,
+  type ZephyrBundlerBuildTarget,
   type ZephyrBuildTarget,
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import type {
   ZephyrBuildStats,
@@ -29,7 +30,7 @@ const getInputFolder = (options: InputOptions): string => {
 
 export interface ZephyrRollupPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   hooks?: ZephyrBuildHooks;
   /** Every independently published Module Federation container in the snapshot. */
   mfConfigs?: ZephyrModuleFederationConfig[];
@@ -138,7 +139,7 @@ function attachFederationBuildStats(
 
 export function withZephyr(options: ZephyrRollupPluginOptions = {}) {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
   assertTapModuleFederationMetadata(
     options.target,

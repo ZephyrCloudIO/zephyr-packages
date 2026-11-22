@@ -1,4 +1,12 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the mocked agent keeps the real bundler target guard
+//     Given the spec replaces zephyr-agent with a partial mock
+//     Then assertZephyrBundlerBuildTarget is the real guard, so the plugin still rejects the worker target and unsupported targets while accepting web and tap-app
+//
+// The remaining scenarios are described by the test names in this file.
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 import * as path from 'node:path';
 
 const mocks = rs.hoisted(() => ({
@@ -30,7 +38,9 @@ rs.mock('zephyr-agent', () => {
         };
       }
     },
-    assertZephyrBuildTarget: rs.fn(),
+    assertZephyrBundlerBuildTarget: (
+      rs.requireActual('zephyr-agent') as typeof ZephyrAgent
+    ).assertZephyrBundlerBuildTarget,
     buildAssetsMap: mocks.buildAssetsMap,
     handleGlobalError: rs.fn(),
     zeBuildDashData: rs.fn(),

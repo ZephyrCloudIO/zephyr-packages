@@ -1,4 +1,8 @@
-import type { ZephyrEngine, ZephyrBuildHooks, ZephyrBuildTarget } from 'zephyr-agent';
+import type {
+  ZephyrEngine,
+  ZephyrBuildHooks,
+  ZephyrBundlerBuildTarget,
+} from 'zephyr-agent';
 import type {
   ModuleFederationPlugin,
   XStats,
@@ -17,7 +21,7 @@ export interface ZephyrRspressPluginOptions {
 /** Internal SSG publication options shared by the Rspress config and build hooks. */
 export interface ZephyrRspressSSGOptions {
   hooks?: ZephyrBuildHooks;
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   mfConfig?: ModuleFederationPlugin[] | ModuleFederationPlugin;
 }
 

@@ -1,3 +1,19 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -39,6 +55,22 @@ describe('withZephyr', () => {
     );
     expect(rspressPluginMock).not.toHaveBeenCalled();
     expect(rsbuildPluginMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects the worker target and points to ze-cli before configuring Rspress', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () => withZephyr({ target: 'worker' });
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
+    expect(rspressPluginMock).not.toHaveBeenCalled();
+    expect(rsbuildPluginMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps accepting the web and tap-app targets', () => {
+    expect(() => withZephyr({ target: 'web' })).not.toThrow();
+    expect(() => withZephyr({ target: 'tap-app' })).not.toThrow();
   });
 
   it('should add the zephyrRspressSSGPlugin when ssg is true', async () => {

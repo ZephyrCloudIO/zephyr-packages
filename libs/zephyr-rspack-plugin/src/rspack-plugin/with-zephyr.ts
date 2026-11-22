@@ -1,11 +1,12 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   getGlobal,
   handleGlobalError,
   isZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
@@ -37,10 +38,10 @@ function mergeResolvedDependencies(
 
 function resolveBuildTarget(
   options: ZephyrRspackPluginOptions | undefined
-): ZephyrBuildTarget | undefined {
+): ZephyrBundlerBuildTarget | undefined {
   const target = options?.target;
   if (target !== undefined) {
-    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(target, 'withZephyr({ target })');
   }
   return target;
 }

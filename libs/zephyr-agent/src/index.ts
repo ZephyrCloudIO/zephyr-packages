@@ -171,9 +171,14 @@ export {
   applyTargetPlaceholder,
   parseZeDependency,
 } from './lib/build-context/ze-util-parse-ze-dependencies';
-export { assertZephyrBuildTarget, ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
+export {
+  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
+  ZEPHYR_MANIFEST_FILENAME,
+} from 'zephyr-edge-contract';
 export type {
   ZephyrBuildTarget,
+  ZephyrBundlerBuildTarget,
   ZephyrLegacyModuleFederationConfig,
   ZephyrModuleFederationBuildMetadata,
   ZephyrModuleFederationConfig,

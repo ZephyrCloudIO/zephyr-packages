@@ -3,9 +3,13 @@
 // edge api
 export {
   assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
+  formatWorkerBundlerTargetError,
   isZephyrBuildTarget,
   ZEPHYR_BUILD_TARGETS,
+  ZEPHYR_BUNDLER_BUILD_TARGETS,
   type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from './lib/build-target';
 export type {
   GatewayPublishRequest,

@@ -1,3 +1,5 @@
+import { formatWorkerBundlerTargetError } from 'zephyr-edge-contract';
+
 export const NATIVE_BUILD_TARGETS = ['ios', 'android'] as const;
 
 export type NativeBuildTarget = (typeof NATIVE_BUILD_TARGETS)[number];
@@ -27,6 +29,10 @@ export function assertNativeBuildTarget(
 ): asserts target is NativeBuildTarget {
   if (target === 'ios' || target === 'android') {
     return;
+  }
+
+  if (target === 'worker') {
+    throw new TypeError(formatWorkerBundlerTargetError(source));
   }
 
   throw new TypeError(

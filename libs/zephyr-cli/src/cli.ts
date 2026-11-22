@@ -1,4 +1,8 @@
-import { isZephyrBuildTarget, type ZephyrBuildTarget } from 'zephyr-edge-contract';
+import {
+  isZephyrBuildTarget,
+  ZEPHYR_BUILD_TARGETS,
+  type ZephyrBuildTarget,
+} from 'zephyr-edge-contract';
 import { MAX_ONLINE_TIMEOUT_MS } from './doctor/online-limits';
 
 export interface CliOptions {
@@ -213,6 +217,12 @@ export function parseArgs(args: string[]): CliOptions {
   return options;
 }
 
+function formatBuildTargets(): string {
+  const targets = [...ZEPHYR_BUILD_TARGETS];
+  const last = targets.pop();
+  return targets.length > 0 ? `${targets.join(', ')}, or ${last}` : String(last);
+}
+
 function printHelp(): void {
   console.log(`
 Usage: ze-cli [options] <command> [args...]
@@ -230,7 +240,7 @@ Commands:
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered
-  --target, -t <target>    Build target: web, ios, android, or tap-app (default: web)
+  --target, -t <target>    Build target: ${formatBuildTargets()} (default: web)
   --metadata <path>        JSON sidecar for Module Federation publication metadata
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output

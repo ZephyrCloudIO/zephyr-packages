@@ -76,6 +76,9 @@ ze-cli deploy ./dist
 # Upload with specific target
 ze-cli deploy ./dist --target ios
 
+# Publish a worker build (worker builds are published with ze-cli only)
+ze-cli deploy ./dist --target worker
+
 # Publish a TAP mini-app artifact
 ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 

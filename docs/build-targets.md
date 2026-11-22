@@ -35,6 +35,8 @@ target.
 
 ## Publishing a worker build
 
+Example only, not guidance:
+
 ```bash
 ze-cli deploy ./dist --target worker
 ```

@@ -284,7 +284,7 @@ the wrapped build already runs a Zephyr plugin, both print the line.
 ## Options
 
 - `--ssr` - Mark this snapshot as server-side rendered
-- `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
+- `--target, -t <target>` - Build target: `web`, `ios`, `android`, `tap-app`, or `worker` (default: `web`)
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
 - `--format <json|text>` - Doctor report format, or deploy result format (default: `text`)

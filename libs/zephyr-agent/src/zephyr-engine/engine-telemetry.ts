@@ -78,6 +78,44 @@ export async function withEngineRequestIdentity<T>(
   return withRequestIdentity(identity, fn);
 }
 
+const PENDING = Symbol('pending');
+
+/** The promise's value if it has already settled successfully, otherwise `PENDING`. */
+async function peek<T>(
+  promise: Promise<T> | null | undefined
+): Promise<T | typeof PENDING | undefined> {
+  if (!promise) return undefined;
+  // `Promise.race` subscribes in order, so a promise that has already settled wins the
+  // race against the immediately resolved marker. A pending one loses without delay.
+  return Promise.race([promise, Promise.resolve(PENDING)]).catch(() => undefined);
+}
+
+/**
+ * Like {@link withEngineRequestIdentity}, but never waits: the build ID is attached only
+ * when it is already known. Used for requests that start alongside the build-ID fetch,
+ * such as remote dependency resolution, which must not wait one extra round trip just to
+ * carry a header. These requests only go to the API origin, which is always a Zephyr
+ * endpoint, so no edge origins are needed.
+ */
+export async function withAvailableEngineRequestIdentity<T>(
+  zephyr_engine: ZephyrEngine,
+  fn: () => Promise<T>
+): Promise<T> {
+  const buildId = await peek(zephyr_engine.build_id);
+  return withRequestIdentity(
+    {
+      buildId:
+        typeof buildId === 'string' || typeof buildId === 'number'
+          ? String(buildId)
+          : undefined,
+      builder: zephyr_engine.builder,
+      plugin: zephyr_engine.plugin_identity?.name,
+      pluginVersion: zephyr_engine.plugin_identity?.version,
+    },
+    fn
+  );
+}
+
 async function flushLogger(logger: Promise<ZeLogger> | undefined): Promise<void> {
   const log = await settled(logger);
   // Test doubles and older callers may provide a bare function.

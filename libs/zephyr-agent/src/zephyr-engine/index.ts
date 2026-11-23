@@ -64,6 +64,7 @@ import {
 import {
   engineLogContext,
   reportBuildFailure,
+  withAvailableEngineRequestIdentity,
   withEngineRequestIdentity,
 } from './engine-telemetry';
 import type {
@@ -387,7 +388,7 @@ export class ZephyrEngine {
       const selector = ze_dependency?.version ?? dep.version;
       const requested = applyTargetPlaceholder(selector, platform);
       const tuple = await ZeUtils.PromiseTuple(
-        withEngineRequestIdentity(this, () =>
+        withAvailableEngineRequestIdentity(this, () =>
           resolve_remote_dependency({
             application_uid: dep_application_uid,
             version: requested,

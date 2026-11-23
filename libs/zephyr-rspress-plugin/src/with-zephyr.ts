@@ -2,11 +2,11 @@ import {
   withZephyr as zephyrRsbuildPlugin,
   type ZephyrBuildHooks,
 } from 'zephyr-rsbuild-plugin';
-import { assertZephyrBuildTarget } from 'zephyr-edge-contract';
+import { assertZephyrBundlerBuildTarget } from 'zephyr-edge-contract';
 import {
   isZephyrDisabled,
   logZephyrDisabled,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import type { ModuleFederationPlugin } from 'zephyr-xpack-internal';
 import { zephyrRspressSSGPlugin } from './zephyrRspressSSGPlugin';
@@ -21,7 +21,7 @@ import type {
 
 export interface ZephyrRspressOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   hooks?: ZephyrBuildHooks;
 }
 
@@ -71,7 +71,7 @@ export function withZephyr<TConfig extends RspressUserConfig = RspressUserConfig
   options?: ZephyrRspressOptions
 ): RspressPlugin<TConfig> {
   if (options?.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
 
   // Skip mode: no engine, no token, no git information, no request. Rspress builds the

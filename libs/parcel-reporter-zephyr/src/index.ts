@@ -1,12 +1,14 @@
 import { Reporter } from '@parcel/plugin';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   handleGlobalError,
   isZephyrDisabled,
   logZephyrDisabled,
+  ZeErrors,
   ZephyrEngine,
+  ZephyrError,
   type ZephyrBuildHooks,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import type {
   ZephyrModuleFederationBuildMetadata,
@@ -20,7 +22,7 @@ import {
 
 export interface ZephyrParcelReporterOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   hooks?: ZephyrBuildHooks;
   /** Every independently published Module Federation container in the snapshot. */
   mfConfigs?: ZephyrModuleFederationConfig[];
@@ -28,9 +30,21 @@ export interface ZephyrParcelReporterOptions {
   federation?: ZephyrModuleFederationBuildMetadata[];
 }
 
+/** Turns Parcel's failure diagnostics into the error reported as `build:failed`. */
+function buildFailureError(
+  diagnostics: readonly { message?: string }[] | undefined
+): ZephyrError<'ERR_DEPLOY_LOCAL_BUILD'> {
+  const details = (diagnostics ?? [])
+    .map((diagnostic) => diagnostic.message)
+    .filter((message): message is string => !!message);
+  return new ZephyrError(ZeErrors.ERR_DEPLOY_LOCAL_BUILD, {
+    message: details.length > 0 ? details.join('\n') : 'Parcel build failed.',
+  });
+}
+
 function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
   if (options?.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'createZephyrReporter({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'createZephyrReporter({ target })');
   }
   assertTapModuleFederationMetadata(
     options?.target,
@@ -79,7 +93,7 @@ function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
             {
               const zephyr_engine = await zephyr_engine_defer;
               if (zephyr_engine.hasActiveBuild) {
-                zephyr_engine.build_failed();
+                await zephyr_engine.build_failed(buildFailureError(event.diagnostics));
               }
             }
             break;

@@ -1,11 +1,12 @@
 import type { Configuration as RspackConfiguration } from '@rspack/core';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   getGlobal,
   handleGlobalError,
   isZephyrDisabled,
   ZephyrEngine,
   type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
@@ -37,10 +38,10 @@ function mergeResolvedDependencies(
 
 function resolveBuildTarget(
   options: ZephyrRspackPluginOptions | undefined
-): ZephyrBuildTarget | undefined {
+): ZephyrBundlerBuildTarget | undefined {
   const target = options?.target;
   if (target !== undefined) {
-    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(target, 'withZephyr({ target })');
   }
   return target;
 }
@@ -105,7 +106,7 @@ export function withZephyr(
     } catch (error: unknown) {
       // A half-configured compiler array would wait for compilers that never report.
       if (pluginSnapshot) restorePlugins(config, pluginSnapshot);
-      if (engine?.hasActiveBuild) engine.build_failed();
+      if (engine?.hasActiveBuild) await engine.build_failed(error);
       handleGlobalError(error, { failBuild: zephyrPluginOptions?.failBuild });
     }
     return config;
@@ -164,7 +165,7 @@ async function _zephyr_configuration(
       throw error;
     }
     if (zephyr_engine?.hasActiveBuild !== false) {
-      zephyr_engine?.build_failed();
+      await zephyr_engine?.build_failed(error);
     }
     handleGlobalError(error, { failBuild: _zephyrOptions?.failBuild });
   }

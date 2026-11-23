@@ -1,4 +1,21 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
   engine: {
@@ -19,15 +36,11 @@ const mocks = rs.hoisted(() => ({
   rspackWithZephyr: rs.fn(),
   isZephyrDisabled: rs.fn(() => false),
   disableZephyrForXpack: rs.fn(),
-  assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
-    if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
-      throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
-    }
-  }),
 }));
 
 rs.mock('zephyr-agent', () => ({
-  assertZephyrBuildTarget: mocks.assertBuildTarget,
+  assertZephyrBundlerBuildTarget: (rs.requireActual('zephyr-agent') as typeof ZephyrAgent)
+    .assertZephyrBundlerBuildTarget,
   handleGlobalError: mocks.handleGlobalError,
   isZephyrDisabled: mocks.isZephyrDisabled,
   ZephyrEngine: { create: mocks.create },
@@ -147,7 +160,9 @@ describe('Rsbuild withZephyr compiler coordination', () => {
           hook = options.handler;
         },
       } as never);
-      return hook!;
+      if (!hook)
+        throw new Error('Expected onBeforeCreateCompiler handler to be registered');
+      return hook;
     }
 
     afterEach(() => {
@@ -204,5 +219,19 @@ describe('Rsbuild withZephyr compiler coordination', () => {
       'withZephyr({ target }) must be one of'
     );
     expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects the worker target and points to ze-cli', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () => withZephyr({ target: 'worker' });
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
+  });
+
+  it('keeps accepting the web and tap-app targets', () => {
+    expect(() => withZephyr({ target: 'web' })).not.toThrow();
+    expect(() => withZephyr({ target: 'tap-app' })).not.toThrow();
   });
 });

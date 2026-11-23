@@ -1,11 +1,23 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
-  assertZephyrBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
-    if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
-      throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
-    }
-  }),
   deferCreate: rs.fn(() => ({
     zephyr_engine_defer: Promise.resolve({}),
     zephyr_defer_create: rs.fn(),
@@ -26,7 +38,8 @@ rs.mock('@parcel/plugin', () => ({
 }));
 
 rs.mock('zephyr-agent', () => ({
-  assertZephyrBuildTarget: mocks.assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget: (rs.requireActual('zephyr-agent') as typeof ZephyrAgent)
+    .assertZephyrBundlerBuildTarget,
   handleGlobalError: rs.fn(),
   isZephyrDisabled: mocks.isZephyrDisabled,
   logZephyrDisabled: mocks.logZephyrDisabled,
@@ -104,6 +117,20 @@ describe('createZephyrReporter', () => {
     );
     expect(mocks.deferCreate).not.toHaveBeenCalled();
     expect(mocks.reporter).not.toHaveBeenCalled();
+  });
+
+  it('rejects the worker target and points to ze-cli', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () => createZephyrReporter({ target: 'worker' });
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('createZephyrReporter({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
+  });
+
+  it('keeps accepting the web and tap-app targets', () => {
+    expect(() => createZephyrReporter({ target: 'web' })).not.toThrow();
+    expect(() => createZephyrReporter({ target: 'tap-app' })).not.toThrow();
   });
 
   it('validates and forwards all TAP Module Federation containers to publication', async () => {

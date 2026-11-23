@@ -210,7 +210,7 @@ export async function runCommand(options: RunOptions): Promise<void> {
     assetsMap = await extractAssetsFromDirectory(outputDir, { target });
   } catch (error: unknown) {
     if (zephyr_engine.hasActiveBuild) {
-      zephyr_engine.build_failed();
+      await zephyr_engine.build_failed(error);
     }
     throw error;
   }

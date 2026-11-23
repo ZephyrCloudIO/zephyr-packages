@@ -1,3 +1,19 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
 import type * as NodeModule from 'node:module';
@@ -153,6 +169,32 @@ test('rejects unsupported targets before Vite resolves configuration', () => {
   expect(mocks.deferCreate).not.toHaveBeenCalled();
 });
 
+test('rejects the worker target and points to ze-cli', () => {
+  // @ts-expect-error worker is publishable through ze-cli only
+  const run = () => withZephyr({ target: 'worker' });
+
+  expect(run).toThrow(TypeError);
+  expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+  expect(run).toThrow('ze-cli');
+});
+
+test('keeps accepting the web and tap-app targets', () => {
+  expect(() => withZephyr({ target: 'web' })).not.toThrow();
+  expect(() => withZephyr({ target: 'tap-app' })).not.toThrow();
+});
+
+test('withZephyrPartial rejects the worker target and unsupported targets', () => {
+  // @ts-expect-error worker is publishable through ze-cli only
+  const worker = () => withZephyrPartial({ target: 'worker' });
+
+  expect(worker).toThrow('withZephyrPartial({ target }) does not support "worker"');
+  expect(worker).toThrow('ze-cli');
+  expect(() => withZephyrPartial({ target: 'desktop' as never })).toThrow(
+    'withZephyrPartial({ target }) must be one of'
+  );
+  expect(() => withZephyrPartial({ target: 'web' })).not.toThrow();
+});
+
 test('passes tap-app into the engine before resolving Vite remotes', async () => {
   const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
   await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
@@ -202,13 +244,18 @@ type TestWriteBundle = (
   bundle: Record<string, never>
 ) => Promise<void>;
 
+function defined<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`Expected ${what} to be defined`);
+  return value;
+}
+
 function writeBundleHandler(plugin: Plugin): TestWriteBundle {
-  const hook = plugin.writeBundle!;
+  const hook = defined(plugin.writeBundle, 'plugin.writeBundle');
   return (typeof hook === 'function' ? hook : hook.handler) as TestWriteBundle;
 }
 
 function closeBundleHandler(plugin: Plugin): () => Promise<void> {
-  const hook = plugin.closeBundle!;
+  const hook = defined(plugin.closeBundle, 'plugin.closeBundle');
   return (typeof hook === 'function' ? hook : hook.handler) as () => Promise<void>;
 }
 
@@ -640,7 +687,10 @@ describe('vite-plugin-zephyr', () => {
     ]);
 
     const plugins = withZephyr({ mfConfig }) as Plugin[];
-    const plugin = plugins.find((candidate) => candidate.name === 'with-zephyr')!;
+    const plugin = defined(
+      plugins.find((candidate) => candidate.name === 'with-zephyr'),
+      'with-zephyr plugin'
+    );
     const config = resolvedConfig({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
@@ -676,7 +726,8 @@ describe('vite-plugin-zephyr', () => {
 
   test('keeps an SDK-owned TAP manifest from public/static output without regeneration', async () => {
     const sdkStaticManifest = asset('zephyr-manifest.json', 'sdk-manifest-lock');
-    sdkStaticManifest['sdk-manifest-lock']!.buffer = '{"sdk":"locked"}';
+    defined(sdkStaticManifest['sdk-manifest-lock'], 'sdk manifest asset').buffer =
+      '{"sdk":"locked"}';
     const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
     const config = resolvedConfig(
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
@@ -940,8 +991,9 @@ describe('vite-plugin-zephyr', () => {
     const writeBundle = writeBundleHandler(plugin);
     const desktopAssets = asset('sdk/desktop/runtime.js', 'desktop-sdk-lock');
     const workerAssets = asset('sdk/worker/runtime.js', 'worker-sdk-lock');
-    desktopAssets['desktop-sdk-lock']!.buffer = 'desktop SDK bytes';
-    workerAssets['worker-sdk-lock']!.buffer = 'worker SDK bytes';
+    defined(desktopAssets['desktop-sdk-lock'], 'desktop asset').buffer =
+      'desktop SDK bytes';
+    defined(workerAssets['worker-sdk-lock'], 'worker asset').buffer = 'worker SDK bytes';
     mocks.extractAssets
       .mockResolvedValueOnce(desktopAssets)
       .mockResolvedValueOnce(workerAssets);

@@ -1,5 +1,5 @@
 import { resolve } from 'node:path';
-import { assertZephyrBuildTarget } from 'zephyr-edge-contract';
+import { assertZephyrBundlerBuildTarget } from 'zephyr-edge-contract';
 import { ZephyrEngine, handleGlobalError, ze_log } from 'zephyr-agent';
 import { setupZeDeploy } from './internal/assets/setupZeDeploy';
 import { rewriteRspressModuleFederationAssets } from './internal/assets/rewriteRspressModuleFederationAssets';
@@ -15,7 +15,7 @@ export const zephyrRspressSSGPlugin = <
   options?: ZephyrRspressSSGOptions
 ): RspressPlugin<TConfig> => {
   if (options?.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'zephyrRspressSSGPlugin({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'zephyrRspressSSGPlugin({ target })');
   }
 
   const { zephyr_engine_defer, zephyr_defer_create } = ZephyrEngine.defer_create();
@@ -67,7 +67,7 @@ export const zephyrRspressSSGPlugin = <
         try {
           const zephyr_engine = await zephyr_engine_defer;
           if (zephyr_engine.hasActiveBuild) {
-            zephyr_engine.build_failed();
+            await zephyr_engine.build_failed(error);
           }
         } catch {
           // The original initialization/build failure is the actionable error below.

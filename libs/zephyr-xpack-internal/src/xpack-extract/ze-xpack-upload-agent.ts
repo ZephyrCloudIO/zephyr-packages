@@ -143,7 +143,7 @@ export async function xpack_zephyr_agent<T extends UploadAgentPluginOptions>({
     } else if (zephyr_engine.hasActiveBuild !== false) {
       // setupZeDeploy starts direct builds. Any failure before build_finished must release
       // that generation so watch mode can retry with fresh identity and logger state.
-      zephyr_engine.build_failed();
+      await zephyr_engine.build_failed(err);
     }
     handleGlobalError(err, { failBuild: pluginOptions.failBuild });
     // This build will never publish, so release anyone awaiting onDeploymentDone().

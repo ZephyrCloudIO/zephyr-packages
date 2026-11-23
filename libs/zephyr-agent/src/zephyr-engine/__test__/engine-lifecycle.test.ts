@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 import type { ZeApplicationConfig } from '../../lib/node-persist/upload-provider-options';
 import { ZeErrors, ZephyrError } from '../../lib/errors';
+import { getRequestIdentity } from '../../lib/http/request-identity';
 import { ApplicationContext, ZephyrEngine } from '../../index';
 
 const mocks = rs.hoisted(() => ({
@@ -143,6 +144,74 @@ describe('ZephyrEngine build lifecycle', () => {
       'configured-app.configured-project.configured-org'
     );
     value.build_failed();
+  });
+
+  it('identifies the builder and plugin on requests made before the build ID exists', async () => {
+    const identities: Record<string, ReturnType<typeof getRequestIdentity>> = {};
+    mocks.getZephyrConfig.mockReturnValue({});
+    mocks.getPackageJson.mockResolvedValue({
+      name: 'package-app',
+      version: '1.0.0',
+      devDependencies: { 'vite-plugin-zephyr': '^1.8.0' },
+    });
+    mocks.getGitInfo.mockResolvedValue({
+      app: { org: 'org', project: 'project' },
+      git: {
+        name: 'Developer',
+        email: 'dev@example.com',
+        branch: 'main',
+        commit: 'c0ffee',
+      },
+    });
+    mocks.checkAuth.mockImplementation(async () => {
+      identities['auth'] = getRequestIdentity();
+    });
+    mocks.getApplicationConfiguration.mockImplementation(async () => {
+      identities['config'] = getRequestIdentity();
+      return appConfig();
+    });
+    mocks.getBuildId.mockImplementation(async () => {
+      identities['buildId'] = getRequestIdentity();
+      return '11887';
+    });
+    mocks.getHashList.mockImplementation(async () => {
+      identities['hashList'] = getRequestIdentity();
+      return { hash_set: new Set<string>() };
+    });
+
+    const value = await ZephyrEngine.create({
+      builder: 'vite',
+      context: '/workspace/app',
+    });
+    await value.hash_list;
+
+    for (const step of ['auth', 'config', 'buildId', 'hashList']) {
+      const identity = identities[step];
+      expect({ step, builder: identity?.builder, plugin: identity?.plugin }).toEqual({
+        step,
+        builder: 'vite',
+        plugin: 'vite-plugin-zephyr',
+      });
+      expect({ step, buildId: identity?.buildId }).toEqual({ step, buildId: undefined });
+    }
+    value.build_failed();
+  });
+
+  it('never sends the previous build ID while fetching the next one', async () => {
+    const value = engine();
+    value.plugin_identity = { name: 'vite-plugin-zephyr', version: '1.8.0' };
+    value.build_id = Promise.resolve('11887');
+    let identity: ReturnType<typeof getRequestIdentity>;
+    mocks.getBuildId.mockImplementation(async () => {
+      identity = getRequestIdentity();
+      return '11888';
+    });
+
+    await value.start_new_build();
+
+    await expect(value.build_id).resolves.toBe('11888');
+    expect(identity!).toMatchObject({ builder: 'vite', plugin: 'vite-plugin-zephyr' });
+    expect(identity!.buildId).toBeUndefined();
   });
 
   it('preserves each stable reason through the public engine entry', async () => {

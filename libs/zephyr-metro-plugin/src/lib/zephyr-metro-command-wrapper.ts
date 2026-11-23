@@ -156,7 +156,7 @@ export async function zephyrCommandWrapper(
         wrapperOwnsRollback &&
         zephyrMetroPlugin?.zephyr_engine.hasActiveBuild !== false
       ) {
-        zephyrMetroPlugin?.zephyr_engine.build_failed();
+        await zephyrMetroPlugin?.zephyr_engine.build_failed(error);
       }
       const detail =
         error instanceof Error

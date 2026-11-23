@@ -1,3 +1,11 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the public entry point exposes the build-target API
+//     Given the package index
+//     Then it exports the bundler build-target guard, and its list
+//     And the guard rejects worker while the public list accepts it
+//
+// The remaining type-export scenarios check that each public type is importable.
 import { describe, expect, test } from '@rstest/core';
 
 import type {
@@ -27,6 +35,12 @@ import type {
   ZeUploadAssetsOptions,
   ZephyrGlobalNamespace,
   FindTemplates,
+  ZephyrBundlerBuildTarget,
+} from '../index';
+import {
+  assertZephyrBundlerBuildTarget,
+  isZephyrBuildTarget,
+  ZEPHYR_BUNDLER_BUILD_TARGETS,
 } from '../index';
 
 describe('type exports', () => {
@@ -205,5 +219,12 @@ describe('type exports', () => {
     type TestZephyrGlobalNamespace = ZephyrGlobalNamespace;
     const obj: TestZephyrGlobalNamespace = {} as TestZephyrGlobalNamespace;
     expect(obj).toBeDefined();
+  });
+
+  test('should export the bundler build-target API', () => {
+    const target: ZephyrBundlerBuildTarget = 'tap-app';
+    expect(ZEPHYR_BUNDLER_BUILD_TARGETS).toContain(target);
+    expect(isZephyrBuildTarget('worker')).toBe(true);
+    expect(() => assertZephyrBundlerBuildTarget('worker', 'x')).toThrow('ze-cli');
   });
 });

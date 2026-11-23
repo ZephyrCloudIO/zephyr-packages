@@ -7,11 +7,11 @@ import type { OutputAsset, OutputChunk } from 'rollup';
 import * as path from 'path';
 import {
   ApplicationContext,
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   isZephyrDisabled,
   ZephyrEngine,
   type ZephyrEngineOptions,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
   type ZephyrLegacyModuleFederationConfig,
   type ZephyrModuleFederationBuildMetadata,
   type ZephyrModuleFederationConfig,
@@ -62,7 +62,7 @@ function getAssetType(item: { fileName?: string; name?: string }): string {
  */
 export interface TanStackStartZephyrOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   /** Every independently published Module Federation container. */
   mfConfigs?: ZephyrModuleFederationConfig[];
   /** Build-stat metadata paired with `mfConfigs`. */
@@ -242,7 +242,7 @@ function getLegacyModuleFederationConfig(
  */
 export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
   assertTapFederationMetadata(options);
 

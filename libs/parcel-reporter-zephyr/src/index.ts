@@ -1,6 +1,6 @@
 import { Reporter } from '@parcel/plugin';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   handleGlobalError,
   isZephyrDisabled,
   logZephyrDisabled,
@@ -8,7 +8,7 @@ import {
   ZephyrEngine,
   ZephyrError,
   type ZephyrBuildHooks,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import type {
   ZephyrModuleFederationBuildMetadata,
@@ -22,7 +22,7 @@ import {
 
 export interface ZephyrParcelReporterOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   hooks?: ZephyrBuildHooks;
   /** Every independently published Module Federation container in the snapshot. */
   mfConfigs?: ZephyrModuleFederationConfig[];
@@ -44,7 +44,7 @@ function buildFailureError(
 
 function createZephyrReporter(options?: ZephyrParcelReporterOptions) {
   if (options?.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'createZephyrReporter({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'createZephyrReporter({ target })');
   }
   assertTapModuleFederationMetadata(
     options?.target,

@@ -1,12 +1,13 @@
 import type { Configuration } from 'webpack';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   getGlobal,
   handleGlobalError,
   isZephyrDisabled,
   ze_log,
   ZephyrEngine,
   type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
   type ZeResolvedDependency,
 } from 'zephyr-agent';
 import {
@@ -37,10 +38,10 @@ function mergeResolvedDependencies(
 
 function resolveBuildTarget(
   options: ZephyrWebpackPluginOptions | undefined
-): ZephyrBuildTarget | undefined {
+): ZephyrBundlerBuildTarget | undefined {
   const target = options?.target;
   if (target !== undefined) {
-    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(target, 'withZephyr({ target })');
   }
   return target;
 }

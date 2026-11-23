@@ -1,7 +1,15 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the mocked agent keeps the real bundler target guard
+//     Given the spec replaces zephyr-agent with a partial mock
+//     Then assertZephyrBundlerBuildTarget is the real guard, so the plugin still rejects the worker target and unsupported targets while accepting web and tap-app
+//
+// The remaining scenarios are described by the test names in this file.
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, test, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 import { build, createBuilder, type InlineConfig, type Plugin } from 'vite';
 import {
   claimPartialAssetMapBatch,
@@ -105,7 +113,9 @@ rs.mock('zephyr-agent', () => {
     normalizeBasePath: (base: string) => base.replace(/^\/+|\/+$/g, ''),
     rewriteEnvReadsToVirtualModule: () => null,
     zeBuildDashData: async () => ({}),
-    assertZephyrBuildTarget: rs.fn(),
+    assertZephyrBundlerBuildTarget: (
+      rs.requireActual('zephyr-agent') as typeof ZephyrAgent
+    ).assertZephyrBundlerBuildTarget,
     isZephyrDisabled: () => false,
     readPackageJson: () => ({}),
     ze_log: { init: rs.fn(), remotes: rs.fn() },
@@ -425,6 +435,11 @@ test('an earlier pre buildApp plugin is rejected before anything can publish', a
   expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
   expect(mocks.engine.build_finished).not.toHaveBeenCalled();
   expect(mocks.events).toEqual([]);
+});
+
+test('rejects the worker target with a ze-cli pointer through the real guard', () => {
+  expect(() => withZephyr({ target: 'worker' as never })).toThrow(/ze-cli/);
+  expect(() => withZephyr({ target: 'web' })).not.toThrow();
 });
 
 function applicationConfig(failServer = false): InlineConfig {

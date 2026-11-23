@@ -11,7 +11,7 @@ import type {
   ZephyrModuleFederationConfig,
 } from 'zephyr-edge-contract';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   handleGlobalError,
   rewriteEnvReadsToVirtualModule,
   ZeErrors,
@@ -21,6 +21,7 @@ import {
   isZephyrDisabled,
   logZephyrDisabled,
   type ZephyrBuildHooks,
+  type ZephyrBundlerBuildTarget,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
 import { extractAstroAssetsFromBuildHook } from './internal/extract-astro-assets-map';
@@ -31,7 +32,7 @@ type AstroBuildDoneParams = HookParameters<'astro:build:done'> & {
 
 export interface ZephyrAstroOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   /** Every JSON-serializable Module Federation config emitted by the package SDK. */
   mfConfigs?: ZephyrModuleFederationConfig[];
   /** Dashboard metadata paired with each entry in `mfConfigs`. */
@@ -134,7 +135,7 @@ function assertTapModuleFederationMetadata(
 
 export function withZephyr(options?: ZephyrAstroOptions): AstroIntegration {
   if (options?.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
 
   // Skip mode: Astro builds the site as it is. No engine, token, git information,

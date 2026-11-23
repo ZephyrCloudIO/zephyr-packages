@@ -1,8 +1,9 @@
 import type { AppTools, CliPlugin } from '@modern-js/app-tools';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   ze_log,
   type ZephyrBuildHooks,
+  type ZephyrBundlerBuildTarget,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
 
@@ -22,7 +23,7 @@ export function shouldApplyDevPublicPathFix(
 
 export interface ZephyrModernjsPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   /** Override automatic CSR/SSR detection for Modern.js compiler arrays. */
@@ -35,7 +36,7 @@ export const withZephyr = (
   zephyrOptions?: ZephyrModernjsPluginOptions
 ): CliPlugin<AppTools> => {
   if (zephyrOptions?.target !== undefined) {
-    assertZephyrBuildTarget(zephyrOptions.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(zephyrOptions.target, 'withZephyr({ target })');
   }
 
   return {

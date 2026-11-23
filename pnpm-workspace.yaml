@@ -256,7 +256,7 @@ catalogs:
     '@tailwindcss/vite': ^4.3.3
     tailwindcss: ^4.3.3
   tanstack:
-    '@tanstack/react-devtools': 0.10.12
+    '@tanstack/react-devtools': 0.10.15
     '@tanstack/react-router': 1.170.45
     '@tanstack/react-router-devtools': 1.167.2
     '@tanstack/react-router-ssr-query': 1.167.3

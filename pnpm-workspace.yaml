@@ -324,6 +324,10 @@ overrides:
   seroval@<1.6.3: 1.6.12
   source-map-js@>=1.0.0 <1.2.2: 1.2.2
   tinypool@<2.1.2: 2.2.0
+  zod@<4.6.6: 4.6.7
+  node-forge@<1.4.1: 1.4.3
+  brace-expansion@<1.1.21: 1.1.22
+  brace-expansion@>=2.0.0 <2.1.7: 2.1.8
 
 allowBuilds:
   '@biomejs/biome': true

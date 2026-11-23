@@ -31,6 +31,7 @@ import { get_hash_list } from '../lib/edge-hash-list/distributed-hash-control';
 import { get_missing_assets } from '../lib/edge-hash-list/get-missing-assets';
 import { getApplicationConfiguration } from '../lib/edge-requests/get-application-configuration';
 import { getBuildId } from '../lib/edge-requests/get-build-id';
+import { withRequestIdentity } from '../lib/http/request-identity';
 import {
   type HandleGlobalErrorOptions,
   ZeErrors,
@@ -62,6 +63,7 @@ import {
   resolve_remote_dependency,
 } from './resolve_remote_dependency';
 import {
+  engineBuilderIdentity,
   engineLogContext,
   reportBuildFailure,
   withAvailableEngineRequestIdentity,
@@ -295,12 +297,17 @@ export class ZephyrEngine {
 
     // starting async load of application configuration, build_id and hash_list
 
+    // Requests made before a build exists still identify the builder and plugin.
+    const builderIdentity = engineBuilderIdentity(ze);
+
     ze_log.init('Initializing: checking authentication...');
-    await checkAuth(ze.gitProperties);
+    await withRequestIdentity(builderIdentity, () => checkAuth(ze.gitProperties));
 
     ze_log.init('Initialized: loading application configuration...');
 
-    ze.application_configuration = getApplicationConfiguration({ application_uid });
+    ze.application_configuration = withRequestIdentity(builderIdentity, () =>
+      getApplicationConfiguration({ application_uid })
+    );
 
     ze.application_configuration
       .then((appConfig) => {
@@ -496,9 +503,15 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
     }
 
     const application_uid = ze.application_uid;
+    // The requests that create a build carry who is building but no build ID: `build_id`
+    // still holds the previous generation's. The scope is entered synchronously so these
+    // requests keep starting alongside the application configuration request.
+    const builderIdentity = engineBuilderIdentity(ze);
 
     ze_log.init('Initializing: loading of hash list');
-    const hashList = get_hash_list(application_uid);
+    const hashList = withRequestIdentity(builderIdentity, () =>
+      get_hash_list(application_uid)
+    );
     ze.hash_list = hashList;
     hashList
       .then((hash_set) => {
@@ -512,7 +525,9 @@ https://docs.zephyr-cloud.io/features/remote-dependencies`,
       .catch((err) => ze_log.app(`Failed to get hash list: ${err}`));
 
     ze_log.init('Initializing: loading of build id');
-    const buildId = getBuildId(application_uid);
+    const buildId = withRequestIdentity(builderIdentity, () =>
+      getBuildId(application_uid)
+    );
     ze.build_id = buildId;
     buildId
       .then((buildId) => ze_log.app(`Loaded build id "${buildId}"`))

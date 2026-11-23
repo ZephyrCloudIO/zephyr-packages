@@ -38,6 +38,32 @@ async function settled<T>(
   }
 }
 
+/** Who is building: known from engine creation on, before any build ID exists. */
+export function engineBuilderIdentity(zephyr_engine: ZephyrEngine): RequestIdentity {
+  return {
+    builder: zephyr_engine.builder,
+    plugin: zephyr_engine.plugin_identity?.name,
+    pluginVersion: zephyr_engine.plugin_identity?.version,
+  };
+}
+
+/** The application's edge origins, which are Zephyr endpoints. */
+function applicationOrigins(
+  appConfig: Awaited<ZephyrEngine['application_configuration']> | undefined
+): string[] {
+  return [
+    appConfig?.EDGE_URL,
+    appConfig?.BUILD_ID_ENDPOINT,
+    ...Object.values(appConfig?.ENVIRONMENTS ?? {}).map((env) => env?.edgeUrl),
+  ].filter((origin): origin is string => typeof origin === 'string' && !!origin);
+}
+
+function buildIdHeaderValue(buildId: unknown): string | undefined {
+  return typeof buildId === 'string' || typeof buildId === 'number'
+    ? String(buildId)
+    : undefined;
+}
+
 /**
  * Identity for requests made on behalf of the engine's current build: its build ID and
  * the application's edge origins, which are Zephyr endpoints. Never rejects.
@@ -51,21 +77,10 @@ export async function engineRequestIdentity(
     settled(zephyr_engine.application_configuration),
   ]);
 
-  const zephyrOrigins = [
-    appConfig?.EDGE_URL,
-    appConfig?.BUILD_ID_ENDPOINT,
-    ...Object.values(appConfig?.ENVIRONMENTS ?? {}).map((env) => env?.edgeUrl),
-  ].filter((origin): origin is string => typeof origin === 'string' && !!origin);
-
   return {
-    buildId:
-      typeof buildId === 'string' || typeof buildId === 'number'
-        ? String(buildId)
-        : undefined,
-    builder: zephyr_engine.builder,
-    plugin: zephyr_engine.plugin_identity?.name,
-    pluginVersion: zephyr_engine.plugin_identity?.version,
-    zephyrOrigins,
+    ...engineBuilderIdentity(zephyr_engine),
+    buildId: buildIdHeaderValue(buildId),
+    zephyrOrigins: applicationOrigins(appConfig),
   };
 }
 
@@ -103,15 +118,7 @@ export async function withAvailableEngineRequestIdentity<T>(
 ): Promise<T> {
   const buildId = await peek(zephyr_engine.build_id);
   return withRequestIdentity(
-    {
-      buildId:
-        typeof buildId === 'string' || typeof buildId === 'number'
-          ? String(buildId)
-          : undefined,
-      builder: zephyr_engine.builder,
-      plugin: zephyr_engine.plugin_identity?.name,
-      pluginVersion: zephyr_engine.plugin_identity?.version,
-    },
+    { ...engineBuilderIdentity(zephyr_engine), buildId: buildIdHeaderValue(buildId) },
     fn
   );
 }
@@ -156,7 +163,8 @@ export function reportBuildFailure(
         log({
           level: 'error',
           action: 'build:failed',
-          message: ZephyrError.format(error),
+          // A remote reader can't open the local error file, so don't write or cite one.
+          message: ZephyrError.format(error, { errorFile: false }),
           // The plugin prints or rethrows the error itself; don't print it twice.
           remoteOnly: true,
           error,

@@ -206,7 +206,12 @@ export class ZephyrError<
     return ZeErrors.ERR_UNKNOWN;
   }
 
-  static format(error: unknown): string {
+  /**
+   * Formats an error for display. By default it also writes the complete details to a
+   * temporary file and points to it. Pass `errorFile: false` for messages that leave the
+   * machine, such as remote log events, where a local path is meaningless.
+   */
+  static format(error: unknown, options: { errorFile?: boolean } = {}): string {
     const zeError = ZephyrError.is(error)
       ? error
       : new ZephyrError(ZeErrors.ERR_UNKNOWN, {
@@ -214,7 +219,7 @@ export class ZephyrError<
           cause: error,
         });
 
-    const tmpFile = write_error_file(zeError);
+    const tmpFile = options.errorFile === false ? undefined : write_error_file(zeError);
 
     // Strings don't need to be inspected.
     const sanitizedData = sanitizeForLogging(zeError.data);

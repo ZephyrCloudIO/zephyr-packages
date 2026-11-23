@@ -108,6 +108,9 @@ describe('build:failed reporting', () => {
         cause_status: 413,
       },
     });
+    // A remote reader can't open the local error-details file, so it isn't cited.
+    expect(event?.['message']).toMatch(/^ZE\d{5}: /);
+    expect(event?.['message']).not.toContain('Complete error details');
     // The plugin prints the error itself; the report must not print it again.
     expect(console.error).not.toHaveBeenCalled();
   });

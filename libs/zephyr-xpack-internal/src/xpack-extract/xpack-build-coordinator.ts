@@ -326,9 +326,9 @@ export class XPackBuildCoordinator {
           this.preparationPromises.delete(identity.generation);
         }
       },
-      onFailure: (identity) => {
+      onFailure: (identity, error) => {
         this.preparationPromises.delete(identity.generation);
-        engine.build_failed();
+        void engine.build_failed(error);
       },
     });
   }

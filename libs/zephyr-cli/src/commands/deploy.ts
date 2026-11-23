@@ -98,7 +98,7 @@ export async function deployCommand(
     assetsMap = await extractAssetsFromDirectory(directoryPath, { target });
   } catch (error: unknown) {
     if (zephyr_engine.hasActiveBuild) {
-      zephyr_engine.build_failed();
+      await zephyr_engine.build_failed(error);
     }
     throw error;
   }

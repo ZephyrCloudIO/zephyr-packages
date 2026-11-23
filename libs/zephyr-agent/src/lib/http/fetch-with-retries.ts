@@ -8,6 +8,7 @@ import {
   createUnreachableError,
   isUnreachableStatus,
 } from './http-failure';
+import { getRequestIdentityHeaders } from './request-identity';
 import {
   redactString,
   redactUrl,
@@ -29,6 +30,26 @@ const RETRY_ERROR_CODES = [
   'EPIPE',
 ];
 const RETRY_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
+
+function toHeaderRecord(headers: HeadersInit | undefined): Record<string, string> {
+  const record: Record<string, string> = {};
+  if (!headers) return record;
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      record[key] = value;
+    });
+  } else if (Array.isArray(headers)) {
+    for (const [key, value] of headers) record[key] = value;
+  } else {
+    Object.assign(record, headers);
+  }
+  return record;
+}
+
+function hasHeader(headers: Record<string, string>, name: string): boolean {
+  const lowerName = name.toLowerCase();
+  return Object.keys(headers).some((key) => key.toLowerCase() === lowerName);
+}
 
 function hasIdempotencyKey(headers: HeadersInit | undefined): boolean {
   if (!headers) return false;
@@ -315,22 +336,13 @@ export async function fetchWithRetries(
     ...(options.signal ? { signal: options.signal } : {}),
   };
 
-  if (options.headers) {
-    if (options.headers instanceof Headers) {
-      const headersRecord: Record<string, string> = {};
-      options.headers.forEach((value, key) => {
-        headersRecord[key] = value;
-      });
-      axiosConfig.headers = headersRecord;
-    } else if (Array.isArray(options.headers)) {
-      const headersRecord: Record<string, string> = {};
-      options.headers.forEach(([key, value]) => {
-        headersRecord[key] = value;
-      });
-      axiosConfig.headers = headersRecord;
-    } else {
-      axiosConfig.headers = options.headers as AxiosRequestConfig['headers'];
-    }
+  const headers = toHeaderRecord(options.headers);
+  // Identity headers go to Zephyr endpoints only, and never replace a caller's header.
+  for (const [name, value] of Object.entries(getRequestIdentityHeaders(url))) {
+    if (!hasHeader(headers, name)) headers[name] = value;
+  }
+  if (options.headers || Object.keys(headers).length > 0) {
+    axiosConfig.headers = headers as AxiosRequestConfig['headers'];
   }
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

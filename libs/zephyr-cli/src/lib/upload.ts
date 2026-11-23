@@ -64,6 +64,10 @@ export async function uploadAssets(options: UploadOptions): Promise<UploadResult
     return result;
   } catch (error) {
     logFn('error', ZephyrError.format(error));
+    if (buildInProgress && zephyr_engine.hasActiveBuild !== false) {
+      buildInProgress = false;
+      await zephyr_engine.build_failed(error);
+    }
     throw error;
   } finally {
     if (buildInProgress && zephyr_engine.hasActiveBuild !== false) {

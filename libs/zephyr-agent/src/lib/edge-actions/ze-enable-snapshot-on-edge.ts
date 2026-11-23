@@ -17,7 +17,11 @@ export async function zeEnableSnapshotOnEdge(
   const { pluginOptions, envs_jwt, zeStart } = props;
 
   ze_log.snapshot('Enabling snapshot on edge...');
-  const logEvent = logger(pluginOptions);
+  const logEvent = logger({
+    application_uid: pluginOptions.application_uid,
+    buildId: pluginOptions.zeConfig?.buildId,
+    git: pluginOptions.git,
+  });
 
   await uploadEnvs({
     body: envs_jwt,
@@ -25,23 +29,26 @@ export async function zeEnableSnapshotOnEdge(
     logEvent,
   });
 
-  const urls = envs_jwt.urls
-    .reverse()
+  const deployedUrls = envs_jwt.urls.reverse();
+  const urls = deployedUrls
     .map(
       (url, i) =>
         `${brightBlueBgName}  -> ${i === 0 ? cyanBright(url) : blackBright(url)}`
     )
     .join('\n');
 
+  const durationMs = Date.now() - zeStart;
   logEvent(
     {
       level: 'info',
       action: 'build:deploy:done',
-      message: `Deployment took ${yellow(`${Date.now() - zeStart}`)}ms`,
+      data: { outcome: 'deployed', duration_ms: durationMs },
+      message: `Deployment took ${yellow(`${durationMs}`)}ms`,
     },
     {
       level: 'trace',
       action: 'deploy:url',
+      data: { urls: deployedUrls },
       message: `Deploying to edge:\n${urls}\n`,
     }
   );

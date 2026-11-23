@@ -26,6 +26,7 @@
     "dist",
     "README.md",
     "LICENSE",
+    "schema",
     "!dist/**/*.map"
   ],
   "type": "commonjs",
@@ -53,6 +54,7 @@
         "default": "./dist/doctor/schema.js"
       }
     },
+    "./zephyr.config.schema.json": "./schema/zephyr.config.schema.json",
     "./package.json": "./package.json",
     "./*": "./*"
   },
@@ -68,8 +70,10 @@
     "test": "rstest run"
   },
   "dependencies": {
+    "ajv": "catalog:",
     "cosmiconfig": "catalog:",
     "jsonc-parser": "catalog:",
+    "picomatch": "catalog:",
     "zephyr-agent": "workspace:*",
     "zephyr-edge-contract": "workspace:*"
   },
@@ -77,6 +81,7 @@
     "@rslib/core": "catalog:rslib",
     "@rstest/core": "catalog:rstest",
     "@types/node": "catalog:typescript",
+    "@types/picomatch": "catalog:",
     "typescript": "catalog:typescript"
   }
 }

@@ -28,5 +28,9 @@ Federation metadata, infer release identity, or implement Marketplace,
 installation, update, or runtime policy. Callers supply ordinary static assets
 and explicitly configure ordinary adapter options such as CSR or SSR behavior.
 
+`ze-cli` applies its credential denylist (for example `.env` or `*.pem`) to `tap-app`
+too: a package output that holds such a file, or a symbolic link leading outside the
+folder, stops the publication instead of being skipped.
+
 Product consumers remain responsible for interpreting any files published in a
 `tap-app` snapshot.

@@ -353,7 +353,7 @@ catalogs:
       version: 2.2.2
     '@rspack/plugin-react-refresh':
       specifier: ^2.0.2
-      version: 2.0.2
+      version: 2.0.3
   rspress:
     '@rspress/core':
       specifier: ^2.0.17
@@ -1542,7 +1542,7 @@ importers:
         version: 2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23)
       '@rspack/plugin-react-refresh':
         specifier: catalog:rspack
-        version: 2.0.2(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.18.0)
+        version: 2.0.3(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.18.0)
       '@types/react':
         specifier: catalog:react19
         version: 19.2.18
@@ -7406,8 +7406,8 @@ packages:
       webpack-hot-middleware:
         optional: true
 
-  '@rspack/plugin-react-refresh@2.0.2':
-    resolution: {integrity: sha512-dGNZiCxQxgAUI9sah7gd8u+O7OJZRCmqtEJNDOd8xW5RqcieC86F7p5qcShyw6onH5pKf57evpr2VjGbaFGkZg==}
+  '@rspack/plugin-react-refresh@2.0.3':
+    resolution: {integrity: sha512-/K86+2fzdtGdqorm8IwxaouAr5uXFdn7yej0P6/JtuqVYEo9tAUMypGbepAZgt3ClVevn6sC8Oo+fUCLhR10zg==}
     peerDependencies:
       '@rspack/core': ^2.0.0
       react-refresh: '>=0.10.0 <1.0.0'
@@ -22375,7 +22375,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.0(@rsbuild/core@2.2.0-rc.0(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0))(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.18.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.18.0)
       react-refresh: 0.18.0
     optionalDependencies:
       '@rsbuild/core': 2.2.0-rc.0(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0)
@@ -22384,7 +22384,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.1(@rsbuild/core@2.2.0-rc.0(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0))(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
       react-refresh: 0.19.0
     optionalDependencies:
       '@rsbuild/core': 2.2.0-rc.0(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0)
@@ -22393,7 +22393,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.1(@rsbuild/core@2.2.11(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0))(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
       react-refresh: 0.19.0
     optionalDependencies:
       '@rsbuild/core': 2.2.11(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0)
@@ -22402,7 +22402,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.1(@rsbuild/core@2.2.11(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0))(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
       react-refresh: 0.19.0
     optionalDependencies:
       '@rsbuild/core': 2.2.11(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0)
@@ -22411,7 +22411,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.1(@rsbuild/core@2.2.3(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0))(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
       react-refresh: 0.19.0
     optionalDependencies:
       '@rsbuild/core': 2.2.3(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)
@@ -22420,7 +22420,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.1(@rsbuild/core@2.2.3(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0))(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
       react-refresh: 0.19.0
     optionalDependencies:
       '@rsbuild/core': 2.2.3(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0)
@@ -22429,7 +22429,7 @@ snapshots:
 
   '@rsbuild/plugin-react@2.1.1(@rsbuild/core@2.2.3(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0))(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))':
     dependencies:
-      '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
+      '@rspack/plugin-react-refresh': 2.0.3(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)
       react-refresh: 0.19.0
     optionalDependencies:
       '@rsbuild/core': 2.2.3(@module-federation/runtime-tools@2.9.3)(core-js@3.49.0)
@@ -22960,25 +22960,25 @@ snapshots:
       html-entities: 2.6.0
       react-refresh: 0.17.0
 
-  '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
+  '@rspack/plugin-react-refresh@2.0.3(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
     dependencies:
       react-refresh: 0.18.0
     optionalDependencies:
       '@rspack/core': 2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23)
 
-  '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)':
+  '@rspack/plugin-react-refresh@2.0.3(@rspack/core@2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23))(react-refresh@0.19.0)':
     dependencies:
       react-refresh: 0.19.0
     optionalDependencies:
       '@rspack/core': 2.2.2(@module-federation/runtime-tools@2.9.0)(@swc/helpers@0.5.23)
 
-  '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
+  '@rspack/plugin-react-refresh@2.0.3(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.18.0)':
     dependencies:
       react-refresh: 0.18.0
     optionalDependencies:
       '@rspack/core': 2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23)
 
-  '@rspack/plugin-react-refresh@2.0.2(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)':
+  '@rspack/plugin-react-refresh@2.0.3(@rspack/core@2.2.8(@module-federation/runtime-tools@2.9.3)(@swc/helpers@0.5.23))(react-refresh@0.19.0)':
     dependencies:
       react-refresh: 0.19.0
     optionalDependencies:

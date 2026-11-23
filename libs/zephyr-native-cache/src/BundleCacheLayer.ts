@@ -1,64 +1,52 @@
-import { CacheManager } from './CacheManager';
+import { CacheManager, type VerifiedArtifact } from './CacheManager';
 import { CacheEvents } from './events';
+import { NativeCacheLoadError } from './NativeCacheError';
 import NativeMFECache from './NativeMFECache';
+import { getBundleCacheKey } from './cache-key';
+import { normalizeSha256 } from './integrity';
 import type {
+  ArtifactOutcome,
+  BundleLoadResult,
   BundleMetadata,
   CacheStatusListener,
   CacheStatusSnapshot,
   CheckForUpdatesOptions,
   CheckForUpdatesResult,
+  ManifestOutcome,
+  ManifestRelease,
   MFECacheConfig,
+  NativeCacheFailureReason,
   UpdatePolicy,
 } from './types';
-import { ensureZephyrNativeCacheRefs } from './zephyr-global';
-import { getBundleCacheKey } from './cache-key';
-
-const LOG_PREFIX = '[MFE-Cache]';
 
 interface ManifestSource {
-  extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>;
+  release: ManifestRelease;
+  extractRelease: (manifest: unknown, manifestUrl: string) => ManifestRelease;
 }
 
 export class BundleCacheLayer {
   private cacheManager: CacheManager | null = null;
   private initPromise: Promise<void> | null = null;
   private config: MFECacheConfig;
-
-  // Bundle hash map: canonical content-sensitive bundle URL → expected hash
-  // Shared via globalThis.__ZEPHYR__.runtime.nativeCache.refs.bundleHashes
-  // for cross-instance access.
-  private bundleHashMap: Record<string, string>;
-
-  // Manifest sources for polling: manifestUrl → ManifestSource
+  private releasesByBundle = new Map<string, ManifestRelease>();
+  private releasesByManifest = new Map<string, ManifestRelease>();
+  private lastRegisteredRelease: ManifestRelease | null = null;
   private manifestSources = new Map<string, ManifestSource>();
+  private inflightLoads = new Map<string, Promise<BundleLoadResult>>();
+  private operationTail: Promise<void> = Promise.resolve();
+  private runtimePoisoned = false;
 
-  // Inflight dedup: prevents concurrent downloads of the same bundle URL
-  private inflightLoads = new Map<
-    string,
-    Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }>
-  >();
-
-  // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
-  private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+  private static DEFAULT_POLL_INTERVAL_MS = 5 * 60 * 1000;
   private static MANIFEST_FETCH_TIMEOUT_MS = 15_000;
 
-  // Event emitter for cache lifecycle events
   readonly events = new CacheEvents();
-
-  // Public status snapshot for UI/hooks/integration tooling
   private status: CacheStatusSnapshot;
   private statusListeners = new Set<CacheStatusListener>();
 
   constructor(config: MFECacheConfig = {}) {
     this.config = config;
-
-    // Share bundleHashMap via Zephyr global namespace for cross-instance access.
-    const nativeCacheRefs = ensureZephyrNativeCacheRefs();
-    nativeCacheRefs.bundleHashes ??= {};
-    this.bundleHashMap = nativeCacheRefs.bundleHashes;
-
     this.status = {
       remotes: {},
       pollingEnabled: false,
@@ -71,44 +59,82 @@ export class BundleCacheLayer {
     };
   }
 
-  // --- Registration (called by bundler integration layer) ---
+  registerManifestRelease(release: ManifestRelease): void {
+    const previous = this.releasesByManifest.get(release.manifestId);
+    if (previous) {
+      for (const artifact of previous.artifacts) {
+        this.releasesByBundle.delete(getBundleCacheKey(artifact.bundleUrl));
+      }
+    }
+    this.releasesByManifest.set(release.manifestId, release);
+    this.lastRegisteredRelease = release;
+    for (const artifact of release.artifacts) {
+      this.releasesByBundle.set(getBundleCacheKey(artifact.bundleUrl), release);
+    }
+  }
 
   registerBundleHash(bundleUrl: string, hash: string): void {
-    this.bundleHashMap[getBundleCacheKey(bundleUrl)] = hash;
+    const remoteName = this.inferRemoteName(bundleUrl);
+    this.registerManifestRelease({
+      manifestId: `legacy:${remoteName}`,
+      remoteName,
+      artifacts: [{ bundleUrl, expectedHash: hash, kind: 'container' }],
+    });
   }
 
   registerManifestSource(
     manifestUrl: string,
-    extractHashes: (manifest: any, manifestUrl: string) => Map<string, string>
+    extractRelease: (manifest: unknown, manifestUrl: string) => ManifestRelease,
+    release: ManifestRelease | null = this.lastRegisteredRelease
   ): void {
-    this.manifestSources.set(manifestUrl, {
-      extractHashes,
+    const registeredRelease = release ??
+      Array.from(new Set(this.releasesByBundle.values())).find((candidate) =>
+        candidate.artifacts.some((artifact) => artifact.bundleUrl.startsWith(manifestUrl))
+      ) ?? {
+        manifestId: manifestUrl,
+        remoteName: this.inferRemoteName(manifestUrl),
+        artifacts: [],
+      };
+    this.manifestSources.set(manifestUrl, { release: registeredRelease, extractRelease });
+  }
+
+  async getCachedManifest(
+    manifestUrl: string,
+    extractRelease: (manifest: unknown, manifestUrl: string) => ManifestRelease
+  ): Promise<unknown | null> {
+    return this.runExclusive(async () => {
+      if (this.runtimePoisoned || !NativeMFECache) return null;
+      await this.ensureInitialized();
+      const manifest = await this.cacheManager!.getActiveManifest(manifestUrl);
+      if (!manifest) return null;
+      try {
+        const release = extractRelease(manifest, manifestUrl);
+        return (await this.cacheManager!.activeMatchesRelease(release)) ? manifest : null;
+      } catch {
+        return null;
+      }
     });
   }
 
-  // --- Core loading ---
-
-  /**
-   * Load a bundle through the cache layer.
-   *
-   * - 'cache-hit': bundle loaded from disk cache (hash matched)
-   * - 'downloaded': bundle freshly downloaded, verified, cached, and eval'd
-   * - 'skipped': no expected hash, verification failed, or error — caller should fallback
-   */
-  async loadBundle(
-    bundleUrl: string
-  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
-    if (!NativeMFECache) return { status: 'skipped' };
-
-    await this.ensureInitialized();
-
+  async loadBundle(bundleUrl: string): Promise<BundleLoadResult> {
     const key = getBundleCacheKey(bundleUrl);
-
-    // Deduplicate concurrent loads of the same bundle
     const inflight = this.inflightLoads.get(key);
     if (inflight) return inflight;
 
-    const load = this.doLoadBundle(bundleUrl, key);
+    const load = this.runExclusive(async () => {
+      if (this.runtimePoisoned) {
+        throw new NativeCacheLoadError(
+          this.failureOutcome(bundleUrl, 'runtime-poisoned')
+        );
+      }
+      if (!NativeMFECache) {
+        throw new NativeCacheLoadError(
+          this.failureOutcome(bundleUrl, 'native-unavailable')
+        );
+      }
+      await this.ensureInitialized();
+      return this.doLoadBundle(bundleUrl, key);
+    });
     this.inflightLoads.set(key, load);
     try {
       return await load;
@@ -117,139 +143,106 @@ export class BundleCacheLayer {
     }
   }
 
-  private async doLoadBundle(
-    bundleUrl: string,
-    bundleUrlNoQuery: string
-  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
-    try {
-      const expectedHash = this.bundleHashMap[bundleUrlNoQuery] as string | undefined;
-
-      if (expectedHash) {
-        return this.loadBundleWithVerification(bundleUrl, expectedHash);
-      }
-
-      // No hash — skip cache, fetch fresh. Serializer will compute hashes
-      // for next load.
-      console.info(`${LOG_PREFIX} skip (no hash): ${bundleUrlNoQuery}`);
-      this.recordBundleLoad(
-        bundleUrl,
-        this.inferRemoteName(bundleUrl),
-        'skipped',
-        undefined
-      );
-      return { status: 'skipped' };
-    } catch (cacheError) {
-      console.warn(`${LOG_PREFIX} cache error, falling back to network:`, cacheError);
-      this.recordBundleLoad(
-        bundleUrl,
-        this.inferRemoteName(bundleUrl),
-        'skipped',
-        undefined
-      );
-      return { status: 'skipped' };
-    }
-  }
-
-  // --- Polling: manifest re-check and pre-download ---
-
-  /**
-   * Check all known manifests for updated bundles and pre-download them. Returns stats
-   * about how many bundles were checked and updated.
-   */
   async checkForUpdates(
     options: CheckForUpdatesOptions = {}
   ): Promise<CheckForUpdatesResult> {
     if (!NativeMFECache || this.isCheckingUpdates) {
-      return { updated: 0, checked: 0, applied: false };
+      return { updated: 0, checked: 0, applied: false, outcomes: [] };
     }
 
-    const policy: UpdatePolicy = options.policy ?? 'downloadOnly';
     this.isCheckingUpdates = true;
     this.status.isPolling = true;
     this.notifyStatusChange();
     this.events.emitPollStart();
-    let updated = 0;
-    let checked = 0;
-    let applied = false;
 
-    try {
-      await this.ensureInitialized();
+    return this.runExclusive(async () => {
+      const policy: UpdatePolicy = options.policy ?? 'downloadOnly';
+      let updated = 0;
+      let checked = 0;
+      let applied = false;
+      const outcomes: ManifestOutcome[] = [];
 
-      if (!this.manifestSources.size) {
-        return { updated: 0, checked: 0, applied: false };
-      }
-
-      for (const [manifestUrl, source] of this.manifestSources) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(
-            () => controller.abort(),
-            BundleCacheLayer.MANIFEST_FETCH_TIMEOUT_MS
-          );
-          let resp: Response;
+      try {
+        await this.ensureInitialized();
+        for (const [manifestUrl, source] of this.manifestSources) {
           try {
-            resp = await fetch(manifestUrl, { signal: controller.signal });
-          } finally {
-            clearTimeout(timeout);
-          }
-          if (!resp.ok) {
-            console.warn(
-              `${LOG_PREFIX} manifest fetch failed: ${manifestUrl} → HTTP ${resp.status}`
+            const controller = new AbortController();
+            const timeout = setTimeout(
+              () => controller.abort(),
+              BundleCacheLayer.MANIFEST_FETCH_TIMEOUT_MS
             );
-            continue;
-          }
-          const manifest = await resp.json();
-
-          // Extract all bundle URLs (container + exposed + shared) from manifest
-          const newHashes = source.extractHashes(manifest, manifestUrl);
-
-          for (const [bundleUrl, newHash] of newHashes) {
-            checked++;
-
-            // Update hash map so subsequent loadBundle() calls use the latest hash.
-            // loadBundle() uses the same canonical content-sensitive key.
-            this.bundleHashMap[getBundleCacheKey(bundleUrl)] = newHash;
-
-            const remoteName = this.inferRemoteName(bundleUrl);
-            const didUpdate = await this.cacheManager!.preDownloadBundle(
-              bundleUrl,
-              newHash
-            );
-            if (didUpdate) {
-              updated++;
-              this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
-              if (!this.status.pendingUpdates.includes(remoteName)) {
-                this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
-                this.notifyStatusChange();
-              }
-              this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
+            let response: Response;
+            try {
+              response = await fetch(manifestUrl, { signal: controller.signal });
+            } finally {
+              clearTimeout(timeout);
             }
+            if (!response.ok) {
+              outcomes.push(this.failedPollOutcome(source.release, 'http-failure'));
+              continue;
+            }
+
+            const release = source.extractRelease(await response.json(), manifestUrl);
+            source.release = release;
+            checked += release.artifacts.length;
+            const outcome = await this.cacheManager!.stageGeneration(release);
+            outcomes.push(outcome);
+            if (outcome.status !== 'staged') continue;
+
+            updated += release.artifacts.length;
+            if (!this.status.pendingUpdates.includes(release.remoteName)) {
+              this.status.pendingUpdates = [
+                ...this.status.pendingUpdates,
+                release.remoteName,
+              ];
+              this.notifyStatusChange();
+            }
+            for (const artifact of release.artifacts) {
+              this.events.emitUpdateAvailable(
+                artifact.bundleUrl,
+                release.remoteName,
+                undefined,
+                artifact.expectedHash ?? ''
+              );
+              this.events.emitUpdateDownloaded(
+                artifact.bundleUrl,
+                release.remoteName,
+                artifact.expectedHash ?? ''
+              );
+            }
+          } catch (error) {
+            const reason =
+              error &&
+              typeof error === 'object' &&
+              'code' in error &&
+              (error as { code?: unknown }).code === 'INVALID_MANIFEST'
+                ? 'invalid-manifest'
+                : error &&
+                    typeof error === 'object' &&
+                    'name' in error &&
+                    (error as { name?: unknown }).name === 'AbortError'
+                  ? 'timeout'
+                  : 'network-failure';
+            outcomes.push(this.failedPollOutcome(source.release, reason));
           }
-        } catch (manifestError) {
-          console.warn(`${LOG_PREFIX} manifest error for ${manifestUrl}`, manifestError);
-          // Non-critical: network error for this manifest, continue with others
         }
-      }
 
-      if (updated > 0 && policy === 'downloadAndApply') {
-        // Clear pendingUpdates and notify BEFORE triggering the native reload.
-        // NativeMFECache.restart() tears down the JS context, so any state
-        // mutation or listener invocation after applyDownloadedUpdates() may
-        // never run. Synchronous listeners observe the clean snapshot here.
-        this.status.pendingUpdates = [];
+        if (updated > 0 && policy === 'downloadAndApply') {
+          this.status.pendingUpdates = [];
+          this.notifyStatusChange();
+          applied = this.applyDownloadedUpdates();
+        }
+      } finally {
+        this.isCheckingUpdates = false;
+        this.status.isPolling = false;
+        this.status.lastPollAt = Date.now();
+        this.status.lastPollResult = { checked, updated };
         this.notifyStatusChange();
-        applied = this.applyDownloadedUpdates();
+        this.events.emitPollComplete(checked, updated);
       }
-    } finally {
-      this.isCheckingUpdates = false;
-      this.status.isPolling = false;
-      this.status.lastPollAt = Date.now();
-      this.status.lastPollResult = { checked, updated };
-      this.notifyStatusChange();
-      this.events.emitPollComplete(checked, updated);
-    }
 
-    return { updated, checked, applied };
+      return { updated, checked, applied, outcomes };
+    });
   }
 
   startPolling(intervalMs?: number): void {
@@ -276,15 +269,64 @@ export class BundleCacheLayer {
       this.pollTimer = null;
     }
     this.status.pollingEnabled = false;
-    this.status.isPolling = false;
     this.notifyStatusChange();
   }
 
-  // --- Public API for UI layer ---
-
   async clearCache(): Promise<void> {
-    await this.ensureInitialized();
-    await this.cacheManager!.invalidateAllCaches();
+    await this.runExclusive(async () => {
+      await this.ensureInitialized();
+      await this.cacheManager!.invalidateAllCaches();
+    });
+  }
+
+  async rollback(remoteNameOrManifestId: string): Promise<ManifestOutcome> {
+    return this.runExclusive(async () => {
+      await this.ensureInitialized();
+      const identity =
+        this.cacheManager!.getPreviousGenerationIdentity(remoteNameOrManifestId);
+      try {
+        if (identity) {
+          const previous = await this.cacheManager!.getVerifiedPreviousGeneration(
+            identity.manifestId
+          );
+          for (const artifact of previous) {
+            try {
+              await this.validateSource(artifact.artifact.bundleUrl, artifact.source);
+            } catch (error) {
+              throw this.withBundleUrl(error, artifact.artifact.bundleUrl);
+            }
+          }
+        }
+      } catch (error) {
+        const failedUrl = this.failureBundleUrl(error);
+        return {
+          manifestId: identity?.manifestId ?? remoteNameOrManifestId,
+          remoteName: identity?.remoteName ?? remoteNameOrManifestId,
+          status: 'failed',
+          reason: 'rollback-failure',
+          artifacts: failedUrl
+            ? [
+                {
+                  manifestId: identity?.manifestId ?? remoteNameOrManifestId,
+                  remoteName: identity?.remoteName ?? remoteNameOrManifestId,
+                  bundleUrl: failedUrl,
+                  status: 'failed',
+                  reason: this.failureReason(error),
+                },
+              ]
+            : [],
+        };
+      }
+      const outcome = await this.cacheManager!.rollbackGeneration(remoteNameOrManifestId);
+      if (outcome.status === 'rolled-back') {
+        this.status.pendingUpdates = this.status.pendingUpdates.filter(
+          (name) => name !== outcome.remoteName
+        );
+        this.notifyStatusChange();
+        this.restartAfterRejectedExecution();
+      }
+      return outcome;
+    });
   }
 
   getLoadedBundles(): BundleMetadata[] {
@@ -292,12 +334,10 @@ export class BundleCacheLayer {
   }
 
   getStatus(): CacheStatusSnapshot {
-    const remotes = Object.fromEntries(
-      Object.entries(this.status.remotes).map(([key, remote]) => [key, { ...remote }])
-    );
-
     return {
-      remotes,
+      remotes: Object.fromEntries(
+        Object.entries(this.status.remotes).map(([key, remote]) => [key, { ...remote }])
+      ),
       pollingEnabled: this.status.pollingEnabled,
       pollIntervalMs: this.status.pollIntervalMs,
       isPolling: this.status.isPolling,
@@ -309,11 +349,6 @@ export class BundleCacheLayer {
     };
   }
 
-  /**
-   * Subscribe to status changes. The listener fires on every status mutation; it is NOT
-   * invoked synchronously at subscribe time — call `getStatus()` yourself if you need the
-   * current snapshot before the next change.
-   */
   subscribeStatus(listener: CacheStatusListener): () => void {
     this.statusListeners.add(listener);
     return () => {
@@ -321,15 +356,323 @@ export class BundleCacheLayer {
     };
   }
 
-  // --- Private helpers ---
+  private async doLoadBundle(bundleUrl: string, key: string): Promise<BundleLoadResult> {
+    const release = this.releasesByBundle.get(key);
+    const artifact = release?.artifacts.find(
+      (candidate) => getBundleCacheKey(candidate.bundleUrl) === key
+    );
+    const expectedHash = normalizeSha256(artifact?.expectedHash);
+    const activeIdentity = this.cacheManager!.getActiveGenerationIdentity(bundleUrl);
+
+    if (release && !expectedHash) {
+      const reason: NativeCacheFailureReason =
+        artifact?.expectedHash == null || artifact.expectedHash === ''
+          ? 'missing-hash'
+          : 'malformed-hash';
+      throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, reason, release));
+    }
+
+    if (
+      !release &&
+      (!activeIdentity || this.releasesByManifest.has(activeIdentity.manifestId))
+    ) {
+      throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, 'missing-hash'));
+    }
+
+    let active: VerifiedArtifact | null = null;
+    try {
+      active = await this.cacheManager!.getVerifiedActiveBundle(
+        bundleUrl,
+        release?.manifestId
+      );
+    } catch {
+      const recovered = await this.recoverPrevious(
+        bundleUrl,
+        release,
+        'corrupt-cache',
+        activeIdentity?.manifestId
+      );
+      if (recovered) return recovered;
+      try {
+        await this.cacheManager!.discardActiveGenerationForBundle(bundleUrl);
+      } catch {
+        throw new NativeCacheLoadError(
+          this.failureOutcome(bundleUrl, 'storage-failure', release)
+        );
+      }
+    }
+
+    if (!release || !artifact) {
+      if (active) {
+        try {
+          return await this.evaluateKnownGood(bundleUrl, active);
+        } catch {
+          await this.rollbackAfterEvaluationFailure(active.generation.manifestId);
+          throw new NativeCacheLoadError(
+            this.failureOutcome(bundleUrl, 'evaluation-failure')
+          );
+        }
+      }
+      throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, 'missing-hash'));
+    }
+
+    if (active?.artifact.bundleHash === expectedHash) {
+      try {
+        return await this.evaluateKnownGood(bundleUrl, active);
+      } catch {
+        await this.rollbackAfterEvaluationFailure(release.manifestId);
+        throw new NativeCacheLoadError(
+          this.failureOutcome(bundleUrl, 'evaluation-failure', release)
+        );
+      }
+    }
+
+    const staged = await this.cacheManager!.stageGeneration(release);
+    if (staged.status === 'failed') {
+      if (active) {
+        try {
+          const result = await this.evaluateKnownGood(bundleUrl, active);
+          result.candidateOutcome =
+            staged.artifacts.find((outcome) => outcome.bundleUrl === key) ??
+            this.failureOutcome(bundleUrl, staged.reason ?? 'storage-failure', release);
+          return result;
+        } catch {
+          await this.rollbackAfterEvaluationFailure(active.generation.manifestId);
+          throw new NativeCacheLoadError(
+            this.failureOutcome(bundleUrl, 'evaluation-failure', release)
+          );
+        }
+      }
+      throw new NativeCacheLoadError(
+        staged.artifacts.find((outcome) => outcome.bundleUrl === key) ??
+          this.failureOutcome(bundleUrl, staged.reason ?? 'storage-failure', release)
+      );
+    }
+
+    let stagedArtifacts: VerifiedArtifact[];
+    try {
+      stagedArtifacts = await this.cacheManager!.getVerifiedStagedGeneration(
+        release.manifestId
+      );
+      if (stagedArtifacts.length !== release.artifacts.length) {
+        throw new Error('Staged generation is incomplete');
+      }
+      for (const stagedArtifact of stagedArtifacts) {
+        try {
+          await this.validateSource(
+            stagedArtifact.artifact.bundleUrl,
+            stagedArtifact.source
+          );
+        } catch (error) {
+          throw this.withBundleUrl(error, stagedArtifact.artifact.bundleUrl);
+        }
+      }
+    } catch (error) {
+      const failedUrl = this.failureBundleUrl(error) ?? bundleUrl;
+      const validationReason = this.failureReason(error);
+      try {
+        await this.cacheManager!.rejectStagedGeneration(
+          release.manifestId,
+          validationReason
+        );
+      } catch {
+        // The candidate remains inert when cleanup persistence fails.
+      }
+      if (active) {
+        try {
+          const result = await this.evaluateKnownGood(bundleUrl, active);
+          result.candidateOutcome = this.failureOutcome(
+            failedUrl,
+            validationReason,
+            release
+          );
+          return result;
+        } catch {
+          await this.rollbackAfterEvaluationFailure(active.generation.manifestId);
+        }
+      }
+      throw new NativeCacheLoadError(
+        this.failureOutcome(failedUrl, validationReason, release)
+      );
+    }
+
+    const candidate = stagedArtifacts.find(
+      (item) =>
+        item.artifact.bundleUrl === key && item.artifact.bundleHash === expectedHash
+    );
+    if (!candidate) {
+      throw new NativeCacheLoadError(
+        this.failureOutcome(bundleUrl, 'storage-failure', release)
+      );
+    }
+
+    try {
+      await this.evalSource(candidate.source);
+    } catch {
+      try {
+        await this.cacheManager!.rejectStagedGeneration(
+          release.manifestId,
+          'evaluation-failure'
+        );
+      } catch {
+        // Preserve the evaluation failure; the staged generation is still inactive.
+      }
+      this.restartAfterRejectedExecution();
+      throw new NativeCacheLoadError(
+        this.failureOutcome(bundleUrl, 'evaluation-failure', release)
+      );
+    }
+
+    const activation = await this.cacheManager!.activateStagedGeneration(
+      release.manifestId
+    );
+    if (activation.status !== 'activated') {
+      this.restartAfterRejectedExecution();
+      throw new NativeCacheLoadError(
+        activation.artifacts.find((artifact) => artifact.status === 'failed') ??
+          this.failureOutcome(
+            bundleUrl,
+            activation.reason ?? 'activation-failure',
+            release
+          )
+      );
+    }
+
+    const outcome =
+      activation.artifacts.find((item) => item.bundleUrl === key) ??
+      this.failureOutcome(bundleUrl, 'activation-failure', release);
+    this.recordBundleLoad(
+      bundleUrl,
+      this.inferRemoteName(bundleUrl),
+      'downloaded',
+      expectedHash!
+    );
+    return { status: 'downloaded', outcome };
+  }
+
+  private async evaluateKnownGood(
+    bundleUrl: string,
+    verified: VerifiedArtifact
+  ): Promise<BundleLoadResult> {
+    await this.validateSource(bundleUrl, verified.source);
+    await this.evalSource(verified.source);
+    const outcome: ArtifactOutcome = {
+      manifestId: verified.generation.manifestId,
+      remoteName: verified.generation.remoteName,
+      bundleUrl: verified.artifact.bundleUrl,
+      status: 'cache-hit',
+      generationId: verified.generation.generationId,
+    };
+    this.recordBundleLoad(
+      bundleUrl,
+      this.inferRemoteName(bundleUrl),
+      'cache-hit',
+      verified.artifact.bundleHash
+    );
+    return { status: 'cache-hit', outcome };
+  }
+
+  private async recoverPrevious(
+    bundleUrl: string,
+    release: ManifestRelease | undefined,
+    reason: NativeCacheFailureReason,
+    manifestId?: string
+  ): Promise<BundleLoadResult | null> {
+    const targetManifestId = release?.manifestId ?? manifestId;
+    if (!targetManifestId) return null;
+    let previous: VerifiedArtifact[];
+    try {
+      previous = await this.cacheManager!.getVerifiedPreviousGeneration(targetManifestId);
+      if (!previous.length) return null;
+      for (const artifact of previous) {
+        await this.validateSource(artifact.artifact.bundleUrl, artifact.source);
+      }
+    } catch {
+      return null;
+    }
+
+    const rollback = await this.cacheManager!.rollbackGeneration(targetManifestId);
+    if (rollback.status !== 'rolled-back') return null;
+    this.restartAfterRejectedExecution();
+    throw new NativeCacheLoadError(this.failureOutcome(bundleUrl, reason, release));
+  }
+
+  private async rollbackAfterEvaluationFailure(manifestId: string): Promise<void> {
+    try {
+      await this.cacheManager!.rejectActiveGenerationAndRollback(
+        manifestId,
+        'evaluation-failure'
+      );
+    } finally {
+      this.restartAfterRejectedExecution();
+    }
+  }
+
+  private async validateSource(bundleUrl: string, source: string): Promise<void> {
+    if (this.config.validateBundle) {
+      await this.config.validateBundle(bundleUrl, source);
+      return;
+    }
+    // Compile without invoking the bundle so every staged artifact receives a
+    // side-effect-free syntax smoke check before generation promotion.
+    Function(source);
+  }
+
+  private async evalSource(source: string): Promise<void> {
+    // eslint-disable-next-line no-eval
+    eval(source);
+  }
+
+  private restartAfterRejectedExecution(): void {
+    this.runtimePoisoned = true;
+    try {
+      NativeMFECache?.restart();
+    } catch {
+      // The typed load failure still prevents further candidate execution.
+    }
+  }
+
+  private async ensureInitialized(): Promise<void> {
+    if (this.cacheManager) return;
+    if (!this.initPromise) {
+      const initialization = (async () => {
+        const {
+          enablePolling,
+          pollIntervalMs,
+          forceCacheInDev,
+          validateBundle,
+          ...cacheConfig
+        } = this.config;
+        const manager = new CacheManager(cacheConfig);
+        await manager.initialize();
+        this.cacheManager = manager;
+      })();
+      this.initPromise = initialization;
+    }
+    try {
+      await this.initPromise;
+    } catch (error) {
+      this.initPromise = null;
+      throw error;
+    }
+  }
+
+  private runExclusive<T>(operation: () => Promise<T>): Promise<T> {
+    const run = this.operationTail.then(operation, operation);
+    this.operationTail = run.then(
+      () => undefined,
+      () => undefined
+    );
+    return run;
+  }
 
   private notifyStatusChange(): void {
     const snapshot = this.getStatus();
     for (const listener of this.statusListeners) {
       try {
         listener(snapshot);
-      } catch (error) {
-        console.warn(`${LOG_PREFIX} status listener failed`, error);
+      } catch {
+        console.warn('[MFE-Cache] status listener failed');
       }
     }
   }
@@ -359,110 +702,73 @@ export class BundleCacheLayer {
   private applyDownloadedUpdates(): boolean {
     if (!NativeMFECache) return false;
     try {
-      // restart() reloads the JS context; control rarely returns here
-      // before the runtime is torn down. The `true` return is informational
-      // for synchronous callers — don't rely on observing it after a reload.
       NativeMFECache.restart();
       return true;
-    } catch (error) {
-      console.warn(`${LOG_PREFIX} failed to apply downloaded updates`, error);
+    } catch {
+      console.warn('[MFE-Cache] failed to apply downloaded updates');
       return false;
     }
   }
 
-  private async loadBundleWithVerification(
+  private failureOutcome(
     bundleUrl: string,
-    expectedHash: string
-  ): Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }> {
-    const cached = await this.cacheManager!.getCachedBundle(bundleUrl);
-
-    const cacheValid =
-      cached && cached.metadata.bundleHash && cached.metadata.bundleHash === expectedHash;
-
-    if (cacheValid) {
-      console.info(`${LOG_PREFIX} cache hit: ${getBundleCacheKey(bundleUrl)}`);
-      this.cacheManager!.updateLastUsedAt(bundleUrl).catch(() => {});
-      await this.evalFromFile(cached.filePath);
-      this.recordBundleLoad(
-        bundleUrl,
-        this.inferRemoteName(bundleUrl),
-        'cache-hit',
-        expectedHash
-      );
-      return { status: 'cache-hit' };
-    }
-
-    console.info(`${LOG_PREFIX} cache miss: ${getBundleCacheKey(bundleUrl)}`);
-    const remoteName = this.inferRemoteName(bundleUrl);
-    const destPath = await this.cacheManager!.getBundleDestPath(
+    reason: NativeCacheFailureReason,
+    release?: ManifestRelease
+  ): ArtifactOutcome {
+    const remoteName = release?.remoteName ?? this.inferRemoteName(bundleUrl);
+    return {
+      manifestId: release?.manifestId ?? remoteName,
       remoteName,
-      bundleUrl,
-      expectedHash
-    );
-    const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
-
-    if (sha256 !== expectedHash) {
-      try {
-        await NativeMFECache!.deleteFile(destPath);
-      } catch {
-        /* ok */
-      }
-      this.recordBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
-      return { status: 'skipped' };
-    }
-
-    await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
-      bundleUrl,
-      bundleHash: sha256,
-    });
-    await this.evalFromFile(destPath);
-    this.recordBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
-    return { status: 'downloaded' };
+      bundleUrl: getBundleCacheKey(bundleUrl),
+      status: 'failed',
+      reason,
+    };
   }
 
-  private async ensureInitialized(): Promise<void> {
-    if (this.cacheManager) return;
-    if (!this.initPromise) {
-      const initialization = (async () => {
-        const { enablePolling, pollIntervalMs, ...cacheConfig } = this.config;
-        const cm = new CacheManager(cacheConfig);
-        await cm.initialize();
-        this.cacheManager = cm;
-      })();
-      this.initPromise = initialization;
-    }
-    try {
-      await this.initPromise;
-    } catch (error) {
-      this.initPromise = null;
-      throw error;
-    }
+  private failureBundleUrl(error: unknown): string | undefined {
+    return error && typeof error === 'object' && 'bundleUrl' in error
+      ? String((error as { bundleUrl?: unknown }).bundleUrl)
+      : undefined;
   }
 
-  /**
-   * Read bundle file and eval its source code. All callers `await` this, so the microtask
-   * gap from the async read is not user-visible.
-   */
-  private async evalFromFile(filePath: string): Promise<void> {
-    const source = await NativeMFECache!.readFile(filePath, 'utf8');
-    // eslint-disable-next-line no-eval
-    eval(source);
+  private failureReason(error: unknown): NativeCacheFailureReason {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? String((error as { code?: unknown }).code)
+        : '';
+    if (code === 'HASH_MISMATCH') return 'corrupt-cache';
+    if (code === 'READ_ERROR' || code === 'SHA256_ERROR') return 'storage-failure';
+    return 'evaluation-failure';
   }
 
-  /** Infer a remote name from a bundle URL for storage path generation */
+  private withBundleUrl(error: unknown, bundleUrl: string): Error {
+    const failure =
+      error instanceof Error ? error : new Error('Bundle validation failed');
+    return Object.assign(failure, { bundleUrl });
+  }
+
+  private failedPollOutcome(
+    release: ManifestRelease,
+    reason: NativeCacheFailureReason
+  ): ManifestOutcome {
+    return {
+      manifestId: release.manifestId,
+      remoteName: release.remoteName,
+      status: 'failed',
+      reason,
+      artifacts: release.artifacts.map((artifact) =>
+        this.failureOutcome(artifact.bundleUrl, reason, release)
+      ),
+    };
+  }
+
   private inferRemoteName(url: string): string {
     try {
-      const parsed = new URL(url);
-      const pathParts = parsed.pathname.replace(/^\/+/, '').split('/');
-      if (pathParts.length > 0) {
-        pathParts[pathParts.length - 1] = pathParts[pathParts.length - 1]
-          .split('.')[0]
-          .split('?')[0];
-      }
-      return pathParts.join('/') || 'unknown';
+      return (
+        new URL(url).pathname.split('/').filter(Boolean).pop()?.split('.')[0] ?? 'unknown'
+      );
     } catch {
-      const last = url.split('/').pop() ?? 'unknown';
-      return last.split('.')[0].split('?')[0];
+      return 'unknown';
     }
   }
 }

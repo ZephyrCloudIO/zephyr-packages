@@ -186,7 +186,7 @@ describe('Pure HTTP Request Functions', () => {
       expect(mockCleanTokens).not.toHaveBeenCalled();
     });
 
-    it('reports a 403 ENVIRONMENT_DENIED as a deploy denial with the environments', async () => {
+    it('reports a 403 ENVIRONMENT_DENIED as ZE10038 with the environments', async () => {
       mockFetchWithRetries.mockResolvedValueOnce({
         status: 403,
         text: async () =>
@@ -196,11 +196,20 @@ describe('Pure HTTP Request Functions', () => {
             message: 'Deploy denied',
             environments: [
               {
-                environment: { id: 'env-1', name: 'production', type: 'production' },
-                profile: { id: 'profile-1', name: 'web / production' },
+                environment: {
+                  id: '0190a1b2-0000-7000-8000-000000000010',
+                  name: 'production',
+                  type: 'production',
+                },
+                profile: {
+                  id: '0190a1b2-0000-7000-8000-000000000020',
+                  name: 'web / production',
+                },
                 requiredRole: 'member',
                 reason: 'no_grant',
-                contacts: [{ id: 'user-1', name: 'Ada Admin' }],
+                contacts: [
+                  { id: '0190a1b2-0000-7000-8000-000000000041', name: 'Ada Admin' },
+                ],
                 moreContacts: 0,
               },
             ],
@@ -215,9 +224,30 @@ describe('Pure HTTP Request Functions', () => {
       expect(ok).toBe(false);
       expect(error).toMatchObject({ code: 'ZE10038' });
       expect((error as Error).message).toContain(
-        'production  profile "web / production"  needs Member'
+        'production  profile "web / production"  needs the Member role'
       );
+      expect((error as Error).message).not.toContain('Ada Admin');
       expect(mockCleanTokens).not.toHaveBeenCalled();
+    });
+
+    it('reports a 403 ENVIRONMENT_DENIED with malformed environments as a denial', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 403,
+        text: async () =>
+          JSON.stringify({
+            code: 'ENVIRONMENT_DENIED',
+            message: 'Denied',
+            environments: [null],
+          }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://zeapi.example.com/build-stats')
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10038' });
     });
 
     it('should handle network errors', async () => {

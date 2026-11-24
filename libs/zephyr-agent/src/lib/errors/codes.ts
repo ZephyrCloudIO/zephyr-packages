@@ -2,7 +2,7 @@ type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 /** Categories for all error codes. */
 export const ZeErrorCategories = {
-  /** Error we have yet catched and known */
+  /** An error not yet caught and classified */
   unknown: '00',
   /** Stage 0 build error */
   build: '10',
@@ -45,7 +45,6 @@ Unknown error: {{ message }}
   },
 
   /** Package.json not found error */
-  // TODO: this error is less likely to happen
   ERR_PACKAGE_JSON_NOT_FOUND: {
     id: '010',
     message: 'package.json not found',
@@ -471,8 +470,9 @@ Also check:
   },
 
   /**
-   * A permission profile denied the upload's deploy (zephyr-cloud-io #4005): the version
-   * is kept, and none of the app's tags or environments moved.
+   * A permission profile denied a write (ZephyrCloudIO/zephyr-cloud-io#4005): an upload's
+   * deploy, where the version is kept and none of the app's tags or environments moved,
+   * or a deploy or settings change refused with 403 `ENVIRONMENT_DENIED`.
    */
   ERR_DEPLOY_DENIED: {
     id: '038',

@@ -47,12 +47,15 @@ describe('zeUploadBuildStats retry identity', () => {
 });
 
 describe('zeUploadBuildStats upload outcome', () => {
+  const envId = '0190a1b2-0000-7000-8000-000000000010';
+  const versionId = '0190a1b2-0000-7000-8000-000000000002';
+  // The upload outcome carries contact ids only (ZephyrCloudIO/zephyr-cloud-io#4501).
   const deniedEntry = {
-    environment: { id: 'env-prod', name: 'production', type: 'production' },
-    profile: { id: 'profile-1', name: 'web / production' },
+    environment: { id: envId, name: 'production', type: 'production' },
+    profile: { id: '0190a1b2-0000-7000-8000-000000000020', name: 'web / production' },
     requiredRole: 'member',
     reason: 'no_grant',
-    contacts: [{ id: 'user-1', name: 'Ada Admin' }],
+    contacts: [{ id: '0190a1b2-0000-7000-8000-000000000041' }],
     moreContacts: 0,
   };
 
@@ -69,19 +72,43 @@ describe('zeUploadBuildStats upload outcome', () => {
         status: 'ok',
         outcome: {
           result: 'denied',
-          version: { id: 'version-1', snapshotId: 'snapshot-1' },
+          version: { id: versionId, snapshotId: 'snapshot-1' },
           denied: [deniedEntry],
         },
-        ignoredEnvs: [{ id: 'env-prod', name: 'production', reason: 'denied' }],
+        ignoredEnvs: [{ id: envId, name: 'production', reason: 'denied' }],
       },
     ]);
 
     const upload = zeUploadBuildStats(buildStats('build-1'));
 
-    await expect(upload).rejects.toMatchObject({ code: 'ZE10038' });
+    await expect(upload).rejects.toMatchObject({
+      code: 'ZE10038',
+      data: {
+        applicationUid: 'app.project.org',
+        versionId,
+        deniedEnvironmentIds: [envId],
+      },
+    });
     await expect(upload).rejects.toThrow(
-      'Deploy denied for checkout-web (version kept, nothing moved)'
+      'Deploy denied for checkout-web (version kept, nothing moved)\n' +
+        '  production  profile "web / production"  needs the Member role'
     );
+  });
+
+  it('fails from result alone when the details and ignoredEnvs are missing', async () => {
+    mocks.makeRequest.mockResolvedValue([
+      true,
+      null,
+      {
+        status: 'ok',
+        outcome: { result: 'denied', version: { id: versionId }, denied: [null] },
+        ignoredEnvs: null,
+      },
+    ]);
+
+    await expect(zeUploadBuildStats(buildStats('build-1'))).rejects.toMatchObject({
+      code: 'ZE10038',
+    });
   });
 
   it('returns the targets when the deploy went through', async () => {
@@ -93,7 +120,7 @@ describe('zeUploadBuildStats upload outcome', () => {
         targets: ['https://tag.edge.test'],
         outcome: {
           result: 'deployed',
-          version: { id: 'version-1', snapshotId: 'snapshot-1' },
+          version: { id: versionId, snapshotId: 'snapshot-1' },
           denied: [],
         },
       },

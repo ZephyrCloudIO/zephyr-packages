@@ -36,7 +36,7 @@ export function getZephyrErrorCodeCategory(code: ZeErrorCodes): ZephyrErrorCateg
   const type = ZephyrError.fromZeCode(code);
   if (type === ZeErrors.ERR_UNKNOWN) return 'unknown';
   if (AUTH_ERRORS.has(type)) return 'auth';
-  // A deploy denied by a permission profile: valid credentials, missing access.
+  // A write a permission profile denied: valid credentials, missing access.
   if (type === ZeErrors.ERR_AUTH_FORBIDDEN_ERROR || type === ZeErrors.ERR_DEPLOY_DENIED) {
     return 'forbidden';
   }

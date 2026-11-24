@@ -21,7 +21,9 @@ export type {
   BuildStatsResponse,
   DeniedEnvironment,
   EnvironmentDeniedResponse,
+  IgnoredEnv,
   PublishOutcome,
+  UploadDeniedEnvironment,
 } from './lib/edge-api/publish-outcome';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 

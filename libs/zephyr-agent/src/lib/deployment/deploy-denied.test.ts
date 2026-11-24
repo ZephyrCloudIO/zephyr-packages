@@ -104,6 +104,16 @@ describe('deployDeniedError', () => {
     expect(text).not.toContain('\u001b');
   });
 
+  it('replaces bidirectional controls and line separators', () => {
+    const text = uploadDenial([
+      entry({
+        environment: { id: ids.prod, name: 'prod\u202eution\u2028x', type: 'production' },
+      }),
+    ]);
+
+    expect(text).toContain('  prod ution x  profile');
+  });
+
   it('names the tag an environment follows', () => {
     expect(
       uploadDenial([entry({ viaTag: { id: ids.tag, name: 'web_latest' } })])

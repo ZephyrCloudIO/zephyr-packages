@@ -56,8 +56,9 @@ const ENVIRONMENT_TYPES: Record<EnvironmentType, true> = {
 };
 
 /**
- * An RFC 9562 uuid: the id format of the denied environments, profiles, tags and contacts
- * in these bodies (ST-27 Identifiers).
+ * A uuid-shaped id (8-4-4-4-12 hex), without a version or variant check: the id format of
+ * the denied environments, profiles, tags and contacts in these bodies (ST-27
+ * Identifiers). The API checks the stricter RFC 9562 form.
  */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -73,9 +74,13 @@ function isKeyOf<T extends object>(map: T, value: unknown): value is keyof T {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(map, value);
 }
 
-/** C0 and C1 control characters, including newline and escape. */
-// oxlint-disable-next-line no-control-regex
-const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f-\u009f]+/g;
+/**
+ * C0 and C1 control characters (including newline and escape), line and paragraph
+ * separators, and bidirectional controls that can reorder a printed line.
+ */
+const CONTROL_CHARACTERS =
+  // oxlint-disable-next-line no-control-regex
+  /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028-\u202e\u2066-\u2069]+/g;
 
 /** A non-empty string from the network, safe to print on one line of a CI log. */
 function printable(value: unknown): string | undefined {

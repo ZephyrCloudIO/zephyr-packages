@@ -94,6 +94,7 @@ export async function makeHttpRequest<T = void>(
   const { credentialToken, skipTokenCleanup = false, ...requestOptions } = options;
 
   try {
+    // TODO(ZephyrCloudIO/zephyr-cloud-io#4595): propagate trace context (ST-16 OpenTelemetry).
     const response = await fetchWithRetries(url, {
       ...requestOptions,
       // TODO(ZephyrCloudIO/zephyr-cloud-io#4593): a typed body instead of a cast.

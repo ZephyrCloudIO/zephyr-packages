@@ -59,8 +59,8 @@ export async function awsUploadStrategy(
   });
   const versionUrl = await zeUploadSnapshot(zephyr_engine, { snapshot });
 
-  // Waits for the reply to check upload problems, but the reply is a simply
-  // 200 OK sent before any processing
+  // Waits for the API's upload decision: when permission profiles are enforced and the
+  // API answers in time, the reply carries `outcome`, and a denied deploy throws ZE10038
   await uploadBuildStatsAndEnableEnvs(zephyr_engine, { getDashData, versionUrl });
 
   return versionUrl;

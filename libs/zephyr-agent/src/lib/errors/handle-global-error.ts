@@ -21,6 +21,8 @@ function isPermissionDenial(error: unknown): boolean {
   );
 }
 
+// TODO(ZephyrCloudIO/zephyr-cloud-io#4594): the fail-build defaults become owned settings,
+// not literals in code.
 /**
  * Whether `error` fails the build. An explicit `failBuild` or `ZE_FAIL_BUILD` decides
  * first, so an app of a monorepo can opt out. Without one, a write a permission profile

@@ -36,8 +36,9 @@ export interface DeniedEnvironment {
     | 'maintainer_required'
     | 'org_admin_required';
   /**
-   * Up to 3 org owners and admins to ask for access. The 403 body still sends `name`; it
-   * is leaving the contract (ZephyrCloudIO/zephyr-cloud-io#4541), so do not read it.
+   * Up to 3 org owners and admins to ask for access. Do not read `name`.
+   *
+   * TODO(ZephyrCloudIO/zephyr-cloud-io#4541): remove `name` when the 403 body drops it.
    */
   contacts: { id: string; name?: string }[];
   /** Org owners and admins beyond `contacts`; never negative. */

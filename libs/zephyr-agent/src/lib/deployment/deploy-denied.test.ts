@@ -99,9 +99,33 @@ describe('deployDeniedError', () => {
       }),
     ]);
 
-    expect(text).toContain('  prod ::error::fake [31m  profile');
+    expect(text).toContain('  prod : :error: :fake [31m  profile');
     expect(text).not.toMatch(/^::error::/m);
     expect(text).not.toContain('\u001b');
+  });
+
+  it.each([
+    ['starts with ::', '::stop-commands::token', '  : :stop-commands: :token  profile'],
+    ['contains ##[', 'prod ##[error]fake', '  prod ## [error]fake  profile'],
+  ])('breaks a workflow command when a name %s', (_label, name, line) => {
+    const text = uploadDenial([
+      entry({ environment: { id: ids.prod, name, type: 'production' } }),
+    ]);
+
+    expect(text).toContain(line);
+    expect(text.split('\n').some((l) => l.trimStart().startsWith('::'))).toBe(false);
+    expect(text).not.toContain('##[');
+  });
+
+  it('breaks workflow commands in a Problem Details title and detail', () => {
+    const error = environmentDeniedError({
+      code: 'ENVIRONMENT_DENIED',
+      title: '::error::title',
+      detail: '##[warning]detail',
+      environments: [],
+    });
+
+    expect(error?.message).toContain('  : :error: :title: ## [warning]detail');
   });
 
   it('replaces bidirectional controls and line separators', () => {

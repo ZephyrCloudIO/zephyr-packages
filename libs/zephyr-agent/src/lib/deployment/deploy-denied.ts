@@ -82,10 +82,18 @@ const CONTROL_CHARACTERS =
   // oxlint-disable-next-line no-control-regex
   /[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028-\u202e\u2066-\u2069]+/g;
 
-/** A non-empty string from the network, safe to print on one line of a CI log. */
+/**
+ * A non-empty string from the network, safe to print on one line of a CI log: control
+ * characters are replaced, and workflow command markers are broken, so a name cannot run
+ * a GitHub Actions command (`::` at the start of a trimmed line, `##[` anywhere).
+ */
 function printable(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
-  const text = value.replace(CONTROL_CHARACTERS, ' ').trim();
+  const text = value
+    .replace(CONTROL_CHARACTERS, ' ')
+    .replace(/::/g, ': :')
+    .replace(/##\[/g, '## [')
+    .trim();
   return text || undefined;
 }
 

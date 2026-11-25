@@ -46,6 +46,21 @@ describe('zeUploadBuildStats retry identity', () => {
   });
 });
 
+describe('zeUploadBuildStats request body', () => {
+  beforeEach(() => {
+    rs.clearAllMocks();
+    mocks.getToken.mockResolvedValue('private-access-token');
+    mocks.makeRequest.mockResolvedValue([true, null, { status: 'ok', targets: [] }]);
+  });
+
+  it('asks the gateway for the upload outcome and keeps the build stats', async () => {
+    await zeUploadBuildStats(buildStats('build-1'));
+
+    const body = JSON.parse(mocks.makeRequest.mock.calls[0][2] as string);
+    expect(body).toEqual({ ...buildStats('build-1'), reportOutcome: true });
+  });
+});
+
 describe('zeUploadBuildStats upload outcome', () => {
   const envId = '0190a1b2-0000-7000-8000-000000000010';
   const versionId = '0190a1b2-0000-7000-8000-000000000002';

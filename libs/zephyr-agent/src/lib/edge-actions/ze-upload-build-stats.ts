@@ -39,7 +39,8 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
       },
       credentialToken: token,
     },
-    JSON.stringify(dashData)
+    // This client reads the outcome below, so it asks the gateway to wait for it.
+    JSON.stringify({ ...dashData, reportOutcome: true } satisfies ZephyrBuildStats)
   );
 
   // A refusal from a permission profile is final: report it as is.

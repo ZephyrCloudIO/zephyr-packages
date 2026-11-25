@@ -24,7 +24,18 @@ export interface ZephyrRuntimeNamespace {
    * compiled into the bundle.
    */
   env?: Record<string, Readonly<Record<string, string>>>;
+
+  /** Set by the embedded-remotes runtime plugin when the host embeds remotes. */
+  embeddedRemotes?: ZephyrEmbeddedRemotes;
   [namespace: string]: unknown;
+}
+
+/** Loads remote bundles shipped inside the app binary (`embedRemotes`). */
+export interface ZephyrEmbeddedRemotes {
+  /** True for URLs under an embedded remote's origin. */
+  owns(bundleUrl: string): boolean;
+  /** Evaluates the embedded copy of the bundle. */
+  load(bundleUrl: string): Promise<void>;
 }
 
 export interface ZephyrNativeCacheNamespace {
@@ -54,6 +65,12 @@ export interface ZephyrNativeCacheRefs {
    * manifests here when present.
    */
   envStorage?: ZephyrNativeEnvStorage;
+  /** UTF-8 text of a file in the app binary root; undefined when it is missing. */
+  readBundledFile?: (name: string) => Promise<string | undefined>;
+  /** True when the bundle is cached (and matches `expectedHash` when given). */
+  hasCachedBundle?: (bundleUrl: string, expectedHash?: string) => Promise<boolean>;
+  /** Reports a bundle loaded from the copy embedded in the app. */
+  recordEmbeddedLoad?: (bundleUrl: string) => void;
   [key: string]: unknown;
 }
 

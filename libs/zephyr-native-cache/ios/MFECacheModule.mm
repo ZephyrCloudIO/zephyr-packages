@@ -70,6 +70,23 @@ RCT_EXPORT_METHOD(readFile:(NSString *)path
   });
 }
 
+// Reads a file shipped in the app bundle root (embedRemotes); resolves null when missing.
+RCT_EXPORT_METHOD(readBundledFile:(NSString *)name
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSString *path = [[NSBundle mainBundle] pathForResource:[name stringByDeletingPathExtension]
+                                                     ofType:[name pathExtension]];
+    NSData *data = path ? [NSData dataWithContentsOfFile:path] : nil;
+    if (!data) {
+      resolve([NSNull null]);
+      return;
+    }
+    resolve([[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+  });
+}
+
 RCT_EXPORT_METHOD(deleteFile:(NSString *)path
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)

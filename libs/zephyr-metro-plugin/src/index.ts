@@ -29,3 +29,8 @@ export {
   type ZephyrMetroRNEFPluginConfig,
   type RNEFPluginApi,
 } from './lib/zephyr-metro-rnef-plugin';
+
+// zephyr.config.* types
+export type { ZephyrConfig } from 'zephyr-agent';
+export type { EmbedRemotesConfig } from 'zephyr-native-internal';
+export type { ZephyrMetroConfig } from './lib/zephyr-config';

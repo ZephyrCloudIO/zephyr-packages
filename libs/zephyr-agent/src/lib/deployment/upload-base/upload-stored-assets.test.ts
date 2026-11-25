@@ -14,7 +14,11 @@ rs.mock('node:zlib', { spy: true });
 
 import { STORE_THRESHOLD_BYTES, uploadStoredAssets } from './upload-stored-assets';
 
-const PRESIGNED = { url: 'https://bucket.example/put', contentType: 'image/png' };
+const PRESIGNED = {
+  url: 'https://bucket.example/put',
+  contentType: 'image/png',
+  headers: { 'x-amz-content-sha256': 'signed-hash' },
+};
 
 const appConfig = {
   PLATFORM: 'akamai',
@@ -110,6 +114,7 @@ describe('uploadStoredAssets', () => {
     expect(presigned()[0]?.searchParams.get('hash')).toBe(store?.object);
     const [put] = puts();
     expect(put?.headers).toEqual({
+      'x-amz-content-sha256': 'signed-hash',
       'Content-Type': PRESIGNED.contentType,
       'Content-Encoding': 'gzip',
     });
@@ -185,7 +190,10 @@ describe('uploadStoredAssets', () => {
       size: raw.length,
     });
     const [put] = puts();
-    expect(put?.headers).toEqual({ 'Content-Type': PRESIGNED.contentType });
+    expect(put?.headers).toEqual({
+      ...PRESIGNED.headers,
+      'Content-Type': PRESIGNED.contentType,
+    });
     expect(put?.body).toEqual(raw);
     expect(gzip).not.toHaveBeenCalled();
   });

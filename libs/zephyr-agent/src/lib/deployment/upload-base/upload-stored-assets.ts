@@ -87,6 +87,8 @@ interface StoredObject {
 interface UploadUrl {
   url: string;
   contentType: string;
+  /** Signed headers the PUT must carry too (the body's `x-amz-content-sha256`). */
+  headers?: Record<string, string>;
 }
 
 interface BucketProbe {
@@ -151,15 +153,15 @@ async function requestUploadUrl(
 }
 
 /**
- * PUTs the stored bytes. `Content-Type` is signed and must match the presigned one;
- * `Content-Encoding` is sent only for gzip bytes.
+ * PUTs the stored bytes. `Content-Type` and the edge's `headers` are signed and must be
+ * sent as given; `Content-Encoding` is sent only for gzip bytes.
  */
 async function putObject(
   { asset, bytes, store }: StoredObject,
-  { url, contentType }: UploadUrl
+  { url, contentType, headers: signed }: UploadUrl
 ): Promise<void> {
   const start = Date.now();
-  const headers: Record<string, string> = { 'Content-Type': contentType };
+  const headers: Record<string, string> = { ...signed, 'Content-Type': contentType };
   if (store.encoding) headers['Content-Encoding'] = store.encoding;
   const [ok, cause] = await makeRequest(url, { method: 'PUT', headers }, bytes);
   if (!ok) {

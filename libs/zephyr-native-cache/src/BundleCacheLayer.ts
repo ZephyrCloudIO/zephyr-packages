@@ -9,9 +9,11 @@ import type {
   CheckForUpdatesResult,
   MFECacheConfig,
   UpdatePolicy,
+  ZephyrVersionInfo,
 } from './types';
 import { ensureZephyrNativeCacheRefs } from './zephyr-global';
 import { getBundleCacheKey } from './cache-key';
+import { COLD_LOAD_VERSION_INFO_TIMEOUT_MS } from './version-info';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -140,6 +142,7 @@ export class BundleCacheLayer {
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'skipped',
+        undefined,
         undefined
       );
       return { status: 'skipped' };
@@ -149,6 +152,7 @@ export class BundleCacheLayer {
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'skipped',
+        undefined,
         undefined
       );
       return { status: 'skipped' };
@@ -244,6 +248,15 @@ export class BundleCacheLayer {
             }
             this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
           }
+
+          // Bundles whose bytes didn't change may now belong to a newer version.
+          this.applyRefreshedVersions(
+            await this.cacheManager!.refreshVersions(
+              manifestUrl,
+              newHashes,
+              source.extractHashes
+            )
+          );
         } catch (manifestError) {
           console.warn(`${LOG_PREFIX} manifest error for ${manifestUrl}`, manifestError);
           // Non-critical: network error for this manifest, continue with others
@@ -357,13 +370,15 @@ export class BundleCacheLayer {
     bundleUrl: string,
     remoteName: string,
     status: 'cache-hit' | 'downloaded' | 'skipped',
-    hash: string | undefined
+    hash: string | undefined,
+    version: ZephyrVersionInfo | undefined
   ): void {
     this.status.remotes[remoteName] = {
       remoteName,
       bundleUrl,
       status,
       hash,
+      version,
       loadedAt: Date.now(),
     };
     // 'skipped' bundles are still evaluated, through the network fallback in register.ts.
@@ -379,6 +394,26 @@ export class BundleCacheLayer {
     }
     this.notifyStatusChange();
     this.events.emitBundleLoad(bundleUrl, remoteName, status, hash);
+  }
+
+  /**
+   * Relabeled bundles run the same bytes as before, so loaded entries with those bytes
+   * take the new version right away.
+   */
+  private applyRefreshedVersions(relabeled: BundleMetadata[]): void {
+    let changed = false;
+    for (const meta of relabeled) {
+      for (const entry of Object.values(this.status.remotes)) {
+        if (
+          entry.hash === meta.bundleHash &&
+          getBundleCacheKey(entry.bundleUrl) === meta.bundleUrl
+        ) {
+          entry.version = meta.version;
+          changed = true;
+        }
+      }
+    }
+    if (changed) this.notifyStatusChange();
   }
 
   private applyDownloadedUpdates(): boolean {
@@ -412,7 +447,8 @@ export class BundleCacheLayer {
         bundleUrl,
         this.inferRemoteName(bundleUrl),
         'cache-hit',
-        expectedHash
+        expectedHash,
+        cached.metadata.version
       );
       return { status: 'cache-hit' };
     }
@@ -424,24 +460,31 @@ export class BundleCacheLayer {
       bundleUrl,
       expectedHash
     );
-    const { sha256 } = await NativeMFECache!.downloadFile(bundleUrl, destPath);
+    const downloaded = await this.cacheManager!.downloadVerifiedBundle(
+      bundleUrl,
+      destPath,
+      expectedHash,
+      COLD_LOAD_VERSION_INFO_TIMEOUT_MS
+    );
 
-    if (sha256 !== expectedHash) {
-      try {
-        await NativeMFECache!.deleteFile(destPath);
-      } catch {
-        /* ok */
-      }
-      this.recordBundleLoad(bundleUrl, remoteName, 'skipped', undefined);
+    if (!downloaded) {
+      this.recordBundleLoad(bundleUrl, remoteName, 'skipped', undefined, undefined);
       return { status: 'skipped' };
     }
 
     await this.cacheManager!.saveBundleToCache(remoteName, destPath, {
       bundleUrl,
-      bundleHash: sha256,
+      bundleHash: expectedHash,
+      version: downloaded.version,
     });
     await this.evalFromFile(destPath);
-    this.recordBundleLoad(bundleUrl, remoteName, 'downloaded', sha256);
+    this.recordBundleLoad(
+      bundleUrl,
+      remoteName,
+      'downloaded',
+      expectedHash,
+      downloaded.version
+    );
     return { status: 'downloaded' };
   }
 

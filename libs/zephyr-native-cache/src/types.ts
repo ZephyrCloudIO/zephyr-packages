@@ -4,10 +4,26 @@ export type BundleLoadStatus = 'cache-hit' | 'downloaded' | 'skipped' | 'pending
 
 export type UpdatePolicy = 'downloadOnly' | 'downloadAndApply';
 
+/** The Zephyr version a cached bundle was downloaded from (`/__get_version_info__`). */
+export interface ZephyrVersionInfo {
+  /** E.g. `alice-5746.host.my-repo.my-org` */
+  snapshotId: string;
+  /** Immutable host of that version, e.g. `alice-5746-host-…-ze.zephyrcloud.app` */
+  versionUrl: string;
+  /** When the version was published to the environment, in ms since epoch */
+  publishedAt: number | undefined;
+}
+
 export interface BundleMetadata {
   remoteName: string;
   bundleHash: string;
-  buildVersion: string;
+  /**
+   * A Zephyr version that serves exactly these bytes. Set when the bytes were downloaded
+   * from the version's immutable URL and matched the expected hash. An update check moves
+   * it to a newer version when that version's manifest lists the same hash, so a publish
+   * that doesn't change this bundle still updates it.
+   */
+  version?: ZephyrVersionInfo;
   filePath: string;
   bundleUrl: string;
   downloadedAt: number;
@@ -46,6 +62,8 @@ export interface CacheStatusRemoteEntry {
   bundleUrl: string;
   status: BundleLoadStatus;
   hash: string | undefined;
+  /** Zephyr version of the loaded bundle; undefined when unknown (see `BundleMetadata`). */
+  version: ZephyrVersionInfo | undefined;
   loadedAt: number | undefined;
 }
 

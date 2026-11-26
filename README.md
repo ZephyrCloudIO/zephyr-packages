@@ -74,7 +74,8 @@ pnpm install
 ```
 
 For the opaque `tap-app` build-target contract, see
-[the target documentation](docs/tap-app-publication.md).
+[the target documentation](docs/tap-app-publication.md). For the list of build targets
+and which entry points accept `worker`, see [build targets](docs/build-targets.md).
 
 ## Available Scripts
 

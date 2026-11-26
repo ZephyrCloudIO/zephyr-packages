@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.9.0 (2026-11-24)
+
+## What's Changed
+* chore(deps): update dependency fast-xml-parser@>=5.9.3 <5.10.1 to v5.12.0 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/764
+* chore(deps): update dependency hono to v4.13.16 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/769
+* chore(deps): update dependency @nuxt/schema to v4.6.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/770
+* chore(deps): update dependency nuxt to v4.6.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/773
+* chore(deps): update dependency nuxt@>=4.0.0 <4.5.1 to v4.6.4 [security] by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/774
+* fix: report an unreachable Zephyr honestly (redaction, ZE50001, /resolve timeout, ZE_FAIL_BUILD, CLI) by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/776
+* chore(deps): update dependency @nuxt/kit to v4.6.4 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/784
+* chore(deps): update dependency @rsbuild/plugin-react to v2.1.1 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/785
+* chore(deps): update dependency @rspack/plugin-react-refresh to v2.0.3 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/787
+* chore(deps): update dependency @tanstack/react-devtools to v0.10.15 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/788
+* chore(deps): update dependency @vitejs/plugin-rsc to v0.5.39 by @renovate[bot] in https://github.com/ZephyrCloudIO/zephyr-packages/pull/789
+* feat: structured remote plugin logs and request identity by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/781
+* feat(edge-contract): add the worker build target by @valorkin in https://github.com/ZephyrCloudIO/zephyr-packages/pull/790
+* fix(agent): identify the CLI or plugin when requesting the login link by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/762
+* fix(deps): patch zod, node-forge and brace-expansion advisories by @Nsttt in https://github.com/ZephyrCloudIO/zephyr-packages/pull/792
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.8.0...v1.9.0
+
 ## 1.8.0 (2026-11-11)
 
 ## What's Changed

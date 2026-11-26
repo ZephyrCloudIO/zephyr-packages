@@ -272,6 +272,12 @@ export async function onBuildSuccess(props: OnBuildSuccessProps): Promise<void> 
 
     buildInProgress = false;
     await zephyr_engine.build_finished();
+  } catch (error) {
+    if (buildInProgress && zephyr_engine.hasActiveBuild !== false) {
+      buildInProgress = false;
+      await zephyr_engine.build_failed(error);
+    }
+    throw error;
   } finally {
     if (buildInProgress && zephyr_engine.hasActiveBuild !== false) {
       zephyr_engine.build_failed();

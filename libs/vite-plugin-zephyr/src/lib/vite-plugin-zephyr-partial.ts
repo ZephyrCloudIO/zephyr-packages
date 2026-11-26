@@ -3,7 +3,7 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   handleGlobalError,
   isZephyrDisabled,
   savePartialAssetMap,
@@ -22,7 +22,7 @@ import { zephyrDisabledPlugin } from './internal/zephyr-disabled-plugin';
 
 export function withZephyrPartial(options: VitePartialBuildOptions = {}): Plugin {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyrPartial({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyrPartial({ target })');
   }
   if (isZephyrDisabled()) {
     return zephyrDisabledPlugin();

@@ -1,13 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { safe_json_parse } from 'zephyr-edge-contract';
 import { fetchWithRetries } from '../http/fetch-with-retries';
 import { brightYellowBgName } from '../logging/debug';
+import { resolveInstalledPackageVersion } from './plugin-package-name';
 import { getZephyrAgentVersion } from './zephyr-agent-version';
 
 const warnedVersionPairs = new Set<string>();
 const NPM_FETCH_TIMEOUT_MS = 1_500;
-const requireFromHere = createRequire(__filename);
 
 type VersionChannel = 'stable' | 'canary' | 'next';
 
@@ -130,28 +127,12 @@ async function fetchDistTags(packageName: string): Promise<DistTagsResponse | nu
   }
 }
 
-function resolveInstalledPluginVersion(pluginPackageName: string): string {
-  try {
-    const packageJsonPath = requireFromHere.resolve(`${pluginPackageName}/package.json`, {
-      paths: [process.cwd()],
-    });
-    const packageJsonContent = readFileSync(packageJsonPath, 'utf8');
-    const parsed = safe_json_parse<{ version?: unknown }>(packageJsonContent);
-
-    if (parsed?.version && typeof parsed.version === 'string') {
-      return parsed.version;
-    }
-  } catch {
-    // Ignore and fallback to zephyr-agent version.
-  }
-
-  return getZephyrAgentVersion();
-}
-
 export async function maybeShowOutdatedPluginWarning(
   pluginPackageName: string
 ): Promise<void> {
-  const currentVersion = resolveInstalledPluginVersion(pluginPackageName);
+  // Fall back to the agent version: every Zephyr package is released in lockstep.
+  const currentVersion =
+    resolveInstalledPackageVersion(pluginPackageName) ?? getZephyrAgentVersion();
   const distTags = await fetchDistTags(pluginPackageName);
 
   if (!distTags) {

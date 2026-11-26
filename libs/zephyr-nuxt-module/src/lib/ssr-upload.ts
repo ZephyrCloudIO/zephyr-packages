@@ -312,6 +312,10 @@ export function createUploadRunner({
       uploadCompleted = true;
       ze_log.upload('Zephyr upload complete.');
     } catch (error) {
+      if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+        buildInProgress = false;
+        await zephyr_engine?.build_failed(error);
+      }
       handleGlobalError(error);
     } finally {
       if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {

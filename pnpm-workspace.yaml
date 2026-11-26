@@ -256,7 +256,7 @@ catalogs:
     '@tailwindcss/vite': ^4.3.3
     tailwindcss: ^4.3.3
   tanstack:
-    '@tanstack/react-devtools': 0.10.12
+    '@tanstack/react-devtools': 0.10.15
     '@tanstack/react-router': 1.170.45
     '@tanstack/react-router-devtools': 1.167.2
     '@tanstack/react-router-ssr-query': 1.167.3
@@ -324,6 +324,10 @@ overrides:
   seroval@<1.6.3: 1.6.12
   source-map-js@>=1.0.0 <1.2.2: 1.2.2
   tinypool@<2.1.2: 2.2.0
+  zod@<4.6.6: 4.6.7
+  node-forge@<1.4.1: 1.4.3
+  brace-expansion@<1.1.21: 1.1.22
+  brace-expansion@>=2.0.0 <2.1.7: 2.1.8
 
 allowBuilds:
   '@biomejs/biome': true

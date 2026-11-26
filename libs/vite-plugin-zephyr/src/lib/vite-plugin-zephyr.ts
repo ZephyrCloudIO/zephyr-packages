@@ -8,7 +8,7 @@ import type { Plugin, ResolvedConfig, UserConfig } from 'vite' with {
 };
 import {
   ApplicationContext,
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   claimPartialAssetMapBatch,
   commitPartialAssetMapClaimBatch,
   createManifestContent,
@@ -29,7 +29,7 @@ import {
   type PartialAssetMaps,
   type ZeBuildAssetsMap,
   type ZephyrBuildHooks,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import { extractEntrypoint } from './internal/extract/extract-entrypoint';
 import { extract_mf_plugins } from './internal/extract/extract_mf_plugin';
@@ -60,7 +60,7 @@ const runtimeRequire = createRequire(__filename);
 
 export interface WithZephyrOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   hooks?: ZephyrBuildHooks;
   /** One or more Module Federation containers emitted by this Vite build. */
   mfConfig?: ModuleFederationOptions | ModuleFederationOptions[];
@@ -521,7 +521,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
         partialClaims.map(({ claimId }) => claimId)
       );
     } catch (error) {
-      zephyrEngine.build_failed();
+      await zephyrEngine.build_failed(error);
       if (partialClaims.length > 0) {
         try {
           await rollbackPartialAssetMapClaimBatch(
@@ -1066,7 +1066,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
           directBuildFailed = true;
           try {
             const zephyr_engine = await zephyr_engine_defer;
-            zephyr_engine.build_failed();
+            await zephyr_engine.build_failed(error);
           } catch {
             // Engine initialization failed before any reusable build state existed.
           }
@@ -1248,7 +1248,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
               });
             },
             finish: () => zephyrEngine.build_finished(),
-            onFailure: () => zephyrEngine.build_failed(),
+            onFailure: (_identity, error) => void zephyrEngine.build_failed(error),
           });
 
           const outputParticipant = uniqueParticipant(
@@ -1284,7 +1284,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
         } catch (error) {
           try {
             const zephyrEngine = await zephyr_engine_defer;
-            zephyrEngine.build_failed();
+            await zephyrEngine.build_failed(error);
           } catch {
             // Engine initialization failed before any reusable build state existed.
           }
@@ -1310,7 +1310,7 @@ function withZephyrCore(options: WithZephyrOptions = {}): Plugin[] {
 
 export function withZephyr(options: WithZephyrOptions = {}): Plugin[] {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
   const plugins: Plugin[] = [];
   // Skip mode builds the bundle with the user's own federation config, without the

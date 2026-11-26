@@ -7,11 +7,11 @@ import type { OutputAsset, OutputChunk } from 'rollup';
 import * as path from 'path';
 import {
   ApplicationContext,
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   isZephyrDisabled,
   ZephyrEngine,
   type ZephyrEngineOptions,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
   type ZephyrLegacyModuleFederationConfig,
   type ZephyrModuleFederationBuildMetadata,
   type ZephyrModuleFederationConfig,
@@ -62,7 +62,7 @@ function getAssetType(item: { fileName?: string; name?: string }): string {
  */
 export interface TanStackStartZephyrOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   /** Every independently published Module Federation container. */
   mfConfigs?: ZephyrModuleFederationConfig[];
   /** Build-stat metadata paired with `mfConfigs`. */
@@ -242,7 +242,7 @@ function getLegacyModuleFederationConfig(
  */
 export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
   assertTapFederationMetadata(options);
 
@@ -345,7 +345,7 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
               });
             },
             finish: () => zephyr_engine.build_finished(),
-            onFailure: () => zephyr_engine.build_failed(),
+            onFailure: (_identity, error) => void zephyr_engine.build_failed(error),
           });
 
           const outputParticipant = uniqueParticipant(
@@ -395,7 +395,7 @@ export function withZephyr(options: TanStackStartZephyrOptions = {}): Plugin {
           if (engineCreated) {
             try {
               const zephyr_engine = await zephyr_engine_defer;
-              zephyr_engine.build_failed();
+              await zephyr_engine.build_failed(error);
             } catch {
               // Engine initialization failed before any reusable build state existed.
             }

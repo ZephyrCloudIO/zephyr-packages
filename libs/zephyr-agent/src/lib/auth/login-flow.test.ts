@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 
 const mocks = rs.hoisted(() => ({
   authLog: rs.fn(),
@@ -9,6 +9,8 @@ const mocks = rs.hoisted(() => ({
   getToken: rs.fn().mockResolvedValue(undefined),
   stdinTTY: true,
   stdoutTTY: true,
+  stderrTTY: true,
+  sessionOwner: true,
   logFn: rs.fn(),
   makeRequest: rs
     .fn()
@@ -17,6 +19,7 @@ const mocks = rs.hoisted(() => ({
       null,
       'https://auth.example/authorize?state=server-one-time-state',
     ]),
+  openUrl: rs.fn<(url: string) => Promise<void>>().mockResolvedValue(undefined),
   question: rs.fn<(prompt: string) => never>(() => {
     throw new Error('browser prompt unavailable');
   }),
@@ -30,8 +33,11 @@ rs.mock('node:readline', () => ({
   createInterface: rs.fn(() => ({ question: mocks.question })),
 }));
 rs.mock('node:tty', () => ({
-  isatty: rs.fn((fd: number) => (fd === 0 ? mocks.stdinTTY : mocks.stdoutTTY)),
+  isatty: rs.fn((fd: number) =>
+    fd === 0 ? mocks.stdinTTY : fd === 1 ? mocks.stdoutTTY : mocks.stderrTTY
+  ),
 }));
+rs.mock('./open-url', () => ({ openUrl: mocks.openUrl }));
 rs.mock('zephyr-edge-contract', () => ({
   ZE_API_ENDPOINT: rs.fn(() => 'https://api.example/'),
   formatString: rs.fn((message: string) => message),
@@ -64,7 +70,7 @@ rs.mock('../node-persist/server-token', () => ({ getServerToken: rs.fn() }));
 rs.mock('../node-persist/ci-token', () => ({ getCiToken: rs.fn() }));
 rs.mock('../node-persist/session-lock', () => ({
   getSessionKey: rs.fn(() => ({
-    owner: true,
+    owner: mocks.sessionOwner,
     session: 'raw-local-session-id',
     [Symbol.dispose]: mocks.disposeSession,
   })),
@@ -83,6 +89,7 @@ rs.mock('./sse', () => ({
   },
 }));
 
+import { setAuthOrigin } from './auth-origin';
 import { checkAuth } from './login';
 
 describe('interactive authentication cleanup', () => {
@@ -90,6 +97,8 @@ describe('interactive authentication cleanup', () => {
     rs.clearAllMocks();
     mocks.stdinTTY = true;
     mocks.stdoutTTY = true;
+    mocks.stderrTTY = true;
+    mocks.sessionOwner = true;
   });
 
   it('fails with authentication guidance instead of waiting without an interactive stdin', async () => {
@@ -105,18 +114,57 @@ describe('interactive authentication cleanup', () => {
     expect(mocks.waitForToken).not.toHaveBeenCalled();
   });
 
-  // Nx on Windows runs tasks with stdio ['inherit', 'pipe', 'pipe'] and FORCE_COLOR set
-  // (picocolor's `isTTY` is mocked truthy here), capturing stdout to disk.
-  it('starts browser login without printing the URL when stdout is piped', async () => {
+  // `> build.log` keeps stderr on the terminal; Nx on Windows pipes both stdout and
+  // stderr (stdio ['inherit', 'pipe', 'pipe']) and may hold task output until the end.
+  it.each([
+    ['stdout is redirected', true],
+    ['Nx pipes stdout and stderr', false],
+  ])(
+    'opens the browser without a prompt or printed URL when %s',
+    async (_case, stderrTTY) => {
+      mocks.stdoutTTY = false;
+      mocks.stderrTTY = stderrTTY;
+      // Login completes only after the browser was opened, as it would for a real user.
+      const browserOpened = Promise.withResolvers<void>();
+      mocks.openUrl.mockImplementationOnce(async () => browserOpened.resolve());
+      mocks.waitForToken.mockImplementationOnce(async () => {
+        await browserOpened.promise;
+        return { token: 'raw-new-token' };
+      });
+      const stderrWrite = rs.spyOn(process.stderr, 'write').mockReturnValue(true);
+
+      try {
+        await expect(checkAuth()).resolves.toBeUndefined();
+
+        const stderrOutput = stderrWrite.mock.calls
+          .map((call) => String(call[0]))
+          .join('');
+        const userOutput = stderrOutput + JSON.stringify(mocks.logFn.mock.calls);
+        expect(mocks.question).not.toHaveBeenCalled();
+        expect(mocks.openUrl).toHaveBeenCalledWith(
+          'https://auth.example/authorize?state=server-one-time-state'
+        );
+        expect(mocks.saveToken).toHaveBeenCalledWith('raw-new-token');
+        expect(stderrOutput.includes('Opening your browser')).toBe(stderrTTY);
+        expect(userOutput).not.toContain('server-one-time-state');
+      } finally {
+        stderrWrite.mockRestore();
+      }
+    }
+  );
+
+  // Concurrent logins (e.g. `nx run-many` over a host and its remotes) share one session.
+  it('waits for the session owner without opening another browser tab when stdout is piped', async () => {
     mocks.stdoutTTY = false;
-    mocks.waitForToken.mockResolvedValue({ token: 'raw-new-token' });
+    mocks.sessionOwner = false;
+    mocks.getToken
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce('owner-saved-token');
 
     await expect(checkAuth()).resolves.toBeUndefined();
-    expect(mocks.makeRequest).toHaveBeenCalledTimes(1);
-    expect(mocks.saveToken).toHaveBeenCalledWith('raw-new-token');
-    const prompt = String(mocks.question.mock.calls[0]?.[0]);
-    expect(prompt).toContain('Enter');
-    expect(prompt).not.toContain('server-one-time-state');
+    expect(mocks.openUrl).not.toHaveBeenCalled();
+    expect(mocks.question).not.toHaveBeenCalled();
+    expect(JSON.stringify(mocks.logFn.mock.calls)).not.toContain('Opening your browser');
   });
 
   it('removes the private fallback artifact when authentication fails or times out', async () => {
@@ -181,5 +229,41 @@ describe('interactive authentication cleanup', () => {
     expect(persistedOutput).not.toContain('raw-new-token');
     expect(persistedOutput).not.toContain('raw-session-id');
     expect(mocks.disposeSession).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('authorize-link origin', () => {
+  beforeEach(() => {
+    rs.clearAllMocks();
+    mocks.stdinTTY = true;
+    mocks.stdoutTTY = true;
+    mocks.waitForToken.mockResolvedValue({ token: 'raw-new-token' });
+  });
+
+  afterEach(() => {
+    setAuthOrigin('plugin');
+  });
+
+  it('identifies bundler plugins so the login confirmation page names them', async () => {
+    await checkAuth();
+
+    expect(mocks.makeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/authorize-link',
+        query: { state: 'raw-local-session-id', origin: 'plugin' },
+      })
+    );
+  });
+
+  it('identifies the Zephyr CLI once it declares itself', async () => {
+    setAuthOrigin('cli');
+
+    await checkAuth();
+
+    expect(mocks.makeRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: { state: 'raw-local-session-id', origin: 'cli' },
+      })
+    );
   });
 });

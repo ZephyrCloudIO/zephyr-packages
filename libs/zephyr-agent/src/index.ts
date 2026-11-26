@@ -73,7 +73,32 @@ export {
 
 // logger
 export { ze_log } from './lib/logging';
-export { logFn } from './lib/logging/ze-log-event';
+export {
+  DEFAULT_LOG_FLUSH_TIMEOUT_MS,
+  logFn,
+  type JsonValue,
+  type LogContext,
+  type LogEventOptions,
+  type ZeLogger,
+} from './lib/logging/ze-log-event';
+export {
+  serializeLogError,
+  type SerializedLogError,
+} from './lib/logging/serialize-log-error';
+export {
+  ZE_BUILD_ID_HEADER,
+  ZE_LOG_FIELD_ATTRIBUTES,
+  ZE_USER_AGENT_PRODUCT,
+  ZeLogFields,
+  ZephyrAttributes,
+  type ZephyrAttributeName,
+} from './lib/logging/telemetry-contract';
+export {
+  formatUserAgent,
+  getRequestIdentity,
+  withRequestIdentity,
+  type RequestIdentity,
+} from './lib/http/request-identity';
 export {
   initializeLogRun,
   getCurrentRunDir,
@@ -129,6 +154,7 @@ export { getToken } from './lib/node-persist/token';
 
 // Auth related exports
 export { DEFAULT_AUTH_COMPLETION_TIMEOUT_MS, TOKEN_EXPIRY } from './lib/auth/auth-flags';
+export { setAuthOrigin, type ZeAuthOrigin } from './lib/auth/auth-origin';
 
 // Zephyr Edge is the main class which should be used
 export {
@@ -171,9 +197,14 @@ export {
   applyTargetPlaceholder,
   parseZeDependency,
 } from './lib/build-context/ze-util-parse-ze-dependencies';
-export { assertZephyrBuildTarget, ZEPHYR_MANIFEST_FILENAME } from 'zephyr-edge-contract';
+export {
+  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
+  ZEPHYR_MANIFEST_FILENAME,
+} from 'zephyr-edge-contract';
 export type {
   ZephyrBuildTarget,
+  ZephyrBundlerBuildTarget,
   ZephyrLegacyModuleFederationConfig,
   ZephyrModuleFederationBuildMetadata,
   ZephyrModuleFederationConfig,

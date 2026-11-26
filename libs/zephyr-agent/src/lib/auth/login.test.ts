@@ -68,17 +68,11 @@ describe('auth/login', () => {
     });
   });
 
-  it('preserves the one-time URL only in the dedicated interactive prompt', () => {
+  it('keeps the one-time URL unredacted in the dedicated terminal prompt', () => {
     const authUrl =
       'https://auth.example.com/authorize?state=copyable-one-time-state&code=copyable-code';
 
-    const prompt = formatAuthenticationPromptForTerminal(authUrl, true);
-
-    expect(prompt).toContain(authUrl);
-    expect(prompt).toContain('shown only in this terminal');
-    expect(formatAuthenticationPromptForTerminal(authUrl, false)).not.toContain(
-      'copyable-one-time-state'
-    );
+    expect(formatAuthenticationPromptForTerminal(authUrl)).toContain(authUrl);
   });
 
   it('creates a private fallback and removes its credential-bearing directory', () => {

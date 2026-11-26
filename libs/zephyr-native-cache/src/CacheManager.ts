@@ -1,6 +1,16 @@
 import NativeMFECache from './NativeMFECache';
-import type { BundleMetadata, CachedBundleResult, MFECacheConfig } from './types';
+import type {
+  BundleMetadata,
+  CachedBundleResult,
+  MFECacheConfig,
+  ZephyrVersionInfo,
+} from './types';
 import { getBundleCacheKey, getBundleCacheVariant } from './cache-key';
+import {
+  fetchVersionInfo,
+  toVersionedBundleUrl,
+  VERSION_INFO_TIMEOUT_MS,
+} from './version-info';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -102,14 +112,14 @@ export class CacheManager {
     metadata: {
       bundleUrl: string;
       bundleHash?: string;
-      buildVersion?: string;
+      version?: ZephyrVersionInfo;
     }
   ): Promise<BundleMetadata> {
     const now = Date.now();
     const meta: BundleMetadata = {
       remoteName,
       bundleHash: metadata.bundleHash ?? '',
-      buildVersion: metadata.buildVersion ?? '',
+      version: metadata.version,
       filePath,
       bundleUrl: getBundleCacheKey(metadata.bundleUrl),
       downloadedAt: now,
@@ -129,6 +139,97 @@ export class CacheManager {
     }
 
     return meta;
+  }
+
+  /**
+   * Download `bundleUrl` to `destPath` and verify it against `expectedHash`. The bytes
+   * are fetched from the Zephyr version the URL's host currently serves (its immutable
+   * version URL) when the edge reports one, so the returned version provably describes
+   * the file. Falls back to `bundleUrl` itself, without a version, when the version
+   * lookup or the versioned download fails or doesn't match. Returns null when nothing
+   * matched. `versionInfoTimeoutMs` bounds the version lookup, which delays the
+   * download.
+   */
+  async downloadVerifiedBundle(
+    bundleUrl: string,
+    destPath: string,
+    expectedHash: string,
+    versionInfoTimeoutMs?: number
+  ): Promise<{ version: ZephyrVersionInfo | undefined } | null> {
+    const version = await fetchVersionInfo(bundleUrl, versionInfoTimeoutMs);
+    const versionedUrl = version && toVersionedBundleUrl(bundleUrl, version.versionUrl);
+    if (versionedUrl) {
+      try {
+        if (await this.downloadMatching(versionedUrl, destPath, expectedHash)) {
+          return { version };
+        }
+      } catch (error) {
+        console.warn(`${LOG_PREFIX} versioned download failed: ${versionedUrl}`, error);
+      }
+    }
+    if (await this.downloadMatching(bundleUrl, destPath, expectedHash)) {
+      return { version: undefined };
+    }
+    return null;
+  }
+
+  /**
+   * Relabel cached bundles whose bytes a newer Zephyr version also serves. A publish that
+   * leaves a bundle's bytes unchanged doesn't trigger a download, so without this the
+   * bundle would keep naming the version it was first downloaded from.
+   *
+   * `hashes` maps the bundle URLs listed by `manifestUrl` to their current hashes. Only
+   * cached bundles with that hash are considered. The new version is taken only when that
+   * version's own (immutable) manifest lists the same hash for the bundle, so a publish
+   * landing between the two requests can't mislabel the file. Returns the relabeled
+   * metadata.
+   */
+  async refreshVersions(
+    manifestUrl: string,
+    hashes: Map<string, string>,
+    extractHashes: (manifest: unknown, manifestUrl: string) => Map<string, string>
+  ): Promise<BundleMetadata[]> {
+    const unchanged: BundleMetadata[] = [];
+    for (const [bundleUrl, hash] of hashes) {
+      const meta = this.urlIndex.get(getBundleCacheKey(bundleUrl));
+      if (meta?.bundleHash === hash) unchanged.push(meta);
+    }
+    if (!unchanged.length) return [];
+
+    const version = await fetchVersionInfo(manifestUrl);
+    if (!version) return [];
+    const stale = unchanged.filter(
+      (meta) => meta.version?.snapshotId !== version.snapshotId
+    );
+    const versionedManifestUrl =
+      stale.length && toVersionedBundleUrl(manifestUrl, version.versionUrl);
+    if (!versionedManifestUrl) return [];
+
+    let verified: Map<string, string>;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), VERSION_INFO_TIMEOUT_MS);
+    try {
+      const response = await fetch(versionedManifestUrl, { signal: controller.signal });
+      if (!response.ok) return [];
+      // Keyed like `hashes`: bundle URLs resolve against the environment manifest URL.
+      verified = extractHashes(await response.json(), manifestUrl);
+    } catch {
+      return [];
+    } finally {
+      clearTimeout(timeout);
+    }
+    const verifiedHashes = new Map<string, string>();
+    for (const [bundleUrl, hash] of verified) {
+      verifiedHashes.set(getBundleCacheKey(bundleUrl), hash);
+    }
+
+    const relabeled = stale.filter(
+      (meta) => verifiedHashes.get(meta.bundleUrl) === meta.bundleHash
+    );
+    if (!relabeled.length) return [];
+    for (const meta of relabeled) meta.version = version;
+    await this.saveDiskManifest();
+    return relabeled;
   }
 
   async updateLastUsedAt(bundleUrl: string): Promise<void> {
@@ -174,21 +275,13 @@ export class CacheManager {
     const destPath = await this.getBundleDestPath(remoteName, bundleUrl, newHash);
 
     try {
-      const { sha256 } = await NativeMFECache.downloadFile(bundleUrl, destPath);
-
-      // Verify downloaded content matches expected hash
-      if (sha256 !== newHash) {
-        try {
-          await NativeMFECache.deleteFile(destPath);
-        } catch {
-          /* ok */
-        }
-        return false;
-      }
+      const downloaded = await this.downloadVerifiedBundle(bundleUrl, destPath, newHash);
+      if (!downloaded) return false;
 
       await this.saveBundleToCache(remoteName, destPath, {
         bundleUrl,
-        bundleHash: sha256,
+        bundleHash: newHash,
+        version: downloaded.version,
       });
 
       console.info(`${LOG_PREFIX} pre-downloaded updated bundle: ${bundleUrl}`);
@@ -219,6 +312,21 @@ export class CacheManager {
   }
 
   // --- Private helpers ---
+
+  private async downloadMatching(
+    url: string,
+    destPath: string,
+    expectedHash: string
+  ): Promise<boolean> {
+    const { sha256 } = await NativeMFECache!.downloadFile(url, destPath);
+    if (sha256 === expectedHash) return true;
+    try {
+      await NativeMFECache!.deleteFile(destPath);
+    } catch {
+      /* ok */
+    }
+    return false;
+  }
 
   private get manifestPath(): string {
     return `${this.bundleDir}/cache-manifest.json`;

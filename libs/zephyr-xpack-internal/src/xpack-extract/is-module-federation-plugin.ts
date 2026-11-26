@@ -1,21 +1,18 @@
-import type { ModuleFederationPlugin, XPackConfiguration } from '../xpack.types';
-
-/** @private */
-type __webpack_plugin__ = NonNullable<XPackConfiguration<any>['plugins']>[number];
+import type { ModuleFederationPlugin } from '../xpack.types';
 
 export function isModuleFederationPlugin(
-  plugin?: __webpack_plugin__
+  plugin: unknown
 ): plugin is ModuleFederationPlugin {
   if (!plugin || typeof plugin !== 'object') return false;
 
+  const constructorName: unknown = plugin.constructor?.name;
   if (
-    typeof plugin.constructor.name?.includes === 'function' &&
-    plugin.constructor.name?.includes('ModuleFederationPlugin')
+    typeof constructorName === 'string' &&
+    constructorName.includes('ModuleFederationPlugin')
   ) {
     return true;
   }
 
-  return Boolean(
-    plugin['name']?.includes && plugin['name']?.includes('ModuleFederationPlugin')
-  );
+  const name: unknown = Reflect.get(plugin, 'name');
+  return typeof name === 'string' && name.includes('ModuleFederationPlugin');
 }

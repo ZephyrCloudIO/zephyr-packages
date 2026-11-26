@@ -5,22 +5,45 @@ const MAX_DEPTH = 10;
 const MAX_NODES = 2_000;
 
 const URL_IN_TEXT = /\bhttps?:\/\/[^\s<>"'`\p{Cc}]+/giu;
-const BEARER_TOKEN = /\b(Bearer\s+)[^\s,;"'}\]]+/giu;
+// Values that are already the redaction marker, bare or quoted as in serialized JSON,
+// must be left alone so that text passing through several logging layers stays stable
+// instead of being mangled into `[REDACTED]]]` or losing its quotes. A marker inside a
+// value (for example a URL fragment after a redacted query value) is consumed whole.
+const ESCAPED_REDACTED = REDACTED.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+const NOT_ALREADY_REDACTED = String.raw`(?!["']?${ESCAPED_REDACTED})`;
+const BEARER_TOKEN = new RegExp(
+  String.raw`\b(Bearer\s+)${NOT_ALREADY_REDACTED}(?:${ESCAPED_REDACTED}|[^\s,;"'}\]])+`,
+  'giu'
+);
 const JWT_TOKEN = /\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b/gu;
 const COOKIE_HEADER = /\b(cookie|set-cookie)(\s*:\s*)[^\r\n]*/giu;
-const SENSITIVE_ASSIGNMENT =
-  /((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)("[^"]*"|'[^']*'|[^,\s;&}\]]+)/giu;
-const SENSITIVE_WORD_VALUE =
-  /\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)([^\s,;"'}\]]+)/giu;
+const SENSITIVE_ASSIGNMENT = new RegExp(
+  String.raw`((?:["']?(?:x-amz-(?:credential|signature|security-token)|authorization|proxy-authorization|cookie|set-cookie|(?:[a-z0-9_-]*(?:token|secret|password|passwd|credential|signature|session|state|jwt|csrf)[a-z0-9_-]*)|(?:authorization|auth|oauth)?code)["']?)\s*(?::|=)\s*)${NOT_ALREADY_REDACTED}("[^"]*"|'[^']*'|(?:${ESCAPED_REDACTED}|[^,\s;&}\]])+)`,
+  'giu'
+);
+const SENSITIVE_WORD_VALUE = new RegExp(
+  String.raw`\b(token|secret|password|passwd|credential|signature|session|state|jwt|code)(\s+)${NOT_ALREADY_REDACTED}((?:${ESCAPED_REDACTED}|[^\s,;"'}\]])+)`,
+  'giu'
+);
+/** HTTP status codes, and `-1` for a request that was canceled before any response. */
+const HTTP_STATUS_CODE = /^(?:[1-5]\d{2}|-1)$/u;
 
 function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/**
+ * A `code` is safe to log when it names a diagnostic (`ZE40035`, `ECONNREFUSED`) or an
+ * HTTP status (`503`). OAuth authorization codes are opaque and longer, so they stay
+ * redacted.
+ */
 function isSafeDiagnosticCode(value: unknown): boolean {
+  if (typeof value === 'number') return HTTP_STATUS_CODE.test(String(value));
   return (
     typeof value === 'string' &&
-    (/^ZE\d{5}$/u.test(value) || /^E[A-Z][A-Z0-9_]{2,}$/u.test(value))
+    (/^ZE\d{5}$/u.test(value) ||
+      /^E[A-Z][A-Z0-9_]{2,}$/u.test(value) ||
+      HTTP_STATUS_CODE.test(value))
   );
 }
 
@@ -50,12 +73,26 @@ function isSensitiveKey(key: string, value: unknown): boolean {
   );
 }
 
+const CLOSING_BRACKETS: Record<string, string> = { ')': '(', ']': '[', '}': '{' };
+
+/**
+ * Split sentence punctuation off a URL found in prose. A closing bracket stays part of
+ * the URL when it balances an opening one inside it (e.g. `?sig=[REDACTED]` or
+ * `http://[::1]`), so already-redacted text is not re-redacted into `[REDACTED]]`.
+ */
 function splitTrailingPunctuation(value: string): [url: string, trailing: string] {
   let url = value;
   let trailing = '';
 
-  while (url.length > 0 && /[),.;\]}]/u.test(url.at(-1) ?? '')) {
-    trailing = `${url.at(-1)}${trailing}`;
+  while (url.length > 0) {
+    const last = url.at(-1) ?? '';
+    const opening = CLOSING_BRACKETS[last];
+    const isTrailing = opening
+      ? url.split(last).length > url.split(opening).length
+      : /[,.;]/u.test(last);
+    if (!isTrailing) break;
+
+    trailing = `${last}${trailing}`;
     url = url.slice(0, -1);
   }
 
@@ -115,9 +152,12 @@ function redactNonUrlText(value: string): string {
     )
     .replace(BEARER_TOKEN, `$1${REDACTED}`)
     .replace(JWT_TOKEN, REDACTED)
-    .replace(SENSITIVE_ASSIGNMENT, (match, prefix: string, assignedValue: string) =>
-      isSafeCodeAssignment(prefix, assignedValue) ? match : `${prefix}${REDACTED}`
-    )
+    .replace(SENSITIVE_ASSIGNMENT, (match, prefix: string, assignedValue: string) => {
+      if (isSafeCodeAssignment(prefix, assignedValue)) return match;
+      // Keep the value's quotes so redacted JSON stays valid JSON.
+      const quote = /^["']/u.test(assignedValue) ? assignedValue[0] : '';
+      return `${prefix}${quote}${REDACTED}${quote}`;
+    })
     .replace(
       SENSITIVE_WORD_VALUE,
       (match, key: string, whitespace: string, assignedValue: string) =>

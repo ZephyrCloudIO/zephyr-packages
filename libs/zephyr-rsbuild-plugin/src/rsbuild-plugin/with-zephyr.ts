@@ -1,19 +1,26 @@
 import type { RsbuildPlugin } from '@rsbuild/core';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
+  handleGlobalError,
   isZephyrDisabled,
   ZephyrEngine,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
 } from 'zephyr-agent';
 import {
   withZephyr as rspackWithZephyr,
   type ZephyrBuildHooks,
 } from 'zephyr-rspack-plugin';
-import { coordinateXPackCompilers, disableZephyrForXpack } from 'zephyr-xpack-internal';
+import {
+  coordinateXPackCompilers,
+  disableZephyrForXpack,
+  restorePlugins,
+  snapshotPlugins,
+  type PluginSnapshot,
+} from 'zephyr-xpack-internal';
 
 export interface ZephyrRsbuildPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;
   snapshotType?: 'csr' | 'ssr';
@@ -25,7 +32,7 @@ type RspackWithZephyrConfig = Parameters<ReturnType<typeof rspackWithZephyr>>[0]
 export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin {
   const target = options?.target;
   if (target !== undefined) {
-    assertZephyrBuildTarget(target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(target, 'withZephyr({ target })');
   }
   return {
     name: 'zephyr-rsbuild-plugin',
@@ -45,15 +52,18 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
             disableZephyrForXpack(bundlerConfigs);
             return;
           }
-          const engine = await ZephyrEngine.create({
-            builder: 'rspack',
-            context: bundlerConfigs[0]?.context,
-            target,
-          });
-          if (target !== undefined) {
-            engine.env.target = target;
-          }
+          let pluginSnapshot: PluginSnapshot | undefined;
+          let engine: ZephyrEngine | undefined;
           try {
+            pluginSnapshot = snapshotPlugins(bundlerConfigs);
+            engine = await ZephyrEngine.create({
+              builder: 'rspack',
+              context: bundlerConfigs[0]?.context,
+              target,
+            });
+            if (target !== undefined) {
+              engine.env.target = target;
+            }
             const { coordinator, compilers } = coordinateXPackCompilers(
               engine,
               bundlerConfigs,
@@ -87,8 +97,9 @@ export function withZephyr(options?: ZephyrRsbuildPluginOptions): RsbuildPlugin 
               }
             }
           } catch (error: unknown) {
-            if (engine.hasActiveBuild) engine.build_failed();
-            throw error;
+            if (pluginSnapshot) restorePlugins(bundlerConfigs, pluginSnapshot);
+            if (engine?.hasActiveBuild) await engine.build_failed(error);
+            handleGlobalError(error);
           }
         },
       });

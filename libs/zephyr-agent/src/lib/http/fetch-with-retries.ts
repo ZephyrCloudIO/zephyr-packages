@@ -4,6 +4,12 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 import { isCI } from 'ci-info';
 import { ZeErrors, ZephyrError } from '../errors';
 import {
+  createHttpResponseError,
+  createUnreachableError,
+  isUnreachableStatus,
+} from './http-failure';
+import { getRequestIdentityHeaders } from './request-identity';
+import {
   redactString,
   redactUrl,
   safeStringifyForLogging,
@@ -24,7 +30,26 @@ const RETRY_ERROR_CODES = [
   'EPIPE',
 ];
 const RETRY_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
-const RETRYABLE_STATUS_CODES = new Set([408, 425, 429]);
+
+function toHeaderRecord(headers: HeadersInit | undefined): Record<string, string> {
+  const record: Record<string, string> = {};
+  if (!headers) return record;
+  if (headers instanceof Headers) {
+    headers.forEach((value, key) => {
+      record[key] = value;
+    });
+  } else if (Array.isArray(headers)) {
+    for (const [key, value] of headers) record[key] = value;
+  } else {
+    Object.assign(record, headers);
+  }
+  return record;
+}
+
+function hasHeader(headers: Record<string, string>, name: string): boolean {
+  const lowerName = name.toLowerCase();
+  return Object.keys(headers).some((key) => key.toLowerCase() === lowerName);
+}
 
 function hasIdempotencyKey(headers: HeadersInit | undefined): boolean {
   if (!headers) return false;
@@ -120,10 +145,6 @@ function isRetryableNetworkError(error: unknown): boolean {
   );
 }
 
-function isRetryableStatus(status: number): boolean {
-  return RETRYABLE_STATUS_CODES.has(status) || status >= 500;
-}
-
 async function waitForRetry(
   retryIndex: number,
   deadline: number,
@@ -208,12 +229,22 @@ function toResponse(response: {
   } as Response;
 }
 
+function isTimeoutError(candidate: HttpLikeError): boolean {
+  return (
+    candidate.code === 'ETIMEDOUT' ||
+    candidate.code === 'ECONNABORTED' ||
+    String(candidate.message ?? '')
+      .toLowerCase()
+      .includes('timeout')
+  );
+}
+
 function normalizeRequestError(error: unknown, url: URL, method: string): Error {
   if (error instanceof ZephyrError) return error;
 
   const candidate = toHttpLikeError(error);
   if (candidate.response) {
-    return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+    return createHttpResponseError({
       status: candidate.response.status,
       url: redactUrl(url),
       content:
@@ -232,24 +263,31 @@ function normalizeRequestError(error: unknown, url: URL, method: string): Error 
       failedHostname = candidate.cause.hostname;
     }
 
-    return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
-      status: -1,
+    return createUnreachableError({
+      failure: 'dns',
       url: redactUrl(url),
-      content: `DNS lookup failed for hostname "${redactString(failedHostname)}" (ENOTFOUND). Verify the hostname's DNS record.`,
+      detail: `DNS lookup failed for hostname "${redactString(failedHostname)}" (ENOTFOUND)`,
       method,
     });
   }
 
-  if (isRetryableNetworkError(error) || candidate.code === 'ERR_CANCELED') {
+  if (candidate.code === 'ERR_CANCELED') {
     return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
       status: -1,
       url: redactUrl(url),
-      content:
-        candidate.code === 'ERR_CANCELED'
-          ? 'Request canceled'
-          : redactString(
-              `Request failed after retries: ${candidate.code ?? candidate.message}`
-            ),
+      content: 'Request canceled',
+      method,
+    });
+  }
+
+  if (isRetryableNetworkError(error)) {
+    const timedOut = isTimeoutError(candidate);
+    return createUnreachableError({
+      failure: timedOut ? 'timeout' : 'network',
+      url: redactUrl(url),
+      detail: redactString(
+        `${timedOut ? 'The request timed out' : 'The request failed'} after retries (${candidate.code ?? candidate.message})`
+      ),
       method,
     });
   }
@@ -298,22 +336,13 @@ export async function fetchWithRetries(
     ...(options.signal ? { signal: options.signal } : {}),
   };
 
-  if (options.headers) {
-    if (options.headers instanceof Headers) {
-      const headersRecord: Record<string, string> = {};
-      options.headers.forEach((value, key) => {
-        headersRecord[key] = value;
-      });
-      axiosConfig.headers = headersRecord;
-    } else if (Array.isArray(options.headers)) {
-      const headersRecord: Record<string, string> = {};
-      options.headers.forEach(([key, value]) => {
-        headersRecord[key] = value;
-      });
-      axiosConfig.headers = headersRecord;
-    } else {
-      axiosConfig.headers = options.headers as AxiosRequestConfig['headers'];
-    }
+  const headers = toHeaderRecord(options.headers);
+  // Identity headers go to Zephyr endpoints only, and never replace a caller's header.
+  for (const [name, value] of Object.entries(getRequestIdentityHeaders(url))) {
+    if (!hasHeader(headers, name)) headers[name] = value;
+  }
+  if (options.headers || Object.keys(headers).length > 0) {
+    axiosConfig.headers = headers as AxiosRequestConfig['headers'];
   }
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -325,7 +354,7 @@ export async function fetchWithRetries(
 
       if (
         attempt < maxRetries &&
-        isRetryableStatus(response.status) &&
+        isUnreachableStatus(response.status) &&
         (await waitForRetry(
           attempt,
           deadline,

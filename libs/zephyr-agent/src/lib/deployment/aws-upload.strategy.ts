@@ -5,6 +5,10 @@ import {
 } from 'zephyr-edge-contract';
 import type { UploadOptions, ZephyrEngine } from '../../zephyr-engine';
 import { zeUploadSnapshot } from '../edge-actions';
+import {
+  assetsUploadDoneData,
+  assetsUploadEmptyData,
+} from '../edge-actions/upload-log-data';
 import { update_hash_list } from '../edge-hash-list/distributed-hash-control';
 import { getApplicationConfiguration } from '../edge-requests/get-application-configuration';
 import { ZeErrors, ZephyrError } from '../errors';
@@ -121,6 +125,7 @@ async function zeUploadAssets(
     logger({
       level: 'info',
       action: 'snapshot:assets:upload:empty',
+      data: assetsUploadEmptyData(assetsMap),
       message: `No assets to upload, ${white('skipping')}...`,
     });
 
@@ -129,19 +134,27 @@ async function zeUploadAssets(
 
   const start = Date.now();
   let totalSize = 0;
+  let totalBytes = 0;
 
   await forEachLimit<void>(
     missingAssets.map((asset) => () => upload_missing_asset(asset)),
     AWS_UPLOAD_CONCURRENCY
   );
 
+  const durationMs = Date.now() - start;
   logger({
     level: 'info',
     action: 'snapshot:assets:upload:done',
+    data: assetsUploadDoneData({
+      missingAssets,
+      assetsMap,
+      bytes: totalBytes,
+      durationMs,
+    }),
     message: white(
       `(${whiteBright(
         missingAssets.length.toString()
-      )}/${white(count.toString())} assets uploaded in ${whiteBright((Date.now() - start).toString())}ms, ${whiteBright(totalSize.toFixed(2))}kb)`
+      )}/${white(count.toString())} assets uploaded in ${whiteBright(durationMs.toString())}ms, ${whiteBright(totalSize.toFixed(2))}kb)`
     ),
   });
 
@@ -186,6 +199,7 @@ async function zeUploadAssets(
     const fileUploaded = Date.now() - start;
 
     totalSize += assetSize;
+    totalBytes += assetWithBuffer?.buffer?.length ?? 0;
 
     ze_log.upload(
       `file ${asset.path} uploaded in ${fileUploaded}ms (${assetSize.toFixed(2)}kb)`

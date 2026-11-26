@@ -1,5 +1,26 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 import type { ZeResolvedDependency } from 'zephyr-agent';
+import {
+  snapshotPlugins,
+  restorePlugins,
+} from '../../../zephyr-xpack-internal/src/xpack-extract/plugin-snapshot';
 import type { Configuration } from './with-zephyr';
 
 const mocks = rs.hoisted(() => {
@@ -13,16 +34,15 @@ const mocks = rs.hoisted(() => {
   };
   return {
     engine,
-    assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
-      if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
-        throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
-      }
-    }),
     create: rs.fn(async () => engine),
     getGlobal: rs.fn(() => ({})),
+    handleGlobalError: rs.fn((error: unknown, options?: { failBuild?: boolean }) => {
+      if (options?.failBuild ?? process.env['ZE_FAIL_BUILD'] === 'true') throw error;
+    }),
+    snapshotPlugins: rs.fn(() => ['snapshot']),
+    restorePlugins: rs.fn(),
     isZephyrDisabled: rs.fn(() => false),
     disableZephyrForXpack: rs.fn((config: unknown) => config),
-    handleGlobalError: rs.fn(),
     extractFederatedDependencyPairs: rs.fn(),
     extractLibraryType: rs.fn(() => 'module'),
     mutWebpackFederatedRemotesConfig: rs.fn(),
@@ -32,7 +52,8 @@ const mocks = rs.hoisted(() => {
 });
 
 rs.mock('zephyr-agent', () => ({
-  assertZephyrBuildTarget: mocks.assertBuildTarget,
+  assertZephyrBundlerBuildTarget: (rs.requireActual('zephyr-agent') as typeof ZephyrAgent)
+    .assertZephyrBundlerBuildTarget,
   getGlobal: mocks.getGlobal,
   isZephyrDisabled: mocks.isZephyrDisabled,
   handleGlobalError: mocks.handleGlobalError,
@@ -46,6 +67,8 @@ rs.mock('zephyr-xpack-internal', () => ({
   mutWebpackFederatedRemotesConfig: mocks.mutWebpackFederatedRemotesConfig,
   makeCopyOfModuleFederationOptions: mocks.makeCopyOfModuleFederationOptions,
   coordinateXPackCompilers: mocks.coordinateXPackCompilers,
+  snapshotPlugins: mocks.snapshotPlugins,
+  restorePlugins: mocks.restorePlugins,
 }));
 
 rs.mock('./ze-rspack-plugin', () => ({
@@ -91,6 +114,46 @@ describe('Rspack withZephyr compiler arrays', () => {
     }));
   });
 
+  it('restores actual nested federation state after partial array configuration', async () => {
+    const remotes = { remote: 'remote@http://localhost:3001/remoteEntry.js' };
+    const runtimePlugins = ['user-runtime'];
+    const federation = {
+      name: 'ModuleFederationPlugin',
+      apply() {},
+      _options: { name: 'host', remotes, runtimePlugins },
+    };
+    const configs = [{ name: 'client', plugins: [federation] }, { name: 'broken' }];
+    mocks.snapshotPlugins.mockImplementationOnce(snapshotPlugins as never);
+    mocks.restorePlugins.mockImplementationOnce(restorePlugins);
+    mocks.mutWebpackFederatedRemotesConfig.mockImplementationOnce(() => {
+      remotes.remote = 'remote@https://example.test/remoteEntry.js';
+      runtimePlugins.push('zephyr-runtime');
+    });
+
+    await expect(withZephyr({ failBuild: false })(configs as never)).resolves.toBe(
+      configs
+    );
+
+    expect(configs[0]?.plugins).toEqual([federation]);
+    expect(remotes.remote).toBe('remote@http://localhost:3001/remoteEntry.js');
+    expect(runtimePlugins).toEqual(['user-runtime']);
+  });
+
+  it.each([false, true])(
+    'handles snapshot errors with failBuild=%s',
+    async (failBuild) => {
+      const error = new Error('snapshot failed');
+      mocks.snapshotPlugins.mockImplementationOnce(() => {
+        throw error;
+      });
+      const configs = [{ name: 'client' }, { name: 'server' }];
+      const result = withZephyr({ failBuild })(configs as never);
+      if (failBuild) await expect(result).rejects.toBe(error);
+      else await expect(result).resolves.toBe(configs);
+      expect(mocks.create).not.toHaveBeenCalled();
+    }
+  );
+
   it('initializes missing plugin arrays and preserves remotes from every compiler', async () => {
     const configs = [
       { name: 'client', context: '/repo', output: { path: '/repo/dist/client' } },
@@ -124,26 +187,103 @@ describe('Rspack withZephyr compiler arrays', () => {
     expect(mocks.create).not.toHaveBeenCalled();
   });
 
-  it('rejects coordinated configuration errors instead of waiting for a missing compiler', async () => {
-    const configs = [
-      { name: 'client', context: '/repo' },
-      { name: 'broken', context: '/repo' },
-    ] as unknown as Configuration[];
+  it('rejects the worker target and points to ze-cli', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () => withZephyr({ target: 'worker' });
 
-    await expect(withZephyr()(configs)).rejects.toThrow('invalid federation config');
-    expect(mocks.handleGlobalError).not.toHaveBeenCalled();
-    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
   });
 
-  it('rolls back direct configuration errors before preserving fail-open semantics', async () => {
+  it('keeps accepting the web and tap-app targets', () => {
+    expect(() => withZephyr({ target: 'web' })).not.toThrow();
+    expect(() => withZephyr({ target: 'tap-app' })).not.toThrow();
+  });
+
+  describe('when Zephyr fails while configuring a compiler array', () => {
+    const originalFailBuild = process.env['ZE_FAIL_BUILD'];
+
+    function brokenArray(): Configuration[] {
+      return [
+        { name: 'client', context: '/repo' },
+        { name: 'broken', context: '/repo' },
+      ] as unknown as Configuration[];
+    }
+
+    afterEach(() => {
+      if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+      else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    });
+
+    it('lets the failBuild option override ZE_FAIL_BUILD in both directions', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      await expect(withZephyr({ failBuild: true })(brokenArray())).rejects.toThrow(
+        'invalid federation config'
+      );
+
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const configs = brokenArray();
+      await expect(withZephyr({ failBuild: false })(configs)).resolves.toBe(configs);
+    });
+
+    it('fails the build when ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+
+      await expect(withZephyr()(brokenArray())).rejects.toThrow(
+        'invalid federation config'
+      );
+      expect(mocks.handleGlobalError).toHaveBeenCalledTimes(1);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the build green without ZE_FAIL_BUILD and removes the partial plugins', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const configs = brokenArray();
+
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(
+        expect.objectContaining({ message: 'invalid federation config' }),
+        { failBuild: undefined }
+      );
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('fails the build when Zephyr cannot start and ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const unreachable = new Error('Zephyr cannot be reached');
+      mocks.create.mockRejectedValueOnce(unreachable);
+
+      await expect(withZephyr()(brokenArray())).rejects.toBe(unreachable);
+      expect(mocks.engine.build_failed).not.toHaveBeenCalled();
+    });
+
+    it('keeps the build green when Zephyr cannot start and ZE_FAIL_BUILD is unset', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const unreachable = new Error('Zephyr cannot be reached');
+      mocks.create.mockRejectedValueOnce(unreachable);
+      const configs = brokenArray();
+
+      await expect(withZephyr()(configs)).resolves.toBe(configs);
+
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(unreachable, {
+        failBuild: undefined,
+      });
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(configs, ['snapshot']);
+    });
+  });
+
+  it('releases the direct build before logging configuration errors', async () => {
     const config = { name: 'broken', context: '/repo' } as unknown as Configuration;
 
-    await expect(withZephyr()(config)).resolves.toBe(config);
+    await expect(withZephyr({ failBuild: false })(config)).resolves.toBe(config);
 
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
     expect(mocks.handleGlobalError).toHaveBeenCalledWith(
       expect.objectContaining({ message: 'invalid federation config' }),
-      { failBuild: undefined }
+      { failBuild: false }
     );
   });
   it('skips every Zephyr step when ZE_DISABLED is set', async () => {

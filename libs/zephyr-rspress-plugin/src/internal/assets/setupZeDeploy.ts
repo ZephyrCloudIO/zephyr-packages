@@ -26,7 +26,7 @@ export async function setupZeDeploy({
     await zephyr_engine.start_new_build();
   } catch (error: unknown) {
     if (zephyr_engine.hasActiveBuild !== false) {
-      zephyr_engine.build_failed();
+      await zephyr_engine.build_failed(error);
     }
     throw error;
   }

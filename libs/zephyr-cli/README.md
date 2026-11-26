@@ -76,6 +76,9 @@ ze-cli deploy ./dist
 # Upload with specific target
 ze-cli deploy ./dist --target ios
 
+# Publish a worker build (worker builds are published with ze-cli only)
+ze-cli deploy ./dist --target worker
+
 # Publish a TAP mini-app artifact
 ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
 
@@ -91,6 +94,24 @@ With `--format json`, a successful deploy prints
 `versionUrl` is the immutable URL of this version and is `null` if Zephyr returned
 none; `targetUrls` lists the tag and environment URLs that now serve it. Tools that
 deploy on a user's behalf should read this line instead of parsing logs.
+
+When the deploy fails, `--format json` still prints exactly one JSON document on stdout,
+the logs stay on stderr, and the exit code is 1:
+
+```json
+{
+  "schemaVersion": "1.0.0",
+  "ok": false,
+  "error": { "code": "ZE20014", "reason": "ZE50001", "kind": "unreachable", "message": "…" }
+}
+```
+
+`code` is the Zephyr error code. `reason` is the code of the root cause when a wrapper
+error hides it, and is absent otherwise. `kind` is the category of the root cause:
+`unreachable` (Zephyr cannot be reached, or failed on its side), `auth`, `forbidden`,
+`config`, `build`, `deploy`, `browser` or `unknown`. The message has no colors and no
+secrets. A successful result has no `ok` field, so use the exit code to tell a failure
+from a success.
 
 ### Watch Command
 
@@ -263,7 +284,7 @@ the wrapped build already runs a Zephyr plugin, both print the line.
 ## Options
 
 - `--ssr` - Mark this snapshot as server-side rendered
-- `--target, -t <target>` - Build target: `web`, `ios`, `android`, or `tap-app` (default: `web`)
+- `--target, -t <target>` - Build target: `web`, `ios`, `android`, `tap-app`, or `worker` (default: `web`)
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
 - `--format <json|text>` - Doctor report format, or deploy result format (default: `text`)
@@ -327,7 +348,9 @@ sidecar during the build. For `watch`, the sidecar is reread for every snapshot.
 2. **Detects configuration files** (e.g., `package.json`, `tsconfig.json`, etc.)
 3. **Warns about dynamic configs** (e.g., JavaScript config files) and suggests alternatives
 4. **Runs the command** with full stdio passthrough
-5. **Infers the output directory** from the configuration
+5. **Infers the output directory** from the configuration. If it cannot, the command
+   exits with code 1 (`ZE20024`) after the build, and you upload the output with
+   `ze-cli deploy <dir>`
 6. **Uploads assets** to Zephyr automatically
 
 ### Deploy Command

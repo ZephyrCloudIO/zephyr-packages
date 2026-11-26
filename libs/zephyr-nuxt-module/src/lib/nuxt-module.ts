@@ -1,7 +1,7 @@
 import { defineNuxtModule } from '@nuxt/kit';
 import type { NuxtModule } from '@nuxt/schema';
 import {
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   isZephyrDisabled,
   logZephyrDisabled,
   ZephyrEngine,
@@ -19,7 +19,7 @@ const zephyrNuxtModule: NuxtModule<ZephyrNuxtOptions> =
     defaults: {},
     setup(options, nuxt) {
       if (options.target !== undefined) {
-        assertZephyrBuildTarget(options.target, 'zephyr({ target })');
+        assertZephyrBundlerBuildTarget(options.target, 'zephyr({ target })');
       }
 
       const nuxtLike = nuxt as unknown as NuxtLike;

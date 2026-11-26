@@ -1,4 +1,21 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 import type { Mock } from '@rstest/core';
 import { handleGlobalError, zeBuildDashData } from 'zephyr-agent';
 import { withZephyr } from './rollup-plugin-zephyr';
@@ -13,18 +30,14 @@ const mocks = rs.hoisted(() => {
   };
   return {
     engine,
-    assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
-      if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
-        throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
-      }
-    }),
     deferCreate: rs.fn(),
     getAssetsMap: rs.fn().mockReturnValue({}),
   };
 });
 
 rs.mock('zephyr-agent', () => ({
-  assertZephyrBuildTarget: mocks.assertBuildTarget,
+  assertZephyrBundlerBuildTarget: (rs.requireActual('zephyr-agent') as typeof ZephyrAgent)
+    .assertZephyrBundlerBuildTarget,
   ZeErrors: { ERR_DEPLOY_LOCAL_BUILD: 'ERR_DEPLOY_LOCAL_BUILD' },
   ZephyrError: class extends Error {
     constructor(_code: string, options?: { message?: string }) {
@@ -86,6 +99,7 @@ describe('rollup Zephyr lifecycle', () => {
 
     expect(handleGlobalError).toHaveBeenCalledWith(uploadFailure);
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.build_failed).toHaveBeenCalledWith(uploadFailure);
     expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(2);
     expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
   });
@@ -93,9 +107,12 @@ describe('rollup Zephyr lifecycle', () => {
   it('releases the active generation when Rollup reports a build error', async () => {
     const plugin = withZephyr();
     await plugin.buildStart({ input: 'src/index.ts' } as never);
-    await plugin.buildEnd(new Error('compile failed'));
+    const compileFailure = new Error('compile failed');
+    await plugin.buildEnd(compileFailure);
 
+    // The engine reports build:failed with this error (see zephyr-agent).
     expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    expect(mocks.engine.build_failed).toHaveBeenCalledWith(compileFailure);
   });
 
   it('passes tap-app into the engine before Rollup starts a build', async () => {
@@ -114,6 +131,19 @@ describe('rollup Zephyr lifecycle', () => {
     expect(() => withZephyr({ target: 'desktop' as never })).toThrow(
       'withZephyr({ target }) must be one of'
     );
+  });
+
+  it('rejects the worker target and points to ze-cli', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () => withZephyr({ target: 'worker' });
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
+  });
+
+  it('keeps accepting the web target (tap-app is covered by the metadata tests)', () => {
+    expect(() => withZephyr({ target: 'web' })).not.toThrow();
   });
 
   it('publishes every TAP federation container without selecting a legacy first entry', async () => {

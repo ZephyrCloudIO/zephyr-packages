@@ -9,6 +9,7 @@ import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
 import { redactString, redactUrl, safeStringifyForLogging } from '../security/redaction';
 import { fetchWithRetries } from './fetch-with-retries';
+import { createHttpResponseError } from './http-failure';
 
 /** Http request wrapper that returns a tuple with the response data or an error. */
 export type HttpResponse<T> =
@@ -137,7 +138,7 @@ export async function makeHttpRequest<T = void>(
     const resData = safe_json_parse<unknown>(resText) ?? resText;
 
     if (!response.status || response.status >= 300) {
-      throw new ZephyrError(ZeErrors.ERR_HTTP_ERROR, {
+      throw createHttpResponseError({
         status: response.status,
         url: redactUrl(url),
         content:

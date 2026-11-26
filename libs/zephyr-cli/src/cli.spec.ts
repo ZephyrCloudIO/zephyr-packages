@@ -1,7 +1,66 @@
-import { describe, expect, it } from '@rstest/core';
-import { parseArgs } from './cli';
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: ze-cli accepts every public build target
+//     Given --target worker (also -t worker) with a run command or a deploy directory
+//     Then the parsed options carry target "worker"
+//
+//   Scenario: ze-cli rejects unknown targets
+//     Given an unknown or wrongly-cased target such as "WORKER"
+//     Then parsing throws "Unsupported Zephyr build target"
+//
+//   Scenario: the help text lists every target
+//     Given --help
+//     Then the target line is built from the shared list, including worker
+//
+// The remaining scenarios are described by the test names in this file.
+import { describe, expect, it, rs } from '@rstest/core';
+import { isJsonDeploy, parseArgs } from './cli';
 
 describe('parseArgs build target', () => {
+  it('accepts worker before a run command', () => {
+    expect(parseArgs(['--target', 'worker', 'pnpm', 'build'])).toMatchObject({
+      command: 'run',
+      commandLine: 'pnpm build',
+      target: 'worker',
+    });
+  });
+
+  it('accepts worker after a deploy directory, also through -t', () => {
+    expect(parseArgs(['deploy', './dist', '--target', 'worker'])).toMatchObject({
+      command: 'deploy',
+      directory: './dist',
+      target: 'worker',
+    });
+    expect(parseArgs(['deploy', './dist', '-t', 'worker'])).toMatchObject({
+      target: 'worker',
+    });
+  });
+
+  it('rejects a wrongly-cased or missing worker target', () => {
+    expect(() => parseArgs(['deploy', './dist', '--target', 'WORKER'])).toThrow(
+      'Unsupported Zephyr build target: WORKER'
+    );
+    expect(() => parseArgs(['deploy', './dist', '--target'])).toThrow(
+      'Unsupported Zephyr build target: undefined'
+    );
+  });
+
+  it('lists every build target, including worker, in the help text', () => {
+    const log = rs.spyOn(console, 'log').mockImplementation(() => undefined);
+    const exit = rs.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('exit');
+    }) as never);
+    try {
+      expect(() => parseArgs(['--help'])).toThrow('exit');
+      expect(log.mock.calls.flat().join('\n')).toContain(
+        'Build target: web, ios, android, tap-app, or worker (default: web)'
+      );
+    } finally {
+      log.mockRestore();
+      exit.mockRestore();
+    }
+  });
+
   it('accepts tap-app before a run command', () => {
     expect(parseArgs(['--target', 'tap-app', 'pnpm', 'build'])).toMatchObject({
       command: 'run',
@@ -151,5 +210,25 @@ describe('parseArgs deploy result format', () => {
     expect(() => parseArgs(['deploy', './dist', '--format', 'yaml'])).toThrow(
       '--format must be either json or text.'
     );
+  });
+});
+
+describe('isJsonDeploy', () => {
+  it('detects deploy with --format json, before or after other options', () => {
+    expect(isJsonDeploy(['deploy', './dist', '--format', 'json'])).toBe(true);
+    expect(
+      isJsonDeploy(['--target', 'web', 'deploy', './dist', '--format', 'json'])
+    ).toBe(true);
+  });
+
+  it('ignores other commands and text output', () => {
+    expect(isJsonDeploy(['deploy', './dist'])).toBe(false);
+    expect(isJsonDeploy(['deploy', 'd', '--format', 'json', '--format', 'text'])).toBe(
+      false
+    );
+    expect(isJsonDeploy(['deploy', './dist', '--format', 'text'])).toBe(false);
+    expect(isJsonDeploy(['deploy', '--format', 'json'])).toBe(false);
+    expect(isJsonDeploy(['doctor', '.', '--format', 'json'])).toBe(false);
+    expect(isJsonDeploy(['npm', 'run', 'deploy', '--format', 'json'])).toBe(false);
   });
 });

@@ -1,4 +1,21 @@
-import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
+import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
   engine: {
@@ -10,19 +27,21 @@ const mocks = rs.hoisted(() => ({
   },
   create: rs.fn(),
   coordinate: rs.fn(),
+  handleGlobalError: rs.fn((error: unknown) => {
+    if (process.env['ZE_FAIL_BUILD'] === 'true') throw error;
+  }),
+  snapshotPlugins: rs.fn(() => ['snapshot']),
+  restorePlugins: rs.fn(),
   configure: rs.fn(),
   rspackWithZephyr: rs.fn(),
   isZephyrDisabled: rs.fn(() => false),
   disableZephyrForXpack: rs.fn(),
-  assertBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
-    if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
-      throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
-    }
-  }),
 }));
 
 rs.mock('zephyr-agent', () => ({
-  assertZephyrBuildTarget: mocks.assertBuildTarget,
+  assertZephyrBundlerBuildTarget: (rs.requireActual('zephyr-agent') as typeof ZephyrAgent)
+    .assertZephyrBundlerBuildTarget,
+  handleGlobalError: mocks.handleGlobalError,
   isZephyrDisabled: mocks.isZephyrDisabled,
   ZephyrEngine: { create: mocks.create },
 }));
@@ -30,6 +49,8 @@ rs.mock('zephyr-agent', () => ({
 rs.mock('zephyr-xpack-internal', () => ({
   disableZephyrForXpack: mocks.disableZephyrForXpack,
   coordinateXPackCompilers: mocks.coordinate,
+  snapshotPlugins: mocks.snapshotPlugins,
+  restorePlugins: mocks.restorePlugins,
 }));
 
 rs.mock('zephyr-rspack-plugin', () => ({
@@ -127,23 +148,70 @@ describe('Rsbuild withZephyr compiler coordination', () => {
     expect(mocks.rspackWithZephyr).not.toHaveBeenCalled();
   });
 
-  it('releases the shared engine when coordinated configuration fails', async () => {
-    let hook:
-      | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
-      | undefined;
-    const error = new Error('configuration failed');
-    mocks.configure.mockRejectedValueOnce(error);
-    const plugin = withZephyr();
-    await plugin.setup({
-      onBeforeCreateCompiler(options: { handler: typeof hook }) {
-        hook = options.handler;
-      },
-    } as never);
+  describe('when Zephyr fails while configuring the bundler configs', () => {
+    const originalFailBuild = process.env['ZE_FAIL_BUILD'];
 
-    await expect(
-      hook?.({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
-    ).rejects.toBe(error);
-    expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    async function registeredHook() {
+      let hook:
+        | ((options: { bundlerConfigs: Array<Record<string, unknown>> }) => Promise<void>)
+        | undefined;
+      await withZephyr().setup({
+        onBeforeCreateCompiler(options: { handler: typeof hook }) {
+          hook = options.handler;
+        },
+      } as never);
+      if (!hook)
+        throw new Error('Expected onBeforeCreateCompiler handler to be registered');
+      return hook;
+    }
+
+    afterEach(() => {
+      if (originalFailBuild === undefined) delete process.env['ZE_FAIL_BUILD'];
+      else process.env['ZE_FAIL_BUILD'] = originalFailBuild;
+    });
+
+    it('releases the shared engine and fails the build when ZE_FAIL_BUILD=true', async () => {
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      const error = new Error('configuration failed');
+      mocks.configure.mockRejectedValueOnce(error);
+      const hook = await registeredHook();
+
+      await expect(
+        hook({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
+      ).rejects.toBe(error);
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+    });
+
+    it('releases the engine, removes the plugins and keeps the build green otherwise', async () => {
+      delete process.env['ZE_FAIL_BUILD'];
+      const error = new Error('configuration failed');
+      mocks.configure.mockRejectedValueOnce(error);
+      const bundlerConfigs = [{ name: 'web', context: '/repo' }];
+      const hook = await registeredHook();
+
+      await expect(hook({ bundlerConfigs })).resolves.toBeUndefined();
+
+      expect(mocks.engine.build_failed).toHaveBeenCalledTimes(1);
+      expect(mocks.handleGlobalError).toHaveBeenCalledWith(error);
+      expect(mocks.restorePlugins).toHaveBeenCalledWith(bundlerConfigs, ['snapshot']);
+    });
+
+    it('follows ZE_FAIL_BUILD when Zephyr cannot start at all', async () => {
+      const unreachable = new Error('Zephyr cannot be reached');
+      const hook = await registeredHook();
+
+      mocks.create.mockRejectedValueOnce(unreachable);
+      delete process.env['ZE_FAIL_BUILD'];
+      await expect(
+        hook({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
+      ).resolves.toBeUndefined();
+
+      mocks.create.mockRejectedValueOnce(unreachable);
+      process.env['ZE_FAIL_BUILD'] = 'true';
+      await expect(
+        hook({ bundlerConfigs: [{ name: 'web', context: '/repo' }] })
+      ).rejects.toBe(unreachable);
+    });
   });
 
   it('rejects unsupported targets before registering a compiler hook', () => {
@@ -151,5 +219,19 @@ describe('Rsbuild withZephyr compiler coordination', () => {
       'withZephyr({ target }) must be one of'
     );
     expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects the worker target and points to ze-cli', () => {
+    // @ts-expect-error worker is publishable through ze-cli only
+    const run = () => withZephyr({ target: 'worker' });
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
+  });
+
+  it('keeps accepting the web and tap-app targets', () => {
+    expect(() => withZephyr({ target: 'web' })).not.toThrow();
+    expect(() => withZephyr({ target: 'tap-app' })).not.toThrow();
   });
 });

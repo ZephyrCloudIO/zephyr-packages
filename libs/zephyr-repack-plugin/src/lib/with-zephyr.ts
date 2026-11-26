@@ -179,7 +179,7 @@ async function _zephyr_configuration(
     );
   } catch (error) {
     if (zephyr_engine?.hasActiveBuild !== false) {
-      zephyr_engine?.build_failed();
+      await zephyr_engine?.build_failed(error);
     }
     handleGlobalError(error);
   }

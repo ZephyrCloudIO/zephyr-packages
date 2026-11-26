@@ -1,10 +1,38 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, test, rs } from '@rstest/core';
 import type * as NodeModule from 'node:module';
 import type { Plugin, ResolvedConfig } from 'vite' with {
   'resolution-mode': 'import',
 };
-import { applyBaseHrefToAssets, type ZeBuildAssetsMap } from 'zephyr-agent';
+import {
+  applyBaseHrefToAssets,
+  isZephyrUnreachableError,
+  ZeErrors,
+  ZephyrError,
+  type ZeBuildAssetsMap,
+} from 'zephyr-agent';
+
+interface DeferredEngineState {
+  deferredEngine?: Promise<unknown>;
+}
+
+const engineState = rs.hoisted((): DeferredEngineState => ({}));
 
 const mocks = rs.hoisted(() => ({
   viteVersion: '7.0.0',
@@ -67,7 +95,7 @@ rs.mock('zephyr-agent', () => {
     },
     ZephyrEngine: {
       defer_create: () => ({
-        zephyr_engine_defer: Promise.resolve(mocks.engine),
+        zephyr_engine_defer: engineState.deferredEngine ?? Promise.resolve(mocks.engine),
         zephyr_defer_create: mocks.deferCreate,
       }),
     },
@@ -141,6 +169,32 @@ test('rejects unsupported targets before Vite resolves configuration', () => {
   expect(mocks.deferCreate).not.toHaveBeenCalled();
 });
 
+test('rejects the worker target and points to ze-cli', () => {
+  // @ts-expect-error worker is publishable through ze-cli only
+  const run = () => withZephyr({ target: 'worker' });
+
+  expect(run).toThrow(TypeError);
+  expect(run).toThrow('withZephyr({ target }) does not support "worker"');
+  expect(run).toThrow('ze-cli');
+});
+
+test('keeps accepting the web and tap-app targets', () => {
+  expect(() => withZephyr({ target: 'web' })).not.toThrow();
+  expect(() => withZephyr({ target: 'tap-app' })).not.toThrow();
+});
+
+test('withZephyrPartial rejects the worker target and unsupported targets', () => {
+  // @ts-expect-error worker is publishable through ze-cli only
+  const worker = () => withZephyrPartial({ target: 'worker' });
+
+  expect(worker).toThrow('withZephyrPartial({ target }) does not support "worker"');
+  expect(worker).toThrow('ze-cli');
+  expect(() => withZephyrPartial({ target: 'desktop' as never })).toThrow(
+    'withZephyrPartial({ target }) must be one of'
+  );
+  expect(() => withZephyrPartial({ target: 'web' })).not.toThrow();
+});
+
 test('passes tap-app into the engine before resolving Vite remotes', async () => {
   const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
   await (plugin.configResolved as (config: ResolvedConfig) => void | Promise<void>)(
@@ -190,13 +244,18 @@ type TestWriteBundle = (
   bundle: Record<string, never>
 ) => Promise<void>;
 
+function defined<T>(value: T | undefined, what: string): T {
+  if (value === undefined) throw new Error(`Expected ${what} to be defined`);
+  return value;
+}
+
 function writeBundleHandler(plugin: Plugin): TestWriteBundle {
-  const hook = plugin.writeBundle!;
+  const hook = defined(plugin.writeBundle, 'plugin.writeBundle');
   return (typeof hook === 'function' ? hook : hook.handler) as TestWriteBundle;
 }
 
 function closeBundleHandler(plugin: Plugin): () => Promise<void> {
-  const hook = plugin.closeBundle!;
+  const hook = defined(plugin.closeBundle, 'plugin.closeBundle');
   return (typeof hook === 'function' ? hook : hook.handler) as () => Promise<void>;
 }
 
@@ -245,6 +304,7 @@ describe('vite-plugin-zephyr', () => {
     });
     mocks.engine.upload_assets.mockResolvedValue(undefined);
     mocks.extractAssets.mockResolvedValue(asset('app.js'));
+    engineState.deferredEngine = undefined;
     delete process.env['ZE_FAIL_BUILD'];
     delete process.env['ZE_BUILD_INVOCATION_ID'];
   });
@@ -627,7 +687,10 @@ describe('vite-plugin-zephyr', () => {
     ]);
 
     const plugins = withZephyr({ mfConfig }) as Plugin[];
-    const plugin = plugins.find((candidate) => candidate.name === 'with-zephyr')!;
+    const plugin = defined(
+      plugins.find((candidate) => candidate.name === 'with-zephyr'),
+      'with-zephyr plugin'
+    );
     const config = resolvedConfig({
       client: { consumer: 'client', build: { outDir: 'dist/client' } },
     });
@@ -663,7 +726,8 @@ describe('vite-plugin-zephyr', () => {
 
   test('keeps an SDK-owned TAP manifest from public/static output without regeneration', async () => {
     const sdkStaticManifest = asset('zephyr-manifest.json', 'sdk-manifest-lock');
-    sdkStaticManifest['sdk-manifest-lock']!.buffer = '{"sdk":"locked"}';
+    defined(sdkStaticManifest['sdk-manifest-lock'], 'sdk manifest asset').buffer =
+      '{"sdk":"locked"}';
     const plugin = withZephyr({ target: 'tap-app' })[0] as Plugin;
     const config = resolvedConfig(
       { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
@@ -927,8 +991,9 @@ describe('vite-plugin-zephyr', () => {
     const writeBundle = writeBundleHandler(plugin);
     const desktopAssets = asset('sdk/desktop/runtime.js', 'desktop-sdk-lock');
     const workerAssets = asset('sdk/worker/runtime.js', 'worker-sdk-lock');
-    desktopAssets['desktop-sdk-lock']!.buffer = 'desktop SDK bytes';
-    workerAssets['worker-sdk-lock']!.buffer = 'worker SDK bytes';
+    defined(desktopAssets['desktop-sdk-lock'], 'desktop asset').buffer =
+      'desktop SDK bytes';
+    defined(workerAssets['worker-sdk-lock'], 'worker asset').buffer = 'worker SDK bytes';
     mocks.extractAssets
       .mockResolvedValueOnce(desktopAssets)
       .mockResolvedValueOnce(workerAssets);
@@ -1230,6 +1295,78 @@ describe('vite-plugin-zephyr', () => {
     expect(mocks.engine.upload_assets).toHaveBeenCalledTimes(2);
     expect(mocks.engine.start_new_build).toHaveBeenCalledTimes(1);
     expect(mocks.engine.build_finished).toHaveBeenCalledTimes(1);
+  });
+
+  describe('when Zephyr is unreachable', () => {
+    function unreachableError(): ZephyrError<'ERR_ZEPHYR_UNREACHABLE'> {
+      return new ZephyrError(ZeErrors.ERR_ZEPHYR_UNREACHABLE, {
+        method: 'GET',
+        url: 'https://api.example.test/application-config/app',
+        detail: 'HTTP 503',
+        hint: 'Try again later.',
+      });
+    }
+
+    test.each(['true', undefined])(
+      'follows ZE_FAIL_BUILD=%s when the upload cannot reach Zephyr',
+      async (failBuild) => {
+        if (failBuild) process.env['ZE_FAIL_BUILD'] = failBuild;
+        const errorLog = rs.spyOn(console, 'error').mockImplementation(() => {});
+        const outage = unreachableError();
+        expect(isZephyrUnreachableError(outage)).toBe(true);
+        mocks.engine.upload_assets.mockRejectedValue(outage);
+        const plugin = await configuredPlugin(
+          { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
+          true
+        );
+
+        const write = writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist/client' },
+          {}
+        );
+
+        if (failBuild) {
+          await expect(write).rejects.toBe(outage);
+        } else {
+          await expect(write).resolves.toBeUndefined();
+          expect(errorLog).toHaveBeenCalledWith(expect.stringContaining('ZE50001'));
+        }
+        expect(mocks.engine.build_finished).not.toHaveBeenCalled();
+      }
+    );
+
+    test.each(['true', undefined])(
+      'follows ZE_FAIL_BUILD=%s when the engine cannot start',
+      async (failBuild) => {
+        if (failBuild) process.env['ZE_FAIL_BUILD'] = failBuild;
+        const errorLog = rs.spyOn(console, 'error').mockImplementation(() => {});
+        const startFailure = new ZephyrError(ZeErrors.ERR_NO_GIT_INFO, {
+          message: 'Stable Git branch and commit information is required in CI',
+        });
+        const rejected = Promise.reject(startFailure);
+        rejected.catch(() => undefined);
+        engineState.deferredEngine = rejected;
+        const plugin = await configuredPlugin(
+          { client: { consumer: 'client', build: { outDir: 'dist/client' } } },
+          true
+        );
+
+        const write = writeBundleHandler(plugin).call(
+          { environment: { name: 'client' } },
+          { dir: '/repo/dist/client' },
+          {}
+        );
+
+        if (failBuild) {
+          await expect(write).rejects.toBe(startFailure);
+        } else {
+          await expect(write).resolves.toBeUndefined();
+          expect(errorLog).toHaveBeenCalledWith(expect.stringContaining('ZE10016'));
+        }
+        expect(mocks.engine.upload_assets).not.toHaveBeenCalled();
+      }
+    );
   });
 
   test('allocates a new coordinated generation after publication failure', async () => {

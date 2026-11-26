@@ -1,9 +1,13 @@
-import type { ZephyrBuildHooks, ZephyrBuildTarget, ZephyrEngine } from 'zephyr-agent';
+import type {
+  ZephyrBuildHooks,
+  ZephyrBundlerBuildTarget,
+  ZephyrEngine,
+} from 'zephyr-agent';
 import type { XPackBuildCoordinator } from 'zephyr-xpack-internal';
 
 export interface ZephyrWebpackPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   /** Wait for HTML processing before deployment when the framework emits HTML late. */
   wait_for_index_html?: boolean;
   hooks?: ZephyrBuildHooks;

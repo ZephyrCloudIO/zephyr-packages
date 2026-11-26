@@ -1,5 +1,5 @@
 import type { ZephyrEngine } from 'zephyr-agent';
-import { ze_log, ZephyrError } from 'zephyr-agent';
+import { ze_log } from 'zephyr-agent';
 
 interface BuildSteps {
   pluginName: string;
@@ -36,23 +36,10 @@ export function logBuildSteps<T extends BuildSteps, Compiler extends BuildStepsC
     cb();
   });
 
-  compiler.hooks.failed.tap(pluginName, (err) => {
+  // `build:failed` is reported once by the agent, through the `build_failed(error)` call
+  // in setupZeDeploy's own `failed` hook. Reporting here too would send it twice.
+  compiler.hooks.failed.tap(pluginName, () => {
     ze_log.misc(`build failed in ${Date.now() - buildStartedAt}ms`);
-
-    void pluginOptions.zephyr_engine.logger
-      .then((logger) => {
-        logger({
-          level: 'error',
-          action: 'build:failed',
-          message: ZephyrError.format(err),
-        });
-      })
-      .catch((loggerError: unknown) => {
-        ze_log.misc(
-          'Unable to report the failed build through the Zephyr logger:',
-          ZephyrError.format(loggerError)
-        );
-      });
   });
 
   return { buildStartedAt };

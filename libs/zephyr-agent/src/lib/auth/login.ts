@@ -1,4 +1,3 @@
-import type openBrowser from 'open';
 import { isCI } from 'ci-info';
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -9,14 +8,16 @@ import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_debug, ze_log } from '../logging';
-import { blue, bold, gray, green, isTTY, white, yellow } from '../logging/picocolor';
+import { blue, bold, gray, green, white, yellow } from '../logging/picocolor';
 import { formatLogMsg, logFn } from '../logging/ze-log-event';
 import { getSecretToken } from '../node-persist/secret-token';
 import { getSessionKey, waitForUnlock } from '../node-persist/session-lock';
 import { StorageKeys } from '../node-persist/storage-keys';
 import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
+import { openUrl } from './open-url';
 import { TOKEN_EXPIRY } from './auth-flags';
+import { getAuthOrigin } from './auth-origin';
 import { isTokenStillValid } from './token-expiry';
 import { getCiToken } from '../node-persist/ci-token';
 import { getServerToken } from '../node-persist/server-token';
@@ -29,10 +30,9 @@ interface PrivateAuthenticationArtifact {
 }
 
 /**
- * Check if the user is already authenticated. If not, ask if they want to open a browser
- * to authenticate. Display a message to the console.
- *
- * @returns The token as a string.
+ * Check if the user is already authenticated. If not, log in through the browser: in a
+ * terminal the user confirms with Enter; when stdout is captured or held back by a task
+ * runner, the browser opens directly because the prompt would not be seen.
  */
 export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
   const secret_token = getSecretToken();
@@ -67,45 +67,64 @@ export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
     await removeToken();
   }
 
-  // In non-TTY environments it's expected that a ZE_SECRET_TOKEN is present
-  // since user cannot interact with it.
-  if (isCI || !isatty(process.stdin.fd) || !isatty(process.stdout.fd)) {
+  // Without an interactive stdin (CI, detached jobs) nobody can complete the login,
+  // so a ZE_SECRET_TOKEN is required. stdout is deliberately not checked: task
+  // runners such as Nx on Windows pipe stdout while still inheriting the terminal's
+  // stdin, and the browser login works there.
+  if (isCI || !isatty(process.stdin.fd)) {
     logFn('warn', `Could not load ${StorageKeys.ze_secret_token}.`);
     throw new ZephyrError(ZeErrors.ERR_AUTH_ERROR, {
-      message:
-        'Interactive login is unavailable. Run the deployment in a terminal or provide a valid authentication token.',
+      message: 'Interactive login is unavailable in CI or when stdin is not a terminal.',
     });
   }
 
   // No valid token found; initiate authentication.
-  logFn('', `${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
+  tellUser(`${yellow('Authentication required')} - You need to log in to Zephyr Cloud`);
 
   // Get authentication URL first
   using sessionKey = getSessionKey();
   const authUrl = await getAuthenticationURL(sessionKey.session);
 
   if (!sessionKey.owner) {
-    logFn('', gray('Waiting for session unlock...'));
+    // Avoid "session <word>": log redaction treats the word after it as a secret.
+    tellUser(gray('Waiting for another Zephyr login in progress to finish...'));
   }
 
   const browserController = new AbortController();
   let privateAuthenticationArtifact: PrivateAuthenticationArtifact | undefined;
 
-  // Tries to open the browser to authenticate the user
-  void promptForAuthAction(authUrl, browserController.signal)
-    .then(() => openUrl(authUrl))
-    .catch(() => {
-      // Aborting the prompt after a successful login is expected and must not print a
-      // fallback link or create a credential-bearing artifact.
-      if (!browserController.signal.aborted) {
-        privateAuthenticationArtifact = fallbackManualLogin(authUrl);
-      }
-    })
-    .finally(() => {
-      if (browserController.signal.aborted) {
-        privateAuthenticationArtifact?.cleanup();
-      }
-    });
+  // In a terminal, show the URL and wait for Enter before opening the browser. When
+  // stdout is not a terminal (`> build.log`, Nx holding or piping task output) the
+  // prompt would be invisible, or Enter may never reach us, so open the browser directly.
+  // Concurrent logins share the owner's session (see getSessionKey), so only the owner
+  // does that; the others wait for its token instead of each opening a tab, e.g. under
+  // `nx run-many` over a host and its remotes.
+  const promptInTerminal = isatty(process.stdout.fd);
+  const openBrowserNow = !promptInTerminal && sessionKey.owner;
+  if (openBrowserNow) {
+    tellUser(`${blue('⏳')} Opening your browser to complete authentication...`);
+  }
+
+  if (promptInTerminal || openBrowserNow) {
+    void (
+      promptInTerminal
+        ? promptForAuthAction(authUrl, browserController.signal)
+        : Promise.resolve()
+    )
+      .then(() => openUrl(authUrl))
+      .catch(() => {
+        // Aborting the prompt after a successful login is expected and must not print a
+        // fallback link or create a credential-bearing artifact.
+        if (!browserController.signal.aborted) {
+          privateAuthenticationArtifact = fallbackManualLogin(authUrl);
+        }
+      })
+      .finally(() => {
+        if (browserController.signal.aborted) {
+          privateAuthenticationArtifact?.cleanup();
+        }
+      });
+  }
 
   try {
     // We are the owner of the session request, join websocket room
@@ -134,12 +153,24 @@ export async function checkAuth(git_config?: ZeGitInfo): Promise<void> {
     privateAuthenticationArtifact?.cleanup();
   }
 
-  logFn('', `${green('✓')} You are now logged in to Zephyr Cloud\n`);
+  tellUser(`${green('✓')} You are now logged in to Zephyr Cloud\n`);
 }
 
 // Re-exported from its own module so credential storage can share one JWT-expiry
 // implementation without importing this interactive flow.
 export { isTokenStillValid } from './token-expiry';
+
+/**
+ * Status line for the person logging in. When stdout is captured (`> build.log`) but
+ * stderr is still the terminal, the line is echoed there so the user is not left waiting
+ * on a login they cannot see.
+ */
+function tellUser(message: string): void {
+  logFn('', message);
+  if (!isatty(process.stdout.fd) && isatty(process.stderr.fd)) {
+    process.stderr.write(`${formatLogMsg(message)}\n`);
+  }
+}
 
 /** Prompts the user to choose an authentication action */
 async function promptForAuthAction(
@@ -167,18 +198,11 @@ async function promptForAuthAction(
  *
  * This value must never be passed to `logFn`, a debug logger, an error, or the file
  * logger. Keeping this as a dedicated terminal prompt preserves the copy/paste login flow
- * while making persistent logging paths redact the state parameter.
+ * while making persistent logging paths redact the state parameter. Callers show it only
+ * when stdout is a real TTY (not merely color-capable): task runners such as Nx set
+ * FORCE_COLOR while piping stdout into captured, persisted output.
  */
-export function formatAuthenticationPromptForTerminal(
-  authUrl: string,
-  interactive = isTTY
-): string {
-  if (!interactive) {
-    return formatLogMsg(
-      '\nA private authentication link was generated. Waiting for browser authentication.\n'
-    );
-  }
-
+export function formatAuthenticationPromptForTerminal(authUrl: string): string {
   return [
     formatLogMsg('\nAuthentication URL (shown only in this terminal):'),
     authUrl,
@@ -190,8 +214,8 @@ export function formatAuthenticationPromptForTerminal(
 
 /** Helper to expose a credential-bearing login link without writing it to a log. */
 function fallbackManualLogin(url: string): PrivateAuthenticationArtifact | undefined {
-  logFn('', '');
-  logFn('', `An unexpected error happened when opening the browser.`);
+  tellUser('');
+  tellUser(`An unexpected error happened when opening the browser.`);
 
   let artifact: PrivateAuthenticationArtifact;
   try {
@@ -205,9 +229,9 @@ function fallbackManualLogin(url: string): PrivateAuthenticationArtifact | undef
   }
 
   try {
-    logFn('', `${yellow('Please open this private HTML file in your browser:')}`);
-    logFn('', artifact.filePath);
-    logFn('', `${blue('⏳')} Waiting for you to complete authentication in browser...`);
+    tellUser(`${yellow('Please open this private HTML file in your browser:')}`);
+    tellUser(artifact.filePath);
+    tellUser(`${blue('⏳')} Waiting for you to complete authentication in browser...`);
     return artifact;
   } catch {
     // A logger failure must not strand a credential-bearing fallback artifact.
@@ -254,25 +278,17 @@ export function createPrivateAuthenticationArtifact(
   };
 }
 
-/** Opens the given URL in the default browser. */
-async function openUrl(url: string): Promise<void> {
-  // Lazy loads `open` module
-  // oxlint-disable-next-line no-eval -- Preserve native import() in CommonJS output for ESM-only `open`.
-  const openModule = (await eval(`import('open')`)) as {
-    default: typeof openBrowser;
-  };
-  await openModule.default(url);
-}
-
 /** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
+  const origin = getAuthOrigin();
   const authorizeUrl = new URL(ze_api_gateway.authorize_link, ZE_API_ENDPOINT());
   authorizeUrl.searchParams.set('state', state);
+  authorizeUrl.searchParams.set('origin', origin);
   ze_log.auth('getAuthenticationURL', redactUrl(authorizeUrl));
   const [ok, cause, data] = await makeRequest<string>({
     path: ze_api_gateway.authorize_link,
     base: ZE_API_ENDPOINT(),
-    query: { state },
+    query: { state, origin },
   });
 
   if (!ok) {

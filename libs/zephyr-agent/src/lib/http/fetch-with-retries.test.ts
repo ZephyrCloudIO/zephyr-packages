@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from '@rstest/core';
 import { ZeErrors, ZephyrError } from '../errors';
 import { DEFAULT_HTTP_DEADLINE_MS, fetchWithRetries } from './fetch-with-retries';
+import { formatUserAgent, withRequestIdentity } from './request-identity';
 
 const mocks = rs.hoisted(() => ({
   axiosCreate: rs.fn(),
@@ -117,7 +118,7 @@ describe('fetchWithRetries', () => {
     }
 
     const serialized = JSON.stringify(error);
-    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
     expect(serialized).toContain('DNS lookup failed');
     expect(serialized).toContain('missing.example.com');
     expect(serialized).toContain('ENOTFOUND');
@@ -149,7 +150,7 @@ describe('fetchWithRetries', () => {
     }
 
     const serialized = JSON.stringify(error);
-    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
+    expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
     expect(serialized).toContain('DNS lookup failed');
     expect(serialized).toContain(proxyHostname);
     expect(mocks.proxyAgent).toHaveBeenCalledWith(proxyUrl);
@@ -200,6 +201,43 @@ describe('fetchWithRetries', () => {
 
     expect(response.status).toBe(204);
     expect(mocks.axiosInstance).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ['ECONNREFUSED', 'connect ECONNREFUSED 127.0.0.1:1', 'network'],
+    ['ECONNABORTED', 'timeout of 30000ms exceeded', 'timeout'],
+    ['ETIMEDOUT', 'connect ETIMEDOUT', 'timeout'],
+  ])(
+    'reports %s as the unreachable class, not a config error',
+    async (code, message, failure) => {
+      mocks.axiosInstance.mockRejectedValue({ code, message });
+
+      let error: unknown;
+      try {
+        await fetchWithRetries(url, { method: 'GET' }, 0);
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(ZephyrError.is(error, ZeErrors.ERR_ZEPHYR_UNREACHABLE)).toBe(true);
+      expect((error as ZephyrError<'ERR_ZEPHYR_UNREACHABLE'>).code).toBe('ZE50001');
+      expect((error as ZephyrError<'ERR_ZEPHYR_UNREACHABLE'>).data).toMatchObject({
+        failure,
+      });
+    }
+  );
+
+  it('keeps a caller abort out of the unreachable class', async () => {
+    mocks.axiosInstance.mockRejectedValue({ code: 'ERR_CANCELED', message: 'canceled' });
+
+    let error: unknown;
+    try {
+      await fetchWithRetries(url, { method: 'GET' }, 0);
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(ZephyrError.is(error, ZeErrors.ERR_HTTP_ERROR)).toBe(true);
   });
 
   it('stops retrying when the overall deadline is exhausted', async () => {
@@ -278,5 +316,139 @@ describe('fetchWithRetries', () => {
     await fetchWithRetries(url);
 
     expect(mocks.proxyAgent).not.toHaveBeenCalled();
+  });
+});
+
+describe('fetchWithRetries request identity', () => {
+  const apiUrl = new URL('https://zeapi.zephyrcloud.app/v2/application/logs');
+  const edgeUrl = new URL('https://edge.example/upload?type=file');
+  const presignedUrl = new URL(
+    'https://bucket.s3.amazonaws.com/hash?X-Amz-Signature=runtime-signature'
+  );
+  const identity = {
+    buildId: '11887',
+    builder: 'webpack',
+    plugin: 'zephyr-webpack-plugin',
+    pluginVersion: '1.8.0',
+    zephyrOrigins: ['https://edge.example'],
+  };
+  const userAgentPattern =
+    /^zephyr-agent\/[^ ]+ \(webpack; zephyr-webpack-plugin\/1\.8\.0; node\/[^ )]+\)$/;
+  const savedApiGate = process.env['ZE_API_GATE'];
+  const savedApi = process.env['ZE_API'];
+
+  function sentHeaders(callIndex = 0): Record<string, string> | undefined {
+    return mocks.axiosInstance.mock.calls[callIndex]?.[1]?.headers;
+  }
+
+  function headerNames(callIndex = 0): string[] {
+    return Object.keys(sentHeaders(callIndex) ?? {}).map((name) => name.toLowerCase());
+  }
+
+  beforeEach(() => {
+    rs.clearAllMocks();
+    delete process.env['ZE_API_GATE'];
+    delete process.env['ZE_API'];
+    mocks.axiosCreate.mockReturnValue(mocks.axiosInstance);
+    mocks.axiosInstance.mockResolvedValue({ status: 200, headers: {}, data: 'ok' });
+  });
+
+  afterEach(() => {
+    if (savedApiGate !== undefined) process.env['ZE_API_GATE'] = savedApiGate;
+    if (savedApi !== undefined) process.env['ZE_API'] = savedApi;
+  });
+
+  it('identifies the agent and the build to the Zephyr API', async () => {
+    await withRequestIdentity(identity, () =>
+      fetchWithRetries(apiUrl, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      })
+    );
+
+    expect(sentHeaders()).toEqual({
+      Accept: 'application/json',
+      'User-Agent': expect.stringMatching(userAgentPattern),
+      'x-ze-build-id': '11887',
+    });
+  });
+
+  it('identifies the build to the application edge declared for the scope', async () => {
+    await withRequestIdentity(identity, () =>
+      fetchWithRetries(edgeUrl, { method: 'POST' })
+    );
+
+    expect(sentHeaders()).toMatchObject({ 'x-ze-build-id': '11887' });
+  });
+
+  it('sends a presigned PUT neither the User-Agent nor the build ID', async () => {
+    const headers = { 'Content-Type': 'application/octet-stream' };
+    await withRequestIdentity(identity, () =>
+      fetchWithRetries(presignedUrl, { method: 'PUT', headers }, 0)
+    );
+
+    expect(sentHeaders()).toEqual(headers);
+    expect(headerNames()).not.toContain('user-agent');
+    expect(headerNames()).not.toContain('x-ze-build-id');
+  });
+
+  it('sends no identity to third-party hosts, even with no caller headers', async () => {
+    await withRequestIdentity(identity, () =>
+      fetchWithRetries(new URL('https://registry.npmjs.org/-/package/x/dist-tags'))
+    );
+
+    expect(sentHeaders()).toBeUndefined();
+  });
+
+  it('never overrides caller-supplied headers, whatever their case', async () => {
+    await withRequestIdentity(identity, () =>
+      fetchWithRetries(apiUrl, {
+        method: 'GET',
+        headers: { 'user-agent': 'custom-client/1.0', 'X-ZE-Build-Id': 'caller-build' },
+      })
+    );
+
+    expect(sentHeaders()).toEqual({
+      'user-agent': 'custom-client/1.0',
+      'X-ZE-Build-Id': 'caller-build',
+    });
+  });
+
+  it('sends the User-Agent without a build ID outside a build', async () => {
+    await fetchWithRetries(apiUrl, { method: 'GET' });
+
+    expect(sentHeaders()).toEqual({
+      'User-Agent': expect.stringMatching(/^zephyr-agent\/[^ ]+ \(node\/[^ )]+\)$/),
+    });
+  });
+
+  it('follows a custom API gateway and keeps nested scopes isolated', async () => {
+    process.env['ZE_API_GATE'] = 'https://api.self-hosted.example';
+    const url = new URL('https://api.self-hosted.example/logs');
+
+    await Promise.all([
+      withRequestIdentity({ buildId: 'build-a' }, () => fetchWithRetries(url)),
+      withRequestIdentity({ buildId: 'build-b' }, () => fetchWithRetries(url)),
+    ]);
+
+    const buildIds = mocks.axiosInstance.mock.calls.map(
+      ([, config]) => config.headers['x-ze-build-id']
+    );
+    expect(buildIds.sort()).toEqual(['build-a', 'build-b']);
+  });
+});
+
+describe('formatUserAgent', () => {
+  it('drops unknown parts and keeps the agent prefix', () => {
+    expect(formatUserAgent({ builder: 'vite' })).toMatch(
+      /^zephyr-agent\/[^ ]+ \(vite; node\/[^ )]+\)$/
+    );
+    expect(formatUserAgent({ plugin: 'zephyr-cli', builder: 'unknown' })).toMatch(
+      /^zephyr-agent\/[^ ]+ \(zephyr-cli; node\/[^ )]+\)$/
+    );
+  });
+
+  it('removes characters that are invalid in a header', () => {
+    expect(formatUserAgent({ builder: 'vite\r\nx-injected: 1' })).not.toMatch(/[\r\n:]/);
   });
 });

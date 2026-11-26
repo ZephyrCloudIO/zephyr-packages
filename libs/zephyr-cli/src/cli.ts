@@ -1,4 +1,8 @@
-import { isZephyrBuildTarget, type ZephyrBuildTarget } from 'zephyr-edge-contract';
+import {
+  isZephyrBuildTarget,
+  ZEPHYR_BUILD_TARGETS,
+  type ZephyrBuildTarget,
+} from 'zephyr-edge-contract';
 import { MAX_ONLINE_TIMEOUT_MS } from './doctor/online-limits';
 
 export interface CliOptions {
@@ -14,6 +18,26 @@ export interface CliOptions {
   debounceMs?: number;
   /** JSON sidecar containing Module Federation publication metadata. */
   metadataPath?: string;
+}
+
+const OPTIONS_WITH_VALUE = new Set(['--target', '-t', '--metadata', '--debounce']);
+
+/**
+ * Whether the arguments ask for `deploy --format json`. It does not validate the
+ * arguments, so a parse error can still be reported as the one JSON document.
+ */
+export function isJsonDeploy(args: string[]): boolean {
+  let index = 0;
+  while (index < args.length && args[index].startsWith('-')) {
+    index += OPTIONS_WITH_VALUE.has(args[index]) ? 2 : 1;
+  }
+  if (args[index] !== 'deploy') return false;
+  // As in parseArgs: options start after the directory, and the last `--format` wins.
+  let format: string | undefined;
+  for (let i = index + 2; i < args.length; i++) {
+    if (args[i] === '--format') format = args[++i];
+  }
+  return format === 'json';
 }
 
 /**
@@ -193,6 +217,12 @@ export function parseArgs(args: string[]): CliOptions {
   return options;
 }
 
+function formatBuildTargets(): string {
+  const targets = [...ZEPHYR_BUILD_TARGETS];
+  const last = targets.pop();
+  return targets.length > 0 ? `${targets.join(', ')}, or ${last}` : String(last);
+}
+
 function printHelp(): void {
   console.log(`
 Usage: ze-cli [options] <command> [args...]
@@ -210,12 +240,13 @@ Commands:
 
 Options:
   --ssr                    Mark this snapshot as server-side rendered
-  --target, -t <target>    Build target: web, ios, android, or tap-app (default: web)
+  --target, -t <target>    Build target: ${formatBuildTargets()} (default: web)
   --metadata <path>        JSON sidecar for Module Federation publication metadata
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
   --verbose                Enable verbose output
   --format <json|text>     Doctor report format, or deploy result format; json prints
-                           one result line on stdout and logs on stderr (default: text)
+                           one JSON document on stdout and logs on stderr, also when
+                           deploy fails (default: text)
   --online                 Doctor only: also check that Zephyr can be reached and that
                            the token and application work (read-only network requests)
   --timeout <milliseconds> Doctor --online only: limit for each check (default: 5000)

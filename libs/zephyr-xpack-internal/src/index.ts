@@ -41,6 +41,12 @@ export {
   type XPackCompilerConfigLike,
 } from './xpack-extract/multi-compiler-coordinator';
 
+export {
+  restorePlugins,
+  snapshotPlugins,
+  type PluginSnapshot,
+} from './xpack-extract/plugin-snapshot';
+
 export { xpack_zephyr_agent } from './xpack-extract/ze-xpack-upload-agent';
 
 export { detectAndStoreBaseHref, detectBaseHref } from './basehref/basehref-integration';

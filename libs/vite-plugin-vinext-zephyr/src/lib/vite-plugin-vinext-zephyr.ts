@@ -4,7 +4,7 @@ import type { Plugin, ResolvedConfig } from 'vite' with {
 };
 import {
   ApplicationContext,
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   buildAssetsMap,
   handleGlobalError,
   isZephyrDisabled,
@@ -12,7 +12,7 @@ import {
   ZeErrors,
   ZephyrEngine,
   type ZephyrBuildHooks,
-  type ZephyrBuildTarget,
+  type ZephyrBundlerBuildTarget,
   type ZephyrLegacyModuleFederationConfig,
   type ZephyrModuleFederationBuildMetadata,
   type ZephyrModuleFederationConfig,
@@ -32,7 +32,7 @@ import { zephyrDisabledPlugin } from './internal/zephyr-disabled-plugin';
 
 export interface VinextZephyrOptions {
   /** Zephyr artifact family, including `tap-app` for TAP packages. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   /** Every independently published Module Federation container. */
   mfConfigs?: ZephyrModuleFederationConfig[];
   /** Build-stat metadata paired with `mfConfigs`. */
@@ -171,7 +171,7 @@ function getLegacyModuleFederationConfig(
 
 export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyrVinext({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyrVinext({ target })');
   }
   assertTapFederationMetadata(options);
 
@@ -312,7 +312,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
               });
             },
             finish: () => zephyrEngine.build_finished(),
-            onFailure: () => zephyrEngine.build_failed(),
+            onFailure: (_identity, error) => void zephyrEngine.build_failed(error),
           });
 
           let outputParticipant = 'vinext-output';
@@ -353,7 +353,7 @@ export function withZephyrVinext(options: VinextZephyrOptions = {}): Plugin {
           if (engineCreated) {
             try {
               const zephyrEngine = await zephyr_engine_defer;
-              zephyrEngine.build_failed();
+              await zephyrEngine.build_failed(error);
             } catch {
               // Engine initialization failed before any reusable build state existed.
             }

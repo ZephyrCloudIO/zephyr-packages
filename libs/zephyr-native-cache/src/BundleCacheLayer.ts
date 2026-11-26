@@ -40,6 +40,11 @@ export class BundleCacheLayer {
     Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }>
   >();
 
+  // Bundles evaluated in this JS session: canonical bundle URL → hash. Only these can be
+  // "updated"; prefetching a never-loaded bundle is not an update. `undefined` marks a
+  // bundle evaluated through the network fallback, whose hash is not known yet.
+  private loadedHashes = new Map<string, string | undefined>();
+
   // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isCheckingUpdates = false;
@@ -212,22 +217,36 @@ export class BundleCacheLayer {
 
             // Update hash map so subsequent loadBundle() calls use the latest hash.
             // loadBundle() uses the same canonical content-sensitive key.
-            this.bundleHashMap[getBundleCacheKey(bundleUrl)] = newHash;
+            const key = getBundleCacheKey(bundleUrl);
+            this.bundleHashMap[key] = newHash;
+
+            // A fallback-loaded bundle takes the first manifest hash seen as its
+            // baseline, so only later changes count as updates.
+            if (this.loadedHashes.has(key) && this.loadedHashes.get(key) === undefined) {
+              this.loadedHashes.set(key, newHash);
+            }
 
             const remoteName = this.inferRemoteName(bundleUrl);
-            const didUpdate = await this.cacheManager!.preDownloadBundle(
+            const didDownload = await this.cacheManager!.preDownloadBundle(
               bundleUrl,
               newHash
             );
-            if (didUpdate) {
-              updated++;
-              this.events.emitUpdateAvailable(bundleUrl, remoteName, undefined, newHash);
-              if (!this.status.pendingUpdates.includes(remoteName)) {
-                this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
-                this.notifyStatusChange();
-              }
-              this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
+            if (!didDownload) continue;
+
+            const loadedHash = this.loadedHashes.get(key);
+            if (loadedHash === undefined || loadedHash === newHash) {
+              console.info(`${LOG_PREFIX} prefetched bundle: ${bundleUrl}`);
+              continue;
             }
+
+            updated++;
+            console.info(`${LOG_PREFIX} update available: ${bundleUrl}`);
+            this.events.emitUpdateAvailable(bundleUrl, remoteName, loadedHash, newHash);
+            if (!this.status.pendingUpdates.includes(remoteName)) {
+              this.status.pendingUpdates = [...this.status.pendingUpdates, remoteName];
+              this.notifyStatusChange();
+            }
+            this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
           }
 
           // Bundles whose bytes didn't change may now belong to a newer version.
@@ -362,6 +381,12 @@ export class BundleCacheLayer {
       version,
       loadedAt: Date.now(),
     };
+    // 'skipped' bundles are still evaluated, through the network fallback in register.ts.
+    if (status === 'skipped') {
+      this.loadedHashes.set(getBundleCacheKey(bundleUrl), undefined);
+    } else if (hash) {
+      this.loadedHashes.set(getBundleCacheKey(bundleUrl), hash);
+    }
     if (status === 'cache-hit' || status === 'downloaded') {
       this.status.pendingUpdates = this.status.pendingUpdates.filter(
         (name) => name !== remoteName

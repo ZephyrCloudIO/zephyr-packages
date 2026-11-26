@@ -10,7 +10,11 @@ import { ZE_API_ENDPOINT, ze_api_gateway } from 'zephyr-edge-contract';
 import { getUserEmail } from './user-email';
 import { ze_log } from '../logging/debug';
 import { type ZeGitInfo } from '../build-context/ze-util-get-git-info';
-import { type CiTokenIdentity, inferCiTokenIdentity } from './ci-token-identity';
+import {
+  type CiTokenIdentity,
+  inferCiTokenIdentity,
+  readCiIdToken,
+} from './ci-token-identity';
 import { ZeErrors, ZephyrError } from '../errors';
 import { TOKEN_EXPIRY } from '../auth/auth-flags';
 import { getTokenExpirationMs, isTokenStillValid } from '../auth/token-expiry';
@@ -213,7 +217,7 @@ async function getTokenFromCiToken(
           credentialToken: ci_token,
           skipTokenCleanup: true,
         },
-        JSON.stringify(identity)
+        buildCiTokenExchangeBody(identity)
       );
 
       if (!ok) {
@@ -246,6 +250,24 @@ async function getTokenFromCiToken(
   );
 }
 
+/**
+ * Builds the exchange request body: the inferred identity plus, when the CI provider
+ * issued one, the signed ID token that lets the server verify that identity.
+ *
+ * The ID token is a credential that changes on every job. It is read here and nowhere
+ * else, so it exists only in this request body. It is not logged, not stored, not part of
+ * `CiTokenIdentity` and not part of the cache scope below.
+ */
+function buildCiTokenExchangeBody(identity: CiTokenIdentity): string {
+  const idToken = readCiIdToken(identity.provider);
+  return JSON.stringify(idToken ? { ...identity, idToken } : identity);
+}
+
+/**
+ * Hashes the CI token, the API gateway and the normalized identity. The fields are listed
+ * one by one so that nothing else can enter the scope. The per-job ID token must stay out
+ * of it, or every job would miss the cache.
+ */
 function getCiTokenScope(ciToken: string, identity: CiTokenIdentity): string {
   const identityScope = [
     ZE_API_ENDPOINT(),

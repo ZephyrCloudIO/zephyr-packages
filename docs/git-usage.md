@@ -109,8 +109,10 @@ Local build can still deploy, and Zephyr can infer org/project from `origin`.
   claims locally, then falls back to GitLab's `/job` API from the runner and GitLab's predefined `GITLAB_USER_EMAIL` for
   legacy/non-JWT job tokens. GitHub Actions reads `GITHUB_EVENT_PATH` commit/pusher emails, then falls back to GitHub
   noreply email from `GITHUB_ACTOR_ID` and `GITHUB_ACTOR`. Expo EAS Build uses the built commit's author/committer emails, falling back to the EAS username as a bot authorized by the CI token creator. No
-  GitLab/GitHub CI YAML changes are required beyond setting `ZE_CI_TOKEN`. Legacy `ZE_SERVER_TOKEN` behavior is unchanged. See [CI Token Identity](./ci-token-identity.md) for
-  access-token caching and cross-process locking details.
+  GitLab/GitHub CI YAML changes are required beyond setting `ZE_CI_TOKEN`. A GitLab job can also add an `id_tokens`
+  entry named `ZE_CI_ID_TOKEN` with the audience `https://zephyr-cloud.io`. This is optional. It lets the server verify
+  the actor with a token signed by GitLab. Legacy `ZE_SERVER_TOKEN` behavior is unchanged. See [CI Token Identity](./ci-token-identity.md) for
+  the `id_tokens` block, access-token caching and cross-process locking details.
 
 ## Troubleshooting
 

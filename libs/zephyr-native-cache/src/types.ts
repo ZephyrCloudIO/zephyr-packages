@@ -18,8 +18,10 @@ export interface BundleMetadata {
   remoteName: string;
   bundleHash: string;
   /**
-   * Set only when the bytes were downloaded from the version's immutable URL and matched
-   * the expected hash, so it always names the version of this file.
+   * A Zephyr version that serves exactly these bytes. Set when the bytes were downloaded
+   * from the version's immutable URL and matched the expected hash. An update check moves
+   * it to a newer version when that version's manifest lists the same hash, so a publish
+   * that doesn't change this bundle still updates it.
    */
   version?: ZephyrVersionInfo;
   filePath: string;

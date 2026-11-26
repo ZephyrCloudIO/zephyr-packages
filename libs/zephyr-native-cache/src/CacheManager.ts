@@ -6,7 +6,11 @@ import type {
   ZephyrVersionInfo,
 } from './types';
 import { getBundleCacheKey, getBundleCacheVariant } from './cache-key';
-import { fetchVersionInfo, toVersionedBundleUrl } from './version-info';
+import {
+  fetchVersionInfo,
+  toVersionedBundleUrl,
+  VERSION_INFO_TIMEOUT_MS,
+} from './version-info';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -143,14 +147,16 @@ export class CacheManager {
    * version URL) when the edge reports one, so the returned version provably describes
    * the file. Falls back to `bundleUrl` itself, without a version, when the version
    * lookup or the versioned download fails or doesn't match. Returns null when nothing
-   * matched.
+   * matched. `versionInfoTimeoutMs` bounds the version lookup, which delays the
+   * download.
    */
   async downloadVerifiedBundle(
     bundleUrl: string,
     destPath: string,
-    expectedHash: string
+    expectedHash: string,
+    versionInfoTimeoutMs?: number
   ): Promise<{ version: ZephyrVersionInfo | undefined } | null> {
-    const version = await fetchVersionInfo(bundleUrl);
+    const version = await fetchVersionInfo(bundleUrl, versionInfoTimeoutMs);
     const versionedUrl = version && toVersionedBundleUrl(bundleUrl, version.versionUrl);
     if (versionedUrl) {
       try {
@@ -165,6 +171,65 @@ export class CacheManager {
       return { version: undefined };
     }
     return null;
+  }
+
+  /**
+   * Relabel cached bundles whose bytes a newer Zephyr version also serves. A publish that
+   * leaves a bundle's bytes unchanged doesn't trigger a download, so without this the
+   * bundle would keep naming the version it was first downloaded from.
+   *
+   * `hashes` maps the bundle URLs listed by `manifestUrl` to their current hashes. Only
+   * cached bundles with that hash are considered. The new version is taken only when that
+   * version's own (immutable) manifest lists the same hash for the bundle, so a publish
+   * landing between the two requests can't mislabel the file. Returns the relabeled
+   * metadata.
+   */
+  async refreshVersions(
+    manifestUrl: string,
+    hashes: Map<string, string>,
+    extractHashes: (manifest: unknown, manifestUrl: string) => Map<string, string>
+  ): Promise<BundleMetadata[]> {
+    const unchanged: BundleMetadata[] = [];
+    for (const [bundleUrl, hash] of hashes) {
+      const meta = this.urlIndex.get(getBundleCacheKey(bundleUrl));
+      if (meta?.bundleHash === hash) unchanged.push(meta);
+    }
+    if (!unchanged.length) return [];
+
+    const version = await fetchVersionInfo(manifestUrl);
+    if (!version) return [];
+    const stale = unchanged.filter(
+      (meta) => meta.version?.snapshotId !== version.snapshotId
+    );
+    const versionedManifestUrl =
+      stale.length && toVersionedBundleUrl(manifestUrl, version.versionUrl);
+    if (!versionedManifestUrl) return [];
+
+    let verified: Map<string, string>;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), VERSION_INFO_TIMEOUT_MS);
+    try {
+      const response = await fetch(versionedManifestUrl, { signal: controller.signal });
+      if (!response.ok) return [];
+      // Keyed like `hashes`: bundle URLs resolve against the environment manifest URL.
+      verified = extractHashes(await response.json(), manifestUrl);
+    } catch {
+      return [];
+    } finally {
+      clearTimeout(timeout);
+    }
+    const verifiedHashes = new Map<string, string>();
+    for (const [bundleUrl, hash] of verified) {
+      verifiedHashes.set(getBundleCacheKey(bundleUrl), hash);
+    }
+
+    const relabeled = stale.filter(
+      (meta) => verifiedHashes.get(meta.bundleUrl) === meta.bundleHash
+    );
+    if (!relabeled.length) return [];
+    for (const meta of relabeled) meta.version = version;
+    await this.saveDiskManifest();
+    return relabeled;
   }
 
   async updateLastUsedAt(bundleUrl: string): Promise<void> {

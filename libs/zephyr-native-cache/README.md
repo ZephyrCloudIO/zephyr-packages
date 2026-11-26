@@ -280,13 +280,15 @@ export function RemoteSourceBadge({ name }: { name: string }) {
 
 ### Show The Running Zephyr Version
 
-Each `status.remotes` entry carries `version`, the Zephyr version of the bundle that's actually running (from the cache too, so it stays correct offline and after a new publish until the app reloads):
+Each `status.remotes` entry carries `version`, a Zephyr version that serves exactly the bytes that are running (from the cache too, so it stays correct offline and after a new publish until the app reloads):
 
 ```ts
 { snapshotId: 'alice-5746.host.my-repo.my-org', versionUrl: 'alice-5746-host-…-ze.zephyrcloud.app', publishedAt: 1794231019806 }
 ```
 
-When the cache downloads a bundle, it asks the bundle's host for `/__get_version_info__` and downloads from the returned immutable `version_url`, verified against the manifest hash, so the recorded version always matches the file. `version` is `undefined` when the host isn't a Zephyr deployment (such as a local dev server), the lookup fails, or the version moved on between reading the manifest and downloading (the bundle then comes from its original URL).
+When the cache downloads a bundle, it asks the bundle's host for `/__get_version_info__` and downloads from the returned immutable `version_url`, verified against the manifest hash, so the recorded version always matches the file. `version` is `undefined` when the host isn't a Zephyr deployment (such as a local dev server), the lookup fails, or the version moved on between reading the manifest and downloading (the bundle then comes from its original URL). On a cold load the lookup is cut off after 1.5 seconds so it can't stall first launch.
+
+A publish that leaves a bundle's bytes unchanged doesn't download it again. Instead, each update check (`checkForUpdates()` or polling) asks for the environment's current version and reads that version's own `mf-manifest.json`. Cached bundles whose hash it lists are relabeled with the new version, and their `status.remotes` entries update right away, since the running bytes are the same. Until that check runs, an unchanged bundle reports the version it was last labeled with.
 
 For a fuller reference, see the [`zephyr-native-cache-test` host app](https://github.com/ZephyrCloudIO/zephyr-native-cache-test/tree/main/apps/host), which combines these patterns into a dev tools panel and source overlay.
 

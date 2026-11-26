@@ -1,7 +1,13 @@
 import type { ZephyrVersionInfo } from './types';
 
 const VERSION_INFO_PATH = '/__get_version_info__';
-const VERSION_INFO_TIMEOUT_MS = 5_000;
+/**
+ * A cold load waits on this lookup before its download starts, so a host that accepts the
+ * connection but never answers must not stall first launch for long.
+ */
+export const COLD_LOAD_VERSION_INFO_TIMEOUT_MS = 1_500;
+/** Background update checks aren't on a load path and can wait longer. */
+export const VERSION_INFO_TIMEOUT_MS = 5_000;
 
 // Parsed by hand: React Native's URL polyfill doesn't implement the setters.
 const ABSOLUTE_URL = /^([a-z][a-z0-9+.-]*:)\/\/([^/?#]+)(.*)$/i;
@@ -12,14 +18,15 @@ const ABSOLUTE_URL = /^([a-z][a-z0-9+.-]*:)\/\/([^/?#]+)(.*)$/i;
  * request fails.
  */
 export async function fetchVersionInfo(
-  bundleUrl: string
+  bundleUrl: string,
+  timeoutMs: number = VERSION_INFO_TIMEOUT_MS
 ): Promise<ZephyrVersionInfo | undefined> {
   const match = ABSOLUTE_URL.exec(bundleUrl);
   if (!match) return undefined;
   const [, protocol, host] = match;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), VERSION_INFO_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(`${protocol}//${host}${VERSION_INFO_PATH}`, {
       signal: controller.signal,

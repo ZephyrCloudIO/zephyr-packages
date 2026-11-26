@@ -13,6 +13,7 @@ import type {
 } from './types';
 import { ensureZephyrNativeCacheRefs } from './zephyr-global';
 import { getBundleCacheKey } from './cache-key';
+import { COLD_LOAD_VERSION_INFO_TIMEOUT_MS } from './version-info';
 
 const LOG_PREFIX = '[MFE-Cache]';
 
@@ -228,6 +229,15 @@ export class BundleCacheLayer {
               this.events.emitUpdateDownloaded(bundleUrl, remoteName, newHash);
             }
           }
+
+          // Bundles whose bytes didn't change may now belong to a newer version.
+          this.applyRefreshedVersions(
+            await this.cacheManager!.refreshVersions(
+              manifestUrl,
+              newHashes,
+              source.extractHashes
+            )
+          );
         } catch (manifestError) {
           console.warn(`${LOG_PREFIX} manifest error for ${manifestUrl}`, manifestError);
           // Non-critical: network error for this manifest, continue with others
@@ -361,6 +371,26 @@ export class BundleCacheLayer {
     this.events.emitBundleLoad(bundleUrl, remoteName, status, hash);
   }
 
+  /**
+   * Relabeled bundles run the same bytes as before, so loaded entries with those bytes
+   * take the new version right away.
+   */
+  private applyRefreshedVersions(relabeled: BundleMetadata[]): void {
+    let changed = false;
+    for (const meta of relabeled) {
+      for (const entry of Object.values(this.status.remotes)) {
+        if (
+          entry.hash === meta.bundleHash &&
+          getBundleCacheKey(entry.bundleUrl) === meta.bundleUrl
+        ) {
+          entry.version = meta.version;
+          changed = true;
+        }
+      }
+    }
+    if (changed) this.notifyStatusChange();
+  }
+
   private applyDownloadedUpdates(): boolean {
     if (!NativeMFECache) return false;
     try {
@@ -408,7 +438,8 @@ export class BundleCacheLayer {
     const downloaded = await this.cacheManager!.downloadVerifiedBundle(
       bundleUrl,
       destPath,
-      expectedHash
+      expectedHash,
+      COLD_LOAD_VERSION_INFO_TIMEOUT_MS
     );
 
     if (!downloaded) {

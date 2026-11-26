@@ -173,3 +173,93 @@ describe('CacheManager Zephyr version of downloaded bundles', () => {
     expect((await manager.getCachedBundle(bundleUrl))?.metadata.version).toBeUndefined();
   });
 });
+
+describe('CacheManager version refresh for unchanged bundles', () => {
+  const manifestUrl = 'https://demo-host-acme-ze.zephyrcloud.app/mf-manifest.json';
+  const bundleUrl = 'https://demo-host-acme-ze.zephyrcloud.app/exposed/App.bundle';
+  const v12 = {
+    snapshot_id: 'alice-12.host.repo.acme',
+    version_url: 'alice-12-host-acme-ze.zephyrcloud.app',
+    published_at: 1700000000000,
+  };
+  const v13 = {
+    snapshot_id: 'alice-13.host.repo.acme',
+    version_url: 'alice-13-host-acme-ze.zephyrcloud.app',
+    published_at: 1700000100000,
+  };
+  // Test manifests list their bundle hashes by path.
+  const extractHashes = (manifest: unknown, url: string) => {
+    const base = url.replace(/\/[^/]*$/, '');
+    const { hashes } = manifest as { hashes: Record<string, string> };
+    return new Map(Object.entries(hashes).map(([p, h]) => [`${base}/${p}`, h]));
+  };
+  let current = v12;
+  let versionedManifests: Record<string, Record<string, string>> = {};
+
+  beforeEach(() => {
+    rs.clearAllMocks();
+    nativeCache.fileExists.mockResolvedValue(true);
+    nativeCache.writeFile.mockResolvedValue(undefined);
+    nativeCache.downloadFile.mockResolvedValue({ sha256: 'same', bytesWritten: 1 });
+    current = v12;
+    versionedManifests = {};
+    globalThis.fetch = rs.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith('/__get_version_info__')) return Response.json(current);
+      const hashes = versionedManifests[url];
+      return hashes
+        ? Response.json({ hashes })
+        : new Response('not found', { status: 404 });
+    });
+  });
+
+  async function cachedAtV12() {
+    const manager = new CacheManager();
+    await manager.initialize();
+    await manager.preDownloadBundle(bundleUrl, 'same');
+    expect((await manager.getCachedBundle(bundleUrl))?.metadata.version?.snapshotId).toBe(
+      'alice-12.host.repo.acme'
+    );
+    nativeCache.downloadFile.mockClear();
+    return manager;
+  }
+
+  it('relabels a bundle a newer version serves byte-for-byte, without downloading it', async () => {
+    const manager = await cachedAtV12();
+    current = v13;
+    versionedManifests['https://alice-13-host-acme-ze.zephyrcloud.app/mf-manifest.json'] =
+      { 'exposed/App.bundle': 'same' };
+
+    const hashes = new Map([[bundleUrl, 'same']]);
+    expect(await manager.preDownloadBundle(bundleUrl, 'same')).toBe(false);
+    const relabeled = await manager.refreshVersions(manifestUrl, hashes, extractHashes);
+
+    expect(relabeled).toHaveLength(1);
+    expect(nativeCache.downloadFile).not.toHaveBeenCalled();
+    expect((await manager.getCachedBundle(bundleUrl))?.metadata.version).toEqual({
+      snapshotId: 'alice-13.host.repo.acme',
+      versionUrl: 'alice-13-host-acme-ze.zephyrcloud.app',
+      publishedAt: 1700000100000,
+    });
+  });
+
+  it("keeps the old version when the new version's manifest lists different bytes", async () => {
+    // The environment moved to v13 after the update check read the manifest, and v13
+    // changed this bundle: the cached file is not v13's.
+    const manager = await cachedAtV12();
+    current = v13;
+    versionedManifests['https://alice-13-host-acme-ze.zephyrcloud.app/mf-manifest.json'] =
+      { 'exposed/App.bundle': 'changed' };
+
+    const relabeled = await manager.refreshVersions(
+      manifestUrl,
+      new Map([[bundleUrl, 'same']]),
+      extractHashes
+    );
+
+    expect(relabeled).toEqual([]);
+    expect((await manager.getCachedBundle(bundleUrl))?.metadata.version?.snapshotId).toBe(
+      'alice-12.host.repo.acme'
+    );
+  });
+});

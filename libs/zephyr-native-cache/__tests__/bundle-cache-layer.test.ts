@@ -82,4 +82,27 @@ describe('BundleCacheLayer.checkForUpdates', () => {
     );
     expect(layer.getStatus().pendingUpdates).toEqual(['remote']);
   });
+
+  it('reports an update for a bundle that loaded through the network fallback', async () => {
+    const layer = new BundleCacheLayer();
+    manifestHashes = new Map([[CONTAINER_URL, 'container-v1']]);
+    layer.registerManifestSource(MANIFEST_URL, () => new Map(manifestHashes));
+    // No registered hash: the cache skips and register.ts evaluates it from the network.
+    expect(await layer.loadBundle(CONTAINER_URL)).toEqual({ status: 'skipped' });
+    const onUpdate = rs.fn();
+    layer.events.on('update:available', onUpdate);
+
+    expect((await layer.checkForUpdates()).updated).toBe(0);
+    expect(onUpdate).not.toHaveBeenCalled();
+
+    nativeCache.fileExists.mockResolvedValue(true);
+    manifestHashes.set(CONTAINER_URL, 'container-v2');
+    const result = await layer.checkForUpdates();
+
+    expect(result.updated).toBe(1);
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ oldHash: 'container-v1', newHash: 'container-v2' })
+    );
+    expect(layer.getStatus().pendingUpdates).toEqual(['remote']);
+  });
 });

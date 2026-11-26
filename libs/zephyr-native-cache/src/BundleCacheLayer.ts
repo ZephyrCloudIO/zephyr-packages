@@ -38,9 +38,10 @@ export class BundleCacheLayer {
     Promise<{ status: 'cache-hit' | 'downloaded' | 'skipped' }>
   >();
 
-  // Hashes of bundles evaluated in this JS session: canonical bundle URL → hash.
-  // Only these can be "updated"; prefetching a never-loaded bundle is not an update.
-  private loadedHashes = new Map<string, string>();
+  // Bundles evaluated in this JS session: canonical bundle URL → hash. Only these can be
+  // "updated"; prefetching a never-loaded bundle is not an update. `undefined` marks a
+  // bundle evaluated through the network fallback, whose hash is not known yet.
+  private loadedHashes = new Map<string, string | undefined>();
 
   // Polling state
   private pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -212,7 +213,14 @@ export class BundleCacheLayer {
 
             // Update hash map so subsequent loadBundle() calls use the latest hash.
             // loadBundle() uses the same canonical content-sensitive key.
-            this.bundleHashMap[getBundleCacheKey(bundleUrl)] = newHash;
+            const key = getBundleCacheKey(bundleUrl);
+            this.bundleHashMap[key] = newHash;
+
+            // A fallback-loaded bundle takes the first manifest hash seen as its
+            // baseline, so only later changes count as updates.
+            if (this.loadedHashes.has(key) && this.loadedHashes.get(key) === undefined) {
+              this.loadedHashes.set(key, newHash);
+            }
 
             const remoteName = this.inferRemoteName(bundleUrl);
             const didDownload = await this.cacheManager!.preDownloadBundle(
@@ -221,7 +229,7 @@ export class BundleCacheLayer {
             );
             if (!didDownload) continue;
 
-            const loadedHash = this.loadedHashes.get(getBundleCacheKey(bundleUrl));
+            const loadedHash = this.loadedHashes.get(key);
             if (loadedHash === undefined || loadedHash === newHash) {
               console.info(`${LOG_PREFIX} prefetched bundle: ${bundleUrl}`);
               continue;
@@ -358,7 +366,10 @@ export class BundleCacheLayer {
       hash,
       loadedAt: Date.now(),
     };
-    if (hash && (status === 'cache-hit' || status === 'downloaded')) {
+    // 'skipped' bundles are still evaluated, through the network fallback in register.ts.
+    if (status === 'skipped') {
+      this.loadedHashes.set(getBundleCacheKey(bundleUrl), undefined);
+    } else if (hash) {
       this.loadedHashes.set(getBundleCacheKey(bundleUrl), hash);
     }
     if (status === 'cache-hit' || status === 'downloaded') {

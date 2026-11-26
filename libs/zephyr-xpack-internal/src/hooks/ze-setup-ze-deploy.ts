@@ -95,7 +95,7 @@ export function setupZeDeploy<
     if (pluginOptions.coordinator && pluginOptions.participant) {
       pluginOptions.coordinator.failParticipant(pluginOptions.participant, error);
     } else if (pluginOptions.zephyr_engine.hasActiveBuild) {
-      pluginOptions.zephyr_engine.build_failed();
+      void pluginOptions.zephyr_engine.build_failed(error);
     }
     throw error;
   };
@@ -114,7 +114,7 @@ export function setupZeDeploy<
         await pluginOptions.zephyr_engine.start_new_build();
       } catch (error: unknown) {
         if (pluginOptions.zephyr_engine.hasActiveBuild !== false) {
-          pluginOptions.zephyr_engine.build_failed();
+          await pluginOptions.zephyr_engine.build_failed(error);
         }
         handleGlobalError(error, { failBuild: pluginOptions.failBuild });
         // This build will never publish, so release anyone awaiting onDeploymentDone().
@@ -170,7 +170,8 @@ export function setupZeDeploy<
       pluginOptions.coordinator.failParticipant(pluginOptions.participant, error);
     } else {
       if (pluginOptions.zephyr_engine.hasActiveBuild !== false) {
-        pluginOptions.zephyr_engine.build_failed();
+        // Reports `build:failed` once; webpack-family plugins rely on this single path.
+        void pluginOptions.zephyr_engine.build_failed(error);
       }
     }
   });

@@ -1,5 +1,7 @@
-import { readFileSync, rmSync } from 'node:fs';
-import { afterEach, describe, expect, it } from '@rstest/core';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it, rs } from '@rstest/core';
 import { stripAnsi } from 'zephyr-edge-contract';
 import { ZeErrors } from './codes';
 import { ZephyrError } from './zephyr-error';
@@ -79,6 +81,30 @@ describe('ZephyrError security serialization', () => {
       expect(output).toContain('ZE10022');
       expect(output).toContain('Write access denied for app.project.org');
       expect(output).not.toContain(token);
+    }
+  });
+
+  it('neither writes nor cites an error file for messages that leave the machine', () => {
+    // Pin the generated file name so this checks its own file, not the shared temp dir.
+    const random = rs.spyOn(Math, 'random').mockReturnValue(0.0987654321);
+    const errorFile = join(tmpdir(), `ze${Math.round(0.0987654321 * 10e9)}.json`);
+    rmSync(errorFile, { force: true });
+    try {
+      const remote = stripAnsi(
+        ZephyrError.format(new Error('remote failure'), { errorFile: false })
+      );
+      expect(remote).toMatch(/^ZE00000: /u);
+      expect(remote).toContain('remote failure');
+      expect(remote).not.toContain('Complete error details');
+      expect(existsSync(errorFile)).toBe(false);
+
+      // The default still writes the file and points to it.
+      const local = stripAnsi(ZephyrError.format(new Error('local failure')));
+      temporaryFiles.push(errorFile);
+      expect(local).toContain(`Complete error details available at ${errorFile}`);
+      expect(existsSync(errorFile)).toBe(true);
+    } finally {
+      random.mockRestore();
     }
   });
 });

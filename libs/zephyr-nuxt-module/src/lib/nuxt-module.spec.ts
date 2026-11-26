@@ -1,11 +1,23 @@
+// BDD description (unit tests are generated from this description):
+//
+//   Scenario: the plugin guards its public `target` option
+//     Given an untyped caller passes an unsupported target such as "desktop"
+//     Then the plugin throws before doing any work
+//
+//   Scenario: the plugin rejects the worker target
+//     Given a caller passes target "worker"
+//     Then the plugin throws a TypeError that points to ze-cli
+//     And the "worker" literal is a compile-time error for typed callers
+//
+//   Scenario: existing targets keep working
+//     Given a caller passes target "web" or "tap-app"
+//     Then the target guard does not throw
+//
+// The remaining scenarios in this file cover the plugin lifecycle and are described by the test names.
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
+import type * as ZephyrAgent from 'zephyr-agent';
 
 const mocks = rs.hoisted(() => ({
-  assertZephyrBuildTarget: rs.fn((value: unknown, optionName = 'target') => {
-    if (!['web', 'ios', 'android', 'tap-app'].includes(value as string)) {
-      throw new TypeError(`${optionName} must be one of web, ios, android, tap-app`);
-    }
-  }),
   defineNuxtModule: rs.fn((definition: unknown) => definition),
   deferCreate: rs.fn(),
   zephyrDeferCreate: rs.fn(),
@@ -20,7 +32,8 @@ rs.mock('@nuxt/kit', () => ({
 }));
 
 rs.mock('zephyr-agent', () => ({
-  assertZephyrBuildTarget: mocks.assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget: (rs.requireActual('zephyr-agent') as typeof ZephyrAgent)
+    .assertZephyrBundlerBuildTarget,
   isZephyrDisabled: mocks.isZephyrDisabled,
   logZephyrDisabled: mocks.logZephyrDisabled,
   ZephyrEngine: {
@@ -143,5 +156,25 @@ describe('zephyr-nuxt-module', () => {
     expect(mocks.deferCreate).not.toHaveBeenCalled();
     expect(mocks.createUploadRunner).not.toHaveBeenCalled();
     expect(hook).not.toHaveBeenCalled();
+  });
+
+  it('rejects the worker target and points to ze-cli before registering Nuxt hooks', () => {
+    const hook = rs.fn();
+    const nuxt = { options: { rootDir: '/workspace/pkg', dev: false }, hook };
+    const definition = zephyrNuxtModule as unknown as NuxtModuleDefinition;
+    const run = () => definition.setup({ target: 'worker' }, nuxt);
+
+    expect(run).toThrow(TypeError);
+    expect(run).toThrow('zephyr({ target }) does not support "worker"');
+    expect(run).toThrow('ze-cli');
+    expect(mocks.deferCreate).not.toHaveBeenCalled();
+    expect(hook).not.toHaveBeenCalled();
+  });
+
+  it('keeps accepting the web target', () => {
+    const nuxt = { options: { rootDir: '/workspace/pkg', dev: false }, hook: rs.fn() };
+    const definition = zephyrNuxtModule as unknown as NuxtModuleDefinition;
+
+    expect(() => definition.setup({ target: 'web' }, nuxt)).not.toThrow();
   });
 });

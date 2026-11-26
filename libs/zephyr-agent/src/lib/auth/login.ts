@@ -17,6 +17,7 @@ import { getToken, removeToken, saveToken } from '../node-persist/token';
 import { AuthListener } from './sse';
 import { openUrl } from './open-url';
 import { TOKEN_EXPIRY } from './auth-flags';
+import { getAuthOrigin } from './auth-origin';
 import { isTokenStillValid } from './token-expiry';
 import { getCiToken } from '../node-persist/ci-token';
 import { getServerToken } from '../node-persist/server-token';
@@ -279,13 +280,15 @@ export function createPrivateAuthenticationArtifact(
 
 /** Generates the URL to authenticate the user. */
 async function getAuthenticationURL(state: string): Promise<string> {
+  const origin = getAuthOrigin();
   const authorizeUrl = new URL(ze_api_gateway.authorize_link, ZE_API_ENDPOINT());
   authorizeUrl.searchParams.set('state', state);
+  authorizeUrl.searchParams.set('origin', origin);
   ze_log.auth('getAuthenticationURL', redactUrl(authorizeUrl));
   const [ok, cause, data] = await makeRequest<string>({
     path: ze_api_gateway.authorize_link,
     base: ZE_API_ENDPOINT(),
-    query: { state },
+    query: { state, origin },
   });
 
   if (!ok) {

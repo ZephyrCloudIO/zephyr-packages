@@ -41,12 +41,18 @@ export async function uploadEnvs({
   );
 
   if (!ok || !data) {
+    const error = new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+      type: 'envs',
+      cause: cause,
+    });
     logEvent({
       level: 'error',
       action: 'deploy:edge:failed',
+      data: { outcome: 'failed' },
+      error,
       message: 'failed deploying local build to edge',
     });
 
-    throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, { type: 'envs', cause: cause });
+    throw error;
   }
 }

@@ -7,8 +7,9 @@ import {
   ZeErrors,
   ZephyrEngine,
   ZephyrError,
-  assertZephyrBuildTarget,
+  assertZephyrBundlerBuildTarget,
   type ZephyrBuildHooks,
+  type ZephyrBundlerBuildTarget,
   type ZephyrBuildTarget,
 } from 'zephyr-agent';
 import type {
@@ -29,7 +30,7 @@ const getInputFolder = (options: InputOptions): string => {
 
 export interface ZephyrRolldownPluginOptions {
   /** Zephyr build target, including the `tap-app` mini-app artifact family. */
-  target?: ZephyrBuildTarget;
+  target?: ZephyrBundlerBuildTarget;
   hooks?: ZephyrBuildHooks;
   /** Every independently published Module Federation container in the snapshot. */
   mfConfigs?: ZephyrModuleFederationConfig[];
@@ -138,7 +139,7 @@ function attachFederationBuildStats(
 
 export function withZephyr(options: ZephyrRolldownPluginOptions = {}) {
   if (options.target !== undefined) {
-    assertZephyrBuildTarget(options.target, 'withZephyr({ target })');
+    assertZephyrBundlerBuildTarget(options.target, 'withZephyr({ target })');
   }
   assertTapModuleFederationMetadata(
     options.target,
@@ -170,7 +171,7 @@ export function withZephyr(options: ZephyrRolldownPluginOptions = {}) {
       try {
         const zephyr_engine = await zephyr_engine_defer;
         if (zephyr_engine.hasActiveBuild !== false) {
-          zephyr_engine.build_failed();
+          await zephyr_engine.build_failed(error);
         }
       } catch (engineError: unknown) {
         handleGlobalError(engineError);
@@ -214,6 +215,10 @@ export function withZephyr(options: ZephyrRolldownPluginOptions = {}) {
         buildInProgress = false;
         await zephyr_engine.build_finished();
       } catch (error) {
+        if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {
+          buildInProgress = false;
+          await zephyr_engine?.build_failed(error);
+        }
         handleGlobalError(error);
       } finally {
         if (buildInProgress && zephyr_engine?.hasActiveBuild !== false) {

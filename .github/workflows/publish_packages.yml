@@ -1,4 +1,6 @@
 name: Publish Packages
+# Release runs show the release tag; manual canary runs show the dispatched branch.
+run-name: ${{ github.event_name == 'release' && format('Release {0}', github.event.release.tag_name) || format('Canary from {0}', github.ref_name) }}
 
 # Release Please owns stable version bumps, tags, and GitHub Releases. This
 # workflow publishes those releases to npm and retains the manual canary/next

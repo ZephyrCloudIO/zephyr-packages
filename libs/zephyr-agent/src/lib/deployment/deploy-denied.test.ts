@@ -233,6 +233,31 @@ describe('deployDeniedError', () => {
     );
   });
 
+  it('prints the kept version URL under the heading and puts it on the data', () => {
+    const error = deployDeniedError(
+      { ...app, versionUrl: 'https://checkout-web-v1.edge.test' },
+      { outcome: { result: 'denied', version: { id: ids.version }, denied: [entry()] } }
+    );
+
+    expect(error.message).toContain(
+      [
+        'Deploy denied for checkout-web (version kept, nothing moved)',
+        '  version: https://checkout-web-v1.edge.test',
+        '  production  profile',
+      ].join('\n')
+    );
+    expect(error.data).toMatchObject({ versionUrl: 'https://checkout-web-v1.edge.test' });
+  });
+
+  it('prints no version line when the URL is unknown', () => {
+    const error = deployDeniedError(app, {
+      outcome: { result: 'denied', version: { id: ids.version }, denied: [entry()] },
+    });
+
+    expect(error.message).not.toContain('version:');
+    expect(error.data).toMatchObject({ versionUrl: undefined });
+  });
+
   it('does not throw on a missing or malformed outcome', () => {
     expect(() =>
       deployDeniedError(app, { outcome: null, ignoredEnvs: 'x' })

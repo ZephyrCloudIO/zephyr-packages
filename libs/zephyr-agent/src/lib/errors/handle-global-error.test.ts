@@ -1,6 +1,7 @@
 import type { Mock } from '@rstest/core';
 
 import { describe, expect, rs, it, beforeEach, afterEach } from '@rstest/core';
+import { deployDeniedError } from '../deployment/deploy-denied';
 import { ZeErrors } from './codes';
 import { handleGlobalError } from './handle-global-error';
 import { ZephyrError } from './zephyr-error';
@@ -172,6 +173,24 @@ describe('handleGlobalError', () => {
       handleGlobalError(denial(), { failBuild: false });
 
       expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+    });
+
+    it('prints the kept version URL when the build is not failed', () => {
+      const error = deployDeniedError(
+        {
+          name: 'checkout-web',
+          uid: 'checkout-web.shop.acme',
+          versionUrl: 'https://v1.edge.test',
+        },
+        { outcome: { result: 'denied', denied: [] } }
+      );
+
+      handleGlobalError(error, { failBuild: false });
+
+      expect(mockLogFn).toHaveBeenCalledWith(
+        'error',
+        expect.stringContaining('version: https://v1.edge.test')
+      );
     });
 
     it('lets a run opt out with ZE_FAIL_BUILD=false', () => {

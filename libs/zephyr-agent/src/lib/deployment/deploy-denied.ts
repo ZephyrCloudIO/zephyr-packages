@@ -221,13 +221,26 @@ function contactLine(entries: DeniedEntry[]): string {
   return `  contact: an org admin (${total} in this org; see their names in Zephyr)`;
 }
 
+/** The optional lines under the heading of a denial block. */
+interface DeniedHeader {
+  /** The line that says what was refused. */
+  summary?: string;
+  /** The kept version's URL, so the user can still open it. */
+  versionUrl?: string;
+}
+
 /**
- * The denial block: the heading, a line per environment (from the entries with details,
- * then by name only), and whom to ask.
+ * The denial block: the heading, the kept version, a line per environment (from the
+ * entries with details, then by name only), and whom to ask.
  */
-function formatDeployDenied(heading: string, list: DeniedList, summary?: string): string {
+function formatDeployDenied(
+  heading: string,
+  list: DeniedList,
+  { summary, versionUrl }: DeniedHeader = {}
+): string {
   const lines = [heading];
   if (summary) lines.push(`  ${summary}`);
+  if (versionUrl) lines.push(`  version: ${versionUrl}`);
   lines.push(...list.entries.map(environmentLine));
   lines.push(...list.withoutDetails.map((env) => `  ${env.name}  details not available`));
   if (!list.entries.length && !list.withoutDetails.length && !summary) {
@@ -253,11 +266,12 @@ export interface DeniedUploadResponse {
 
 /**
  * The build error for an upload whose deploy was denied: the version is kept, and none of
- * the app's tags or environments moved. Every environment `ignoredEnvs` lists as denied
- * is named, with details where `outcome.denied` has them.
+ * the app's tags or environments moved. The kept version's URL is printed and put on the
+ * error data, because the engine does not log it for a failed upload. Every environment
+ * `ignoredEnvs` lists as denied is named, with details where `outcome.denied` has them.
  */
 export function deployDeniedError(
-  app: { name: string; uid: string },
+  app: { name: string; uid: string; versionUrl?: string },
   response: DeniedUploadResponse
 ): ZephyrError<'ERR_DEPLOY_DENIED'> {
   const outcome = isRecord(response.outcome) ? response.outcome : {};
@@ -270,15 +284,18 @@ export function deployDeniedError(
     }
   }
   const version = isRecord(outcome['version']) ? outcome['version']['id'] : undefined;
+  const versionUrl = printable(app.versionUrl);
 
   return new ZephyrError(ZeErrors.ERR_DEPLOY_DENIED, {
     message: formatDeployDenied(
       `Deploy denied for ${app.name} (version kept, nothing moved)`,
-      list
+      list,
+      { versionUrl }
     ),
     data: {
       applicationUid: app.uid,
       versionId: isUuid(version) ? version : undefined,
+      versionUrl,
       deniedEnvironmentIds: [...listed],
     },
   });
@@ -301,7 +318,7 @@ export function environmentDeniedError(
     message: formatDeployDenied(
       'Denied by a permission profile (nothing changed)',
       list,
-      deniedSummary(body, list)
+      { summary: deniedSummary(body, list) }
     ),
     data: { deniedEnvironmentIds: deniedIds(list) },
   });

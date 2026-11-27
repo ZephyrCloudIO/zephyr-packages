@@ -17,6 +17,7 @@ function buildStats(buildId: string): ZephyrBuildStats {
   return {
     id: 'app.project.org',
     app: { buildId, name: 'checkout-web' },
+    edge: { url: 'https://edge.test', versionUrl: 'https://version.edge.test' },
   } as unknown as ZephyrBuildStats;
 }
 
@@ -101,11 +102,13 @@ describe('zeUploadBuildStats upload outcome', () => {
       data: {
         applicationUid: 'app.project.org',
         versionId,
+        versionUrl: 'https://version.edge.test',
         deniedEnvironmentIds: [envId],
       },
     });
     await expect(upload).rejects.toThrow(
       'Deploy denied for checkout-web (version kept, nothing moved)\n' +
+        '  version: https://version.edge.test\n' +
         '  production  profile "web / production"  needs the Member role'
     );
   });

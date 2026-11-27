@@ -15,7 +15,8 @@ import { getToken } from '../node-persist/token';
  * @returns Array of deployed tags and envs. Empty unless the upload waits for deployments
  *   (`waitForCompletion`, set by `ZE_WAIT_FOR_DEPLOYMENTS`)
  * @throws {@link ZephyrError} `ERR_DEPLOY_DENIED` when a permission profile denied the
- *   deploy: the version is kept, and none of the app's tags or environments moved.
+ *   deploy: the version is kept (its URL is in the message and `data.versionUrl`), and
+ *   none of the app's tags or environments moved.
  */
 export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<string[]> {
   ze_log.upload('Uploading build stats to Zephyr...', dashData);
@@ -62,7 +63,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
   // (ZephyrCloudIO/zephyr-cloud-io#4004). Only `result` decides.
   if (isDeniedOutcome(res.outcome)) {
     throw deployDeniedError(
-      { name: dashData.app.name, uid: dashData.id },
+      { name: dashData.app.name, uid: dashData.id, versionUrl: dashData.edge.versionUrl },
       { outcome: res.outcome, ignoredEnvs: res.ignoredEnvs }
     );
   }

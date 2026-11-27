@@ -241,7 +241,7 @@ catalogs:
     '@rspack/core': ^2.1.3
     '@rspack/plugin-react-refresh': ^2.0.2
   rslib:
-    '@rslib/core': 1.0.0
+    '@rslib/core': 1.0.7
   rspress:
     '@rspress/core': ^2.0.17
   rspress1:

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.10.0 (2026-11-27)
+
+## What's Changed
+* fix(agent): open the browser directly when the login prompt cannot be seen by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/760
+* feat(zephyr-native-cache): record the Zephyr version of each cached bundle by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/759
+* fix(zephyr-native-cache): don't report prefetched never-loaded bundles as updates by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/777
+* ci(publish): name runs by release tag or canary branch by @ryok90 in https://github.com/ZephyrCloudIO/zephyr-packages/pull/798
+* feat(agent): fail the build when an upload's deploy is denied by @SvetlanaMuravlova in https://github.com/ZephyrCloudIO/zephyr-packages/pull/783
+
+
+**Full Changelog**: https://github.com/ZephyrCloudIO/zephyr-packages/compare/v1.9.0...v1.10.0
+
 ## 1.9.0 (2026-11-24)
 
 ## What's Changed

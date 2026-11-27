@@ -15,7 +15,9 @@ export interface ZephyrWebpackPluginOptions {
    * Rethrow Zephyr errors routed through `handleGlobalError`, including single-compiler
    * configuration and upload failures. `false` does not suppress compilation errors or
    * coordinated-build failures. Takes precedence over `ZE_FAIL_BUILD`. When neither is
-   * set, defaults to true in CI with a nonempty `ZE_CI_TOKEN` and false otherwise.
+   * set, defaults to true in CI with a nonempty `ZE_CI_TOKEN` and false otherwise. A
+   * deploy that a permission profile denied (`ZE10038`) fails any CI run, whatever
+   * credential it uses, unless this option or `ZE_FAIL_BUILD` says otherwise.
    */
   failBuild?: boolean;
   /** Override automatic CSR/SSR detection for coordinated compiler arrays. */

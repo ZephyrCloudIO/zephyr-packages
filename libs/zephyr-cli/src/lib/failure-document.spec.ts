@@ -42,6 +42,40 @@ describe('createFailureDocument', () => {
     });
   });
 
+  it('reports the kept version URL of a denied deploy', () => {
+    const denial = new ZephyrError(ZeErrors.ERR_DEPLOY_DENIED, {
+      message: 'Deploy denied for app (version kept, nothing moved)',
+      data: { versionUrl: 'https://app-v1.edge.example.test' },
+    });
+
+    expect(FAILURE_DOCUMENT_SCHEMA_VERSION).toBe('1.1.0');
+    expect(createFailureDocument(denial).error).toMatchObject({
+      code: 'ZE10038',
+      versionUrl: 'https://app-v1.edge.example.test',
+    });
+  });
+
+  it('reports the kept version URL behind a wrapper error', () => {
+    const cause = new ZephyrError(ZeErrors.ERR_DEPLOY_DENIED, {
+      message: 'denied',
+      data: { versionUrl: 'https://app-v1.edge.example.test' },
+    });
+    const wrapper = new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+      type: 'build stats',
+      cause,
+    });
+
+    expect(createFailureDocument(wrapper).error.versionUrl).toBe(
+      'https://app-v1.edge.example.test'
+    );
+  });
+
+  it('has no versionUrl when no version was kept', () => {
+    expect(createFailureDocument(new Error('boom')).error).not.toHaveProperty(
+      'versionUrl'
+    );
+  });
+
   it('reports a plain error as unknown without colors or secrets', () => {
     const { error } = createFailureDocument(
       new Error('Directory does not exist\nAuthorization: Bearer abc.def.ghi')

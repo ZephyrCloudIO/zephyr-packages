@@ -4,6 +4,7 @@ import {
   ZE_IS_PREVIEW,
   ZEPHYR_API_ENDPOINT,
 } from 'zephyr-edge-contract';
+import { environmentDeniedError } from '../deployment/deploy-denied';
 import { ZeErrors, ZephyrError } from '../errors';
 import { ze_log } from '../logging/debug';
 import { cleanTokens } from '../node-persist/token';
@@ -93,8 +94,10 @@ export async function makeHttpRequest<T = void>(
   const { credentialToken, skipTokenCleanup = false, ...requestOptions } = options;
 
   try {
+    // TODO(ZephyrCloudIO/zephyr-cloud-io#4595): propagate trace context (ST-16 OpenTelemetry).
     const response = await fetchWithRetries(url, {
       ...requestOptions,
+      // TODO(ZephyrCloudIO/zephyr-cloud-io#4593): a typed body instead of a cast.
       body: data as BodyInit | null | undefined,
     });
 
@@ -117,6 +120,14 @@ export async function makeHttpRequest<T = void>(
     }
 
     if (response.status === 403) {
+      // A permission profile refused the write: report the denied environments, not a
+      // generic access error (ZephyrCloudIO/zephyr-cloud-io#4005).
+      const denied = environmentDeniedError(safe_json_parse<unknown>(resText));
+      if (denied) {
+        throw denied;
+      }
+
+      // TODO(ZephyrCloudIO/zephyr-cloud-io#4593): read the Problem Details of other 403s.
       throw new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR, {
         message: 'The authenticated account does not have access to this target.',
       });
@@ -149,6 +160,8 @@ export async function makeHttpRequest<T = void>(
       });
     }
 
+    // TODO(ZephyrCloudIO/zephyr-cloud-io#4593): parse with the caller's parser, not a
+    // cast; wrap a thrown non-Error value.
     return [true, null, resData as T];
   } catch (error) {
     return [false, error as Error];

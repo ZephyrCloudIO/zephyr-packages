@@ -186,6 +186,70 @@ describe('Pure HTTP Request Functions', () => {
       expect(mockCleanTokens).not.toHaveBeenCalled();
     });
 
+    it('reports a 403 ENVIRONMENT_DENIED as ZE10038 with the environments', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 403,
+        text: async () =>
+          JSON.stringify({
+            status: 'denied',
+            code: 'ENVIRONMENT_DENIED',
+            message: 'Deploy denied',
+            environments: [
+              {
+                environment: {
+                  id: '0190a1b2-0000-7000-8000-000000000010',
+                  name: 'production',
+                  type: 'production',
+                },
+                profile: {
+                  id: '0190a1b2-0000-7000-8000-000000000020',
+                  name: 'web / production',
+                },
+                requiredRole: 'member',
+                reason: 'no_grant',
+                contacts: [
+                  { id: '0190a1b2-0000-7000-8000-000000000041', name: 'Ada Admin' },
+                ],
+                moreContacts: 0,
+              },
+            ],
+          }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://zeapi.example.com/build-stats')
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10038' });
+      expect((error as Error).message).toContain(
+        'production  profile "web / production"  needs the Member role'
+      );
+      expect((error as Error).message).not.toContain('Ada Admin');
+      expect(mockCleanTokens).not.toHaveBeenCalled();
+    });
+
+    it('reports a 403 ENVIRONMENT_DENIED with malformed environments as a denial', async () => {
+      mockFetchWithRetries.mockResolvedValueOnce({
+        status: 403,
+        text: async () =>
+          JSON.stringify({
+            code: 'ENVIRONMENT_DENIED',
+            message: 'Denied',
+            environments: [null],
+          }),
+        ok: false,
+      } as Response);
+
+      const [ok, error] = await makeHttpRequest(
+        new URL('https://zeapi.example.com/build-stats')
+      );
+
+      expect(ok).toBe(false);
+      expect(error).toMatchObject({ code: 'ZE10038' });
+    });
+
     it('should handle network errors', async () => {
       mockFetchWithRetries.mockRejectedValueOnce(new Error('Network error'));
 

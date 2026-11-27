@@ -1,17 +1,26 @@
 import {
   ZE_API_ENDPOINT,
   ze_api_gateway,
+  type BuildStatsResponse,
   type ZephyrBuildStats,
 } from 'zephyr-edge-contract';
 import { createHash } from 'node:crypto';
+import { deployDeniedError, isDeniedOutcome } from '../deployment/deploy-denied';
 import { ZeErrors, ZephyrError } from '../errors';
 import { makeRequest } from '../http/http-request';
 import { ze_log } from '../logging';
 import { getToken } from '../node-persist/token';
 
-/** @returns Array of deployed tags and envs. Empty array when waitForDeployments is false */
+/**
+ * @returns Array of deployed tags and envs. Empty unless the upload waits for deployments
+ *   (`waitForCompletion`, set by `ZE_WAIT_FOR_DEPLOYMENTS`)
+ * @throws {@link ZephyrError} `ERR_DEPLOY_DENIED` when the upload outcome says a
+ *   permission profile denied the deploy: the version is kept (its URL is in the message
+ *   and `data.versionUrl`), and none of the app's tags or environments moved. A 403
+ *   `ENVIRONMENT_DENIED` is passed through as the HTTP layer reports it, without the
+ *   URL.
+ */
 export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<string[]> {
-  // Add dots here to indicate this is an async operation
   ze_log.upload('Uploading build stats to Zephyr...', dashData);
 
   const token = await getToken();
@@ -21,7 +30,7 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
     .update(`${dashData.id}\0${dashData.app.buildId}`)
     .digest('hex');
 
-  const [ok, cause, res] = await makeRequest<{ status: string; targets?: string[] }>(
+  const [ok, cause, res] = await makeRequest<BuildStatsResponse>(
     url,
     {
       method: 'POST',
@@ -33,8 +42,14 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
       },
       credentialToken: token,
     },
-    JSON.stringify(dashData)
+    // This client reads the outcome below, so it asks the gateway to wait for it.
+    JSON.stringify({ ...dashData, reportOutcome: true } satisfies ZephyrBuildStats)
   );
+
+  // A refusal from a permission profile is final: report it as is.
+  if (!ok && ZephyrError.is(cause, ZeErrors.ERR_DEPLOY_DENIED)) {
+    throw cause;
+  }
 
   if (!ok || res.status !== 'ok') {
     throw new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
@@ -44,6 +59,15 @@ export async function zeUploadBuildStats(dashData: ZephyrBuildStats): Promise<st
         url: url.toString(),
       },
     });
+  }
+
+  // The API kept the version but moved nothing of the app
+  // (ZephyrCloudIO/zephyr-cloud-io#4004). Only `result` decides.
+  if (isDeniedOutcome(res.outcome)) {
+    throw deployDeniedError(
+      { name: dashData.app.name, uid: dashData.id, versionUrl: dashData.edge.versionUrl },
+      { outcome: res.outcome, ignoredEnvs: res.ignoredEnvs }
+    );
   }
 
   ze_log.upload('Build stats uploaded to Zephyr...');

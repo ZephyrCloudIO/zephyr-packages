@@ -157,6 +157,12 @@ export interface ZephyrBuildStats {
   worker_version?: string;
   /** When true, plugin waits for terminal deployment status before finishing. */
   waitForCompletion?: boolean;
+  /**
+   * When true, the gateway waits for the API's decision and returns the upload `outcome`,
+   * so the plugin can report a denied deploy (ZephyrCloudIO/zephyr-cloud-io#4005).
+   * Without it, the gateway answers at once, as for older plugins.
+   */
+  reportOutcome?: boolean;
 }
 
 enum DeploymentIntegrationPlatform {

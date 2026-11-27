@@ -2,7 +2,7 @@ type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 /** Categories for all error codes. */
 export const ZeErrorCategories = {
-  /** Error we have yet catched and known */
+  /** An error not yet caught and classified */
   unknown: '00',
   /** Stage 0 build error */
   build: '10',
@@ -19,16 +19,11 @@ export const ZeErrorCategories = {
 };
 
 /**
- * A collection of error types and the error code during local/build stage
+ * A collection of error types and their error codes.
  *
- * If you are searching for an error globally, if it is a build related error, it starts
- * with `ZE10`, if it's a deployment related error, search for `ZE20` and then followed
- * with their ID.
- *
- * - `ZE` at the front is a constant
- * - Two digits at the middle PP (`10` for build error or `20` for deployment error) is
- *   their categories,
- * - Last three digits is their ID.
+ * A code is `ZE`, then two digits for the category (see `ZeErrorCategories`: `00`
+ * unknown, `10` build, `20` deploy, `30` browser, `40` config, `50` unreachable), then
+ * three digits for the ID.
  *
  * For example, if you have a `SNAPSHOT_NOT_FOUND` error, search for `ZE20023`, if you see
  * an error showing up on terminal or application, the last three numbers are their IDs.
@@ -45,7 +40,6 @@ Unknown error: {{ message }}
   },
 
   /** Package.json not found error */
-  // TODO: this error is less likely to happen
   ERR_PACKAGE_JSON_NOT_FOUND: {
     id: '010',
     message: 'package.json not found',
@@ -178,7 +172,7 @@ Verify the application target and account, or ask an organization administrator 
   },
 
   /**
-   * Module federation configuraiton error, throw full stop if configuration is invalid -
+   * Module federation configuration error, throw full stop if configuration is invalid -
    * specifically for React Native.
    *
    * Reference:
@@ -186,7 +180,7 @@ Verify the application target and account, or ask an organization administrator 
    */
   ERR_INVALID_MF_CONFIG: {
     id: '023',
-    message: `Library name {{library_name}} must be a valid identifier when using "var" as library type in Module Federation configuration. Either use a valid identifier (e. g. {base_identifier}) or use a different library type (e. g. type: 'global', which assign a property on the global scope instead of declaring a variable). To see a list of valid identifiers, please refer to:
+    message: `Library name {{library_name}} must be a valid identifier when using "var" as library type in Module Federation configuration. Either use a valid identifier (e. g. \`myApp\`) or use a different library type (e. g. type: 'global', which assign a property on the global scope instead of declaring a variable). To see a list of valid identifiers, please refer to:
 - Mozilla's documentation on identifiers: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#identifiers
 - The list of Module Federation's available library type: https://github.com/module-federation/core/blob/ae5ee1eedad4565774ea82e30b3d0df7c9921c58/webpack/declarations/WebpackOptions.d.ts#L112
 
@@ -466,6 +460,19 @@ Also check:
 - The workflow checks out the Git repository with origin and commit history.
 
 {{ details }}
+`,
+    kind: 'build',
+  },
+
+  /**
+   * A permission profile denied a write (ZephyrCloudIO/zephyr-cloud-io#4005): an upload's
+   * deploy, where the version is kept and none of the app's tags or environments moved,
+   * or a deploy or settings change refused with 403 `ENVIRONMENT_DENIED`.
+   */
+  ERR_DEPLOY_DENIED: {
+    id: '038',
+    message: `
+{{ message }}
 `,
     kind: 'build',
   },

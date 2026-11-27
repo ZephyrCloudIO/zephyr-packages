@@ -150,7 +150,7 @@ in plain quotes, not a template literal, so JavaScript does not interpolate it.
 
 | Variable        | Effect                                                                                 |
 | --------------- | -------------------------------------------------------------------------------------- |
-| `ZE_FAIL_BUILD` | `true` makes a Zephyr failure fail the build. Otherwise the failure is logged.         |
+| `ZE_FAIL_BUILD` | `true` makes a Zephyr failure fail the build. See below for the default.               |
 | `ZE_DISABLED`   | `true` skips Zephyr. The bundle is built and is not deployed. Zephyr is not contacted. |
 
 `ZE_FAIL_BUILD` applies on every path: a single or an array config (webpack, rspack,
@@ -160,6 +160,16 @@ example a 404 because the remote is not published yet) is skipped even when the 
 must fail, so a host can build before its remote. The `failBuild` option of `withZephyr`
 in `zephyr-webpack-plugin` and `zephyr-rspack-plugin` overrides the variable; the other
 integrations read the variable only.
+
+When neither is set, a failure fails the build in CI with a nonempty `ZE_CI_TOKEN` and is
+logged otherwise. A deploy that a permission profile denied (`ZE10038`) fails any CI run,
+whatever credential it uses. Any `ZE_FAIL_BUILD` value other than `true`, an empty one
+too, opts out.
+
+When the upload outcome says the deploy was denied, the uploaded version is kept: the
+`ZE10038` message prints its URL, and the error has it in `data.versionUrl`. A 403
+`ENVIRONMENT_DENIED` refusal carries no version URL. `onDeployComplete` is not called for
+a denied deploy, whether or not the build fails.
 
 ### Error categories
 

@@ -1,7 +1,10 @@
 import type { Mock } from '@rstest/core';
 
 import { describe, expect, rs, it, beforeEach, afterEach } from '@rstest/core';
+import { deployDeniedError } from '../deployment/deploy-denied';
+import { ZeErrors } from './codes';
 import { handleGlobalError } from './handle-global-error';
+import { ZephyrError } from './zephyr-error';
 
 const ciInfo = rs.hoisted(() => ({ isCI: false }));
 
@@ -147,6 +150,87 @@ describe('handleGlobalError', () => {
       ciInfo.isCI = false;
 
       handleGlobalError(new Error('test error'));
+
+      expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+    });
+  });
+
+  describe('denied deploy (ZE10038)', () => {
+    const denial = () =>
+      new ZephyrError(ZeErrors.ERR_DEPLOY_DENIED, { message: 'denied' });
+
+    it('fails any CI run, whatever credential it used', () => {
+      ciInfo.isCI = true;
+      const error = denial();
+
+      expect(() => handleGlobalError(error)).toThrow(error);
+      expect(mockLogFn).not.toHaveBeenCalled();
+    });
+
+    it('lets an app opt out with failBuild=false', () => {
+      ciInfo.isCI = true;
+
+      handleGlobalError(denial(), { failBuild: false });
+
+      expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+    });
+
+    it('prints the kept version URL when the build is not failed', () => {
+      const error = deployDeniedError(
+        {
+          name: 'checkout-web',
+          uid: 'checkout-web.shop.acme',
+          versionUrl: 'https://v1.edge.test',
+        },
+        { outcome: { result: 'denied', denied: [] } }
+      );
+
+      handleGlobalError(error, { failBuild: false });
+
+      expect(mockLogFn).toHaveBeenCalledWith(
+        'error',
+        expect.stringContaining('version: https://v1.edge.test')
+      );
+    });
+
+    it('lets a run opt out with ZE_FAIL_BUILD=false', () => {
+      ciInfo.isCI = true;
+      process.env['ZE_FAIL_BUILD'] = 'false';
+
+      handleGlobalError(denial());
+
+      expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+    });
+
+    it('fails a CI run when a wrapper carries the denial as its reason', () => {
+      ciInfo.isCI = true;
+      const wrapper = new ZephyrError(ZeErrors.ERR_FAILED_UPLOAD, {
+        type: 'build stats',
+        cause: denial(),
+      });
+
+      expect(() => handleGlobalError(wrapper)).toThrow(wrapper);
+    });
+
+    it('treats an empty ZE_FAIL_BUILD as an opt-out, like other errors', () => {
+      ciInfo.isCI = true;
+      process.env['ZE_FAIL_BUILD'] = '';
+
+      handleGlobalError(denial());
+
+      expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+    });
+
+    it('logs in a local build', () => {
+      handleGlobalError(denial());
+
+      expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
+    });
+
+    it('keeps other errors logged in CI without a CI token', () => {
+      ciInfo.isCI = true;
+
+      handleGlobalError(new ZephyrError(ZeErrors.ERR_AUTH_FORBIDDEN_ERROR));
 
       expect(mockLogFn).toHaveBeenCalledWith('error', expect.any(String));
     });

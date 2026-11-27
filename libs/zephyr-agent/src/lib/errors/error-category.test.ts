@@ -25,6 +25,7 @@ describe('getZephyrErrorCategory', () => {
     expect(getZephyrErrorCodeCategory('ZE10018')).toBe('auth');
     expect(getZephyrErrorCodeCategory('ZE10037')).toBe('auth');
     expect(getZephyrErrorCodeCategory('ZE10022')).toBe('forbidden');
+    expect(getZephyrErrorCodeCategory('ZE10038')).toBe('forbidden');
     expect(getZephyrErrorCodeCategory('ZE40035')).toBe('config');
     expect(getZephyrErrorCodeCategory('ZE40002')).toBe('config');
     expect(getZephyrErrorCodeCategory('ZE50001')).toBe('unreachable');

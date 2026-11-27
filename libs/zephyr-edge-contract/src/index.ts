@@ -20,6 +20,14 @@ export type {
   PublishTargets,
   StageZeroPublishRequest,
 } from './lib/edge-api/publish-request';
+export type {
+  BuildStatsResponse,
+  DeniedEnvironment,
+  EnvironmentDeniedResponse,
+  IgnoredEnv,
+  PublishOutcome,
+  UploadDeniedEnvironment,
+} from './lib/edge-api/publish-outcome';
 export type { ZeEnvs, ZeUploadBuildStats } from './lib/edge-api/ze-envs-request';
 
 export type { ZephyrPluginOptions } from './lib/plugin-options/zephyr-webpack-plugin-options';

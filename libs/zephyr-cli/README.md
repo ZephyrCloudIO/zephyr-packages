@@ -97,7 +97,7 @@ the logs stay on stderr, and the exit code is 1:
 
 ```json
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "ok": false,
   "error": { "code": "ZE20014", "reason": "ZE50001", "kind": "unreachable", "message": "…" }
 }
@@ -106,7 +106,9 @@ the logs stay on stderr, and the exit code is 1:
 `code` is the Zephyr error code. `reason` is the code of the root cause when a wrapper
 error hides it, and is absent otherwise. `kind` is the category of the root cause:
 `unreachable` (Zephyr cannot be reached, or failed on its side), `auth`, `forbidden`,
-`config`, `build`, `deploy`, `browser` or `unknown`. The message has no colors and no
+`config`, `build`, `deploy`, `browser` or `unknown`. `versionUrl` (added in schema
+`1.1.0`) is the URL of the version Zephyr kept when a permission profile denied the
+deploy (`ZE10038`), and is absent otherwise. The message has no colors and no
 secrets. A successful result has no `ok` field, so use the exit code to tell a failure
 from a success.
 

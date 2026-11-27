@@ -6,7 +6,7 @@ import {
   type ZephyrErrorCategory,
 } from 'zephyr-agent';
 
-export const FAILURE_DOCUMENT_SCHEMA_VERSION = '1.0.0';
+export const FAILURE_DOCUMENT_SCHEMA_VERSION = '1.1.0';
 
 /**
  * What `ze-cli deploy --format json` prints on stdout when it fails. The only document on
@@ -30,7 +30,21 @@ export interface FailureDocument {
     kind: ZephyrErrorCategory;
     /** Redacted message without colors. */
     message: string;
+    /**
+     * URL of the version Zephyr kept although the deploy failed: a deploy a permission
+     * profile denied (`ZE10038`). Absent otherwise. Added in schema 1.1.0.
+     */
+    versionUrl?: string;
   };
+}
+
+/** The kept version's URL from the error data, also on a wrapper's cause. */
+function keptVersionUrl(error: unknown): string | undefined {
+  for (let current = error; ZephyrError.is(current); current = current.cause) {
+    const versionUrl = current.data?.['versionUrl'];
+    if (typeof versionUrl === 'string' && versionUrl) return versionUrl;
+  }
+  return undefined;
 }
 
 export function createFailureDocument(error: unknown): FailureDocument {
@@ -38,6 +52,7 @@ export function createFailureDocument(error: unknown): FailureDocument {
   const message =
     zephyrError?.message ??
     (error instanceof Error ? error.message : String(error ?? 'Unknown error'));
+  const versionUrl = keptVersionUrl(error);
   return {
     schemaVersion: FAILURE_DOCUMENT_SCHEMA_VERSION,
     ok: false,
@@ -48,6 +63,7 @@ export function createFailureDocument(error: unknown): FailureDocument {
         : {}),
       kind: getZephyrErrorCategory(error),
       message: stripVTControlCharacters(redactString(message)),
+      ...(versionUrl ? { versionUrl } : {}),
     },
   };
 }

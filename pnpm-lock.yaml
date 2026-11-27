@@ -254,12 +254,12 @@ catalogs:
       specifier: 2.9.3
       version: 2.9.3
     '@module-federation/runtime':
-      specifier: 2.9.0
-      version: 2.9.0
+      specifier: 2.9.4
+      version: 2.9.4
   module-federation-vite:
     '@module-federation/runtime':
-      specifier: 2.9.0
-      version: 2.9.0
+      specifier: 2.9.4
+      version: 2.9.4
     '@module-federation/vite':
       specifier: 1.21.2
       version: 1.21.2
@@ -1463,7 +1463,7 @@ importers:
     dependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation-vite
-        version: 2.9.0
+        version: 2.9.4
       react:
         specifier: catalog:react19
         version: 19.3.1
@@ -1497,7 +1497,7 @@ importers:
     dependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation-vite
-        version: 2.9.0
+        version: 2.9.4
       react:
         specifier: catalog:react19
         version: 19.3.1
@@ -2112,7 +2112,7 @@ importers:
     devDependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation
-        version: 2.9.0
+        version: 2.9.4
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
@@ -2152,7 +2152,7 @@ importers:
     devDependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation
-        version: 2.9.0
+        version: 2.9.4
       '@rslib/core':
         specifier: catalog:rslib
         version: 1.0.0(@module-federation/runtime-tools@2.9.0)(core-js@3.49.0)(typescript@7.0.2)
@@ -2323,7 +2323,7 @@ importers:
     devDependencies:
       '@module-federation/runtime':
         specifier: catalog:module-federation
-        version: 2.9.0
+        version: 2.9.4
       '@module-federation/runtime-core':
         specifier: 2.9.0
         version: 2.9.0
@@ -4895,6 +4895,9 @@ packages:
   '@module-federation/error-codes@2.9.3':
     resolution: {integrity: sha512-sXWo6XHOFKC1Dcu9DcSA1okZjtIz2y3uM+NJrAoSpeZ9QSPXielkMWT5PtG7MqGE3OQ+/HDawiLK53IOi3NHcQ==}
 
+  '@module-federation/error-codes@2.9.4':
+    resolution: {integrity: sha512-4JjaxBlQisDfkCTnMC4BaHphJRnlIYeobBNCgYSQY8xSnh1Y6rFFBHX7gyObDTJk66IrAB765G7xA9VYCcLB/g==}
+
   '@module-federation/inject-external-runtime-core-plugin@2.9.0':
     resolution: {integrity: sha512-k3wCSZsY21HjYQ61wmIJUQleOgcHgqx/sX4qXYw0XnJnzHuFo64rzMvgr+TuBIgZ1peAQtfILLlTnWyTRjtZHw==}
     peerDependencies:
@@ -4967,6 +4970,9 @@ packages:
   '@module-federation/runtime-core@2.9.3':
     resolution: {integrity: sha512-E6AjfIWFgZOEATxf+GzBIg54Ejp7QFNTxtVzwnnhEEu01dErBo7qLjJvEPXGiN5sJTNf2a4HIW/wZTM23skouQ==}
 
+  '@module-federation/runtime-core@2.9.4':
+    resolution: {integrity: sha512-i2uEHkJGliwRmjb5ZOzWkA9xzTPwYjPMReqO0ZnIkpp0JuHaE4nDme9vacMnU2P4qRC2xzhGD0/Tb7uGUsUMtg==}
+
   '@module-federation/runtime-tools@0.14.0':
     resolution: {integrity: sha512-y/YN0c2DKsLETE+4EEbmYWjqF9G6ZwgZoDIPkaQ9p0pQu0V4YxzWfQagFFxR0RigYGuhJKmSU/rtNoHq+qF8jg==}
 
@@ -4985,6 +4991,9 @@ packages:
   '@module-federation/runtime@2.9.3':
     resolution: {integrity: sha512-VCJV1VzKk+jvt+1CcTrslbl3LAKScHFpPxKSviafpMIqeHDWIDEY7ZEbVVJl/GuUjA36R7j0QhOPEjihPcz9/A==}
 
+  '@module-federation/runtime@2.9.4':
+    resolution: {integrity: sha512-iU5CqFNkmNVZHprp/glbaSn46q4/6PhSlMefrrzCBPMpoTd/pul+d+JbzQVHRtLv4w44SoGS+kFe3x9JF1BGog==}
+
   '@module-federation/sdk@0.14.0':
     resolution: {integrity: sha512-lg/OWRsh18hsyTCamOOhEX546vbDiA2O4OggTxxH2wTGr156N6DdELGQlYIKfRdU/0StgtQS81Goc0BgDZlx9A==}
 
@@ -4993,6 +5002,9 @@ packages:
 
   '@module-federation/sdk@2.9.3':
     resolution: {integrity: sha512-cT5ko/JDzGrKe8N+MFPgwb07G8fzmpnZbKZjGjXvT9phagQpiOfV6WQZhu1j+HtO152Frv1vjv/1Hhg2wMUL8g==}
+
+  '@module-federation/sdk@2.9.4':
+    resolution: {integrity: sha512-o7VGOEXtM3ITWrYtFOiaB3y/ssFv6mLs5TBx6QEgwXVzm3URgVgqh1KR1husFa94GTheP4Ei8hq4/B6xMQpT8g==}
 
   '@module-federation/third-party-dts-extractor@2.9.0':
     resolution: {integrity: sha512-R1Xuqnqzw6wQxWV3yU9fX1FydXAeZF2TNVFAVo1N1oLBA2j5y7aUO/Fc3VSNgd9/gxMzJgTVBdA+nMiD2SFCgg==}
@@ -19583,6 +19595,8 @@ snapshots:
 
   '@module-federation/error-codes@2.9.3': {}
 
+  '@module-federation/error-codes@2.9.4': {}
+
   '@module-federation/inject-external-runtime-core-plugin@2.9.0(@module-federation/runtime-tools@2.9.0)':
     dependencies:
       '@module-federation/runtime-tools': 2.9.0
@@ -19764,6 +19778,11 @@ snapshots:
       '@module-federation/error-codes': 2.9.3
       '@module-federation/sdk': 2.9.3
 
+  '@module-federation/runtime-core@2.9.4':
+    dependencies:
+      '@module-federation/error-codes': 2.9.4
+      '@module-federation/sdk': 2.9.4
+
   '@module-federation/runtime-tools@0.14.0':
     dependencies:
       '@module-federation/runtime': 0.14.0
@@ -19797,11 +19816,19 @@ snapshots:
       '@module-federation/runtime-core': 2.9.3
       '@module-federation/sdk': 2.9.3
 
+  '@module-federation/runtime@2.9.4':
+    dependencies:
+      '@module-federation/error-codes': 2.9.4
+      '@module-federation/runtime-core': 2.9.4
+      '@module-federation/sdk': 2.9.4
+
   '@module-federation/sdk@0.14.0': {}
 
   '@module-federation/sdk@2.9.0': {}
 
   '@module-federation/sdk@2.9.3': {}
+
+  '@module-federation/sdk@2.9.4': {}
 
   '@module-federation/third-party-dts-extractor@2.9.0': {}
 

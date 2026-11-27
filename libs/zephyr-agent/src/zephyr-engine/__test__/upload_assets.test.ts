@@ -8,6 +8,7 @@ import {
 } from 'zephyr-edge-contract';
 import type { ZeApplicationConfig } from '../../lib/node-persist/upload-provider-options';
 import { UploadProviderType } from '../../lib/node-persist/upload-provider-options';
+import { deployDeniedError } from '../../lib/deployment/deploy-denied';
 import { zeBuildAssets } from '../../lib/transformers/ze-build-assets';
 import { ZephyrEngine, type UploadOptions } from '../index';
 
@@ -200,6 +201,30 @@ describe('ZephyrEngine.upload_assets', () => {
     expect(mocks.getUploadStrategy).not.toHaveBeenCalled();
     expect(mocks.uploadStrategy).not.toHaveBeenCalled();
     expect(mocks.setAppDeployResult).not.toHaveBeenCalled();
+    expect(engine.build_id).toBeNull();
+  });
+
+  it('skips the deploy result and onDeployComplete when the deploy is denied', async () => {
+    const engine = readyEngine();
+    const onDeployComplete = rs.fn();
+    const versionUrl = 'https://app-v1.edge.example.test';
+    mocks.uploadStrategy.mockRejectedValue(
+      deployDeniedError(
+        { name: 'app', uid: 'app.project.org', versionUrl },
+        { outcome: { result: 'denied', denied: [] } }
+      )
+    );
+
+    await expect(
+      engine.upload_assets({
+        assetsMap: {},
+        buildStats: {} as never,
+        hooks: { onDeployComplete },
+      })
+    ).rejects.toMatchObject({ code: 'ZE10038', data: { versionUrl } });
+
+    expect(mocks.setAppDeployResult).not.toHaveBeenCalled();
+    expect(onDeployComplete).not.toHaveBeenCalled();
     expect(engine.build_id).toBeNull();
   });
 

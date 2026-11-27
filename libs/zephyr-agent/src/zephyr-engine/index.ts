@@ -137,9 +137,10 @@ export interface ZeUser {
 
 export interface ZephyrBuildHooks {
   /**
-   * Called after an upload, unless a permission profile denied its deploy (`ZE10038`):
-   * then nothing of the app moved, and the error carries the kept version's URL in
-   * `data.versionUrl`.
+   * Called after a successful upload. Not called when the upload fails, including a
+   * deploy a permission profile denied (`ZE10038`), whose error carries the kept
+   * version's URL in `data.versionUrl`. Errors thrown here are logged and do not fail the
+   * build.
    */
   onDeployComplete?: (deploymentInfo: DeploymentInfo) => void | Promise<void>;
 }

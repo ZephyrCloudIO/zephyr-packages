@@ -97,6 +97,13 @@ function printable(value: unknown): string | undefined {
   return text || undefined;
 }
 
+/** The kept version's URL when it is an http(s) URL, unchanged; otherwise undefined. */
+function readVersionUrl(value: string | undefined): string | undefined {
+  if (!value || !URL.canParse(value)) return undefined;
+  const { protocol } = new URL(value);
+  return protocol === 'https:' || protocol === 'http:' ? value : undefined;
+}
+
 function readUuidRef(value: unknown): Ref | undefined {
   if (!isRecord(value) || !isUuid(value['id'])) return undefined;
   const name = printable(value['name']);
@@ -284,13 +291,13 @@ export function deployDeniedError(
     }
   }
   const version = isRecord(outcome['version']) ? outcome['version']['id'] : undefined;
-  const versionUrl = printable(app.versionUrl);
+  const versionUrl = readVersionUrl(app.versionUrl);
 
   return new ZephyrError(ZeErrors.ERR_DEPLOY_DENIED, {
     message: formatDeployDenied(
       `Deploy denied for ${app.name} (version kept, nothing moved)`,
       list,
-      { versionUrl }
+      { versionUrl: printable(versionUrl) }
     ),
     data: {
       applicationUid: app.uid,

@@ -249,6 +249,22 @@ describe('deployDeniedError', () => {
     expect(error.data).toMatchObject({ versionUrl: 'https://checkout-web-v1.edge.test' });
   });
 
+  it('keeps the raw URL on the data and drops a URL that is not http(s)', () => {
+    const outcome = { result: 'denied', version: { id: ids.version }, denied: [entry()] };
+    const ipv6 = deployDeniedError(
+      { ...app, versionUrl: 'http://[::1]:8787/v1' },
+      { outcome }
+    );
+    const script = deployDeniedError(
+      { ...app, versionUrl: 'javascript:alert(1)' },
+      { outcome }
+    );
+
+    expect(ipv6.data).toMatchObject({ versionUrl: 'http://[::1]:8787/v1' });
+    expect(script.message).not.toContain('version:');
+    expect(script.data).toMatchObject({ versionUrl: undefined });
+  });
+
   it('prints no version line when the URL is unknown', () => {
     const error = deployDeniedError(app, {
       outcome: { result: 'denied', version: { id: ids.version }, denied: [entry()] },

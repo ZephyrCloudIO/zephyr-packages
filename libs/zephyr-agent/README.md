@@ -166,9 +166,10 @@ logged otherwise. A deploy that a permission profile denied (`ZE10038`) fails an
 whatever credential it uses. Any `ZE_FAIL_BUILD` value other than `true`, an empty one
 too, opts out.
 
-A denied deploy keeps the uploaded version: the `ZE10038` message prints its URL, and the
-error has it in `data.versionUrl`. `onDeployComplete` is not called for a denied deploy,
-whether or not the build fails.
+When the upload outcome says the deploy was denied, the uploaded version is kept: the
+`ZE10038` message prints its URL, and the error has it in `data.versionUrl`. A 403
+`ENVIRONMENT_DENIED` refusal carries no version URL. `onDeployComplete` is not called for
+a denied deploy, whether or not the build fails.
 
 ### Error categories
 

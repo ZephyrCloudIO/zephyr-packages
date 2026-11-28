@@ -18,9 +18,36 @@ export interface CliOptions {
   debounceMs?: number;
   /** JSON sidecar containing Module Federation publication metadata. */
   metadataPath?: string;
+  /** For 'deploy': path of a zephyr.config.json. */
+  configPath?: string;
+  /** For 'deploy': replaces the config's include globs. Repeatable. */
+  include?: string[];
+  /** For 'deploy': replaces the config's exclude globs. Repeatable. */
+  exclude?: string[];
+  /** For 'deploy': replaces the config's upload root. */
+  output?: string;
+  /** For 'deploy': list the files that would be uploaded and stop. */
+  dryRun?: boolean;
 }
 
-const OPTIONS_WITH_VALUE = new Set(['--target', '-t', '--metadata', '--debounce']);
+const OPTIONS_WITH_VALUE = new Set([
+  '--target',
+  '-t',
+  '--metadata',
+  '--debounce',
+  '--config',
+  '--include',
+  '--exclude',
+  '--output',
+]);
+
+const DEPLOY_ONLY_FLAGS = new Set([
+  '--config',
+  '--include',
+  '--exclude',
+  '--output',
+  '--dry-run',
+]);
 
 /**
  * Whether the arguments ask for `deploy --format json`. It does not validate the
@@ -36,6 +63,8 @@ export function isJsonDeploy(args: string[]): boolean {
   let format: string | undefined;
   for (let i = index + 2; i < args.length; i++) {
     if (args[i] === '--format') format = args[++i];
+    else if (args[i].startsWith('--format=')) format = args[i].slice('--format='.length);
+    else if (OPTIONS_WITH_VALUE.has(args[i])) i++;
   }
   return format === 'json';
 }
@@ -63,6 +92,8 @@ export function isJsonDeploy(args: string[]): boolean {
  * - Ze-cli doctor . --online
  * - Ze-cli deploy ./dist --ssr
  * - Ze-cli deploy ./dist --format json
+ * - Ze-cli deploy ./dist --dry-run
+ * - Ze-cli deploy ./dist --include 'assets/**' --exclude 'assets/*.map'
  */
 export function parseArgs(args: string[]): CliOptions {
   const options: CliOptions = {
@@ -112,6 +143,8 @@ export function parseArgs(args: string[]): CliOptions {
     } else if (arg === '--verbose') {
       options.verbose = true;
       flags.push(arg);
+    } else if (DEPLOY_ONLY_FLAGS.has(arg)) {
+      throw new Error(`${arg} can only be used with the deploy command.`);
     } else if (!arg.startsWith('-')) {
       // First non-flag argument
       commandStartIndex = i;
@@ -171,27 +204,43 @@ export function parseArgs(args: string[]): CliOptions {
 
     options.directory = directory;
 
-    // Parse any additional flags after the directory
+    // Parse any additional flags after the directory. Value flags accept both
+    // `--flag value` and `--flag=value`.
     for (let i = commandStartIndex + 2; i < args.length; i++) {
-      const arg = args[i];
+      const rawArg = args[i];
+      const equalsAt = rawArg.startsWith('--') ? rawArg.indexOf('=') : -1;
+      const inlineValue = equalsAt === -1 ? undefined : rawArg.slice(equalsAt + 1);
+      const arg = equalsAt === -1 ? rawArg : rawArg.slice(0, equalsAt);
+      if (
+        inlineValue !== undefined &&
+        !OPTIONS_WITH_VALUE.has(arg) &&
+        arg !== '--format'
+      ) {
+        throw new Error(
+          firstArg === 'deploy'
+            ? `Unknown deploy option: ${rawArg}`
+            : `${arg} does not take a value.`
+        );
+      }
+      const takeValue = (): string | undefined => inlineValue ?? args[++i];
 
       if (arg === '--ssr') {
         options.ssr = true;
       } else if (arg === '--target' || arg === '-t') {
-        const value = args[++i];
+        const value = takeValue();
         if (isZephyrBuildTarget(value)) {
           options.target = value;
         } else {
           throw new Error(`Unsupported Zephyr build target: ${String(value)}`);
         }
       } else if (arg === '--metadata') {
-        const value = args[++i];
+        const value = takeValue();
         if (!value || value.startsWith('-')) {
           throw new Error('--metadata requires a JSON sidecar path.');
         }
         options.metadataPath = value;
       } else if (arg === '--debounce') {
-        const value = Number(args[++i]);
+        const value = Number(takeValue());
         if (!Number.isSafeInteger(value) || value < 0) {
           throw new Error(
             `--debounce must be a non-negative integer, received ${String(value)}`
@@ -200,12 +249,32 @@ export function parseArgs(args: string[]): CliOptions {
         options.debounceMs = value;
       } else if (arg === '--verbose') {
         options.verbose = true;
+      } else if (DEPLOY_ONLY_FLAGS.has(arg)) {
+        if (firstArg !== 'deploy') {
+          throw new Error(`${arg} can only be used with the deploy command.`);
+        }
+        const value = arg === '--dry-run' ? undefined : takeValue();
+        if (arg !== '--dry-run' && (!value || value.startsWith('-'))) {
+          throw new Error(`${arg} requires a value.`);
+        }
+        if (arg === '--config') options.configPath = value;
+        else if (arg === '--output') options.output = value;
+        else if (arg === '--include' && value) (options.include ??= []).push(value);
+        else if (arg === '--exclude' && value) (options.exclude ??= []).push(value);
+        else if (arg === '--dry-run') options.dryRun = true;
       } else if (arg === '--format' && firstArg === 'deploy') {
-        const value = args[++i];
+        const value = takeValue();
         if (value !== 'json' && value !== 'text') {
           throw new Error('--format must be either json or text.');
         }
         options.format = value;
+      } else if (firstArg === 'deploy') {
+        // A mistyped flag such as --dry-ryn must never turn a dry run into an upload.
+        throw new Error(
+          rawArg.startsWith('-')
+            ? `Unknown deploy option: ${rawArg}`
+            : `Unexpected extra argument: ${rawArg}. deploy takes one directory.`
+        );
       }
     }
   } else {
@@ -243,6 +312,16 @@ Options:
   --target, -t <target>    Build target: ${formatBuildTargets()} (default: web)
   --metadata <path>        JSON sidecar for Module Federation publication metadata
   --debounce <milliseconds>  Delay output-watch publications after changes (default: 250)
+  --config <path>          Deploy only: zephyr.config.json to use (default:
+                           <directory>/zephyr.config.json)
+  --include <glob>         Deploy only: upload files matching this glob, relative to the
+                           upload root. Repeatable. Replaces the config's include list
+  --exclude <glob>         Deploy only: skip files matching this glob. Repeatable.
+                           Replaces the config's exclude list
+  --output <directory>     Deploy only: upload root, relative to the config's folder.
+                           Replaces the config's output
+  --dry-run                Deploy only: list the files that would be uploaded and stop.
+                           Needs no sign-in and makes no network request
   --verbose                Enable verbose output
   --format <json|text>     Doctor report format, or deploy result format; json prints
                            one JSON document on stdout and logs on stderr, also when
@@ -267,6 +346,10 @@ Examples:
   ze-cli deploy ./build --target ios
   ze-cli deploy ./dist --target tap-app --metadata ./dist/zephyr-publication.json
   ze-cli watch ./dist --target tap-app
+
+  # Choose the files to upload (example only, not guidance)
+  ze-cli deploy ./worker --dry-run
+  ze-cli deploy ./worker --include '**/*' --exclude '**/*.css' --dry-run
 
   # Inspect without mutation
   ze-cli doctor .
@@ -293,7 +376,12 @@ How it works:
   - ze-cli logs are written to stderr only.
 
 Note: No configuration file is needed. Zephyr will automatically detect
-application information from your package.json and git repository.
+application information from your package.json and git repository. To choose the
+files that deploy uploads, add a zephyr.config.json next to the output (JSON Schema:
+zephyr-cli/zephyr.config.schema.json). Files such as .env, .dev.vars, *.pem and *.key
+are never uploaded, with or without a configuration file. A folder holding a
+wrangler.toml, wrangler.json or wrangler.jsonc is refused unless a zephyr.config.json
+is present, and TypeScript source files are refused: upload compiled output only.
 
 For more information: https://docs.zephyr-cloud.io/cli
 `);

@@ -115,6 +115,81 @@ deploy (`ZE10038`), and is absent otherwise. The message has no colors and no
 secrets. A successful result has no `ok` field, so use the exit code to tell a failure
 from a success.
 
+#### zephyr.config.json
+
+By default `deploy` uploads the whole folder, minus common build leftovers (source maps,
+`node_modules`, `.git`, `.DS_Store`). A `zephyr.config.json` makes the upload set
+explicit and reviewable in your repository. Put it in the deploy folder, or pass its path
+with `--config`. Its JSON Schema is published as `zephyr-cli/zephyr.config.schema.json`.
+
+Example only, not guidance:
+
+```json
+{
+  "$schema": "./node_modules/zephyr-cli/schema/zephyr.config.schema.json",
+  "version": "1.0.0",
+  "output": ".",
+  "include": ["**/*"],
+  "exclude": ["**/*.css"],
+  "target": "worker",
+  "metadata": "zephyr-publication.json"
+}
+```
+
+- `version`, `output` and `include` are required. `output` is the upload root, relative to
+  the folder that holds the config. `include` and `exclude` are glob patterns relative to
+  the upload root (same syntax for both, dotfiles are matched). Absolute patterns,
+  backslashes (write `assets/**`, not `assets\**`), drive letters and `..` segments are
+  rejected, in the config and in the `--output`, `--include` and `--exclude` flags. `target` and `metadata` mean the same as `--target` and
+  `--metadata`; `metadata` is relative to the config's folder.
+- A file is uploaded if it matches `include`, does not match `exclude` and is not on the
+  never-upload denylist. With a config, the default skip list does not apply, so source maps
+  can be included explicitly. The config file itself is never uploaded.
+- Precedence: command-line flags, then the config file, then the default behavior.
+  `--include` and `--exclude` replace the config's lists; they are not merged.
+- Without a config, `deploy` prints a one-line hint and uploads the folder as before, with
+  four guards that are always on, config or not: the never-upload denylist, symbolic link
+  containment, the compiled-output check, and the Wrangler config refusal below. The
+  `--include`, `--exclude` and `--output` flags do not count as a config for the Wrangler
+  refusal.
+- Never-upload denylist, always on and not configurable: `.env`, `.env.*`, `.envrc`,
+  `.dev.vars`, `.dev.vars.*`, `.git/`, `node_modules/`, `.ssh/`, `.aws/`, `.docker/`,
+  `.kube/`, `.gnupg/`, `.npmrc`, `.yarnrc.yml`, `.pypirc`, `.netrc`, `.git-credentials`,
+  `.htpasswd`, `wrangler.toml`, `wrangler.json`, `wrangler.jsonc`, `*.pem`, `*.key`,
+  `*.p8`, `*.p12`, `*.pfx`, `*.jks`, `*.keystore`, `*.ppk`, `*.tfstate`, `*.tfstate.*`,
+  `id_rsa*`, `id_dsa*`, `id_ecdsa*` and `id_ed25519*`, matched case-insensitively in any
+  folder, ignoring trailing spaces in a name. Matching files are skipped with a warning
+  and a listing in `--dry-run`. For `--target tap-app`, a credential file stops the
+  publication instead; `.git/` and `node_modules/` are not applied to `tap-app`, because
+  that target publishes its locked output as is.
+- Symbolic links: a link is followed only when its real target is inside the upload
+  folder. A link that leads outside (for example `dist/config.txt` pointing to `../.env`,
+  or a linked folder) is excluded with a warning and listed as `outside-root` in
+  `--dry-run`; for `tap-app` it stops the publication. The denylist is also checked on the
+  real target, so a link to `.env` inside the folder is blocked too.
+- Upload guards: a folder that holds `wrangler.toml`, `wrangler.json` or `wrangler.jsonc`
+  is refused unless a `zephyr.config.json` is in effect, because Wrangler configs can hold
+  plain-text variables. Only compiled output is uploaded: a selection that contains
+  TypeScript source (`.ts`, `.tsx`, `.mts`, `.cts`, but not `.d.ts`), or that looks like a
+  project root (a `package.json` with `src/`, `tsconfig.json` or a root lockfile such as
+  `pnpm-lock.yaml`), is refused. A `.ts` file that is an MPEG transport stream (an HLS
+  video segment, recognised by the `0x47` sync byte) is allowed. `tap-app`
+  keeps its pass-through. `run` and `watch` get the source check, not the Wrangler check.
+- `--dry-run` lists the files that would be uploaded, the excluded files with the rule that
+  removed them, and the total size, then stops. It needs no sign-in, makes no network
+  request and uses the same selection as the real upload. Add `--format json` for one JSON
+  document on stdout. If no file is selected, `deploy` stops with "Nothing to upload"
+  before signing in, and a dry run prints the plan and then exits with status 1.
+- `deploy` rejects unknown options and a second directory argument, so a mistyped
+  `--dry-ryn` can never turn a dry run into an upload. Value flags also accept the
+  `--flag=value` form. `--config` must point to a file inside the deploy directory.
+
+```bash
+# Example only, not guidance
+ze-cli deploy ./dist --dry-run
+ze-cli deploy ./dist --include '**/*' --exclude '**/*.css' --dry-run --format json
+```
+
 ### Watch Command
 
 Publish the initial output and then publish each settled output change without
@@ -288,6 +363,10 @@ the wrapped build already runs a Zephyr plugin, both print the line.
 - `--ssr` - Mark this snapshot as server-side rendered
 - `--target, -t <target>` - Build target: `web`, `ios`, `android`, `tap-app`, or `worker` (default: `web`)
 - `--metadata <path>` - JSON Module Federation sidecar. Required with `--target tap-app`.
+- `--config <path>` - Deploy only: `zephyr.config.json` to use (default: `<directory>/zephyr.config.json`)
+- `--include <glob>` / `--exclude <glob>` - Deploy only: repeatable; replace the config's `include` / `exclude` lists
+- `--output <directory>` - Deploy only: upload root, relative to the config's folder; replaces the config's `output`
+- `--dry-run` - Deploy only: list the files that would be uploaded and stop. No sign-in, no network request
 - `--debounce <milliseconds>` - Delay a `watch` publication until output changes settle (default: `250`)
 - `--format <json|text>` - Doctor report format, or deploy result format (default: `text`)
 - `--online` - Doctor only: also check the API, gateway, token, application configuration and edge URL

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schema.zephyr-cloud.io/ze-cli/zephyr.config.schema.json",
+  "title": "zephyr.config.json",
+  "description": "Per-folder configuration for ze-cli deploy: which files of an output folder are uploaded. Owner: ze-cli (SC-04).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "output", "include"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Schema reference for editors. Ignored by ze-cli. Owner: ze-cli (SC-04)."
+    },
+    "version": {
+      "enum": ["1.0.0"],
+      "description": "Contract version of this file. Supported versions are listed here. Owner: ze-cli (SC-04)."
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!(.*/)?\\.\\.(/|$))",
+      "description": "Upload root, relative to the folder that holds this file. Absolute paths, backslashes and '..' segments are rejected. Owner: ze-cli (SC-04)."
+    },
+    "include": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/relativeGlob" },
+      "description": "Globs, relative to the upload root, that select files to upload. Dotfiles are matched. Files that hold credentials are never uploaded, even when included. Owner: ze-cli (SC-04)."
+    },
+    "exclude": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/relativeGlob" },
+      "description": "Globs, relative to the upload root, that remove files from the included set. Same syntax as include. Owner: ze-cli (SC-04)."
+    },
+    "target": {
+      "enum": ["web", "ios", "android", "tap-app", "worker"],
+      "description": "Zephyr build target, with the same meaning as the --target flag. Owner: ze-cli (SC-04)."
+    },
+    "metadata": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Path of the publication metadata JSON, relative to the folder that holds this file. Same meaning as the --metadata flag. Owner: ze-cli (SC-04)."
+    }
+  },
+  "$defs": {
+    "relativeGlob": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!(.*/)?\\.\\.(/|$))",
+      "description": "A picomatch glob relative to the upload root. Absolute patterns, backslashes and '..' segments are rejected. Owner: ze-cli (SC-04)."
+    }
+  }
+}

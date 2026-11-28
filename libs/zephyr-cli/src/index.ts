@@ -7,6 +7,7 @@ import { deployCommand } from './commands/deploy';
 import { doctorCommand } from './commands/doctor';
 import { runCommand } from './commands/run';
 import { watchCommand } from './commands/watch';
+import { formatDryRun } from './lib/dry-run-format';
 import { createFailureDocument } from './lib/failure-document';
 import { reserveStdout } from './lib/stdout';
 
@@ -46,9 +47,23 @@ async function main(): Promise<void> {
           verbose: options.verbose,
           ssr: options.ssr,
           metadataPath: options.metadataPath,
+          configPath: options.configPath,
+          include: options.include,
+          exclude: options.exclude,
+          output: options.output,
+          dryRun: options.dryRun,
+          format: options.format,
           cwd: workingDir,
         });
-        await writeJson?.(`${JSON.stringify(result)}\n`);
+        if ('dryRun' in result && !writeJson) {
+          process.stdout.write(formatDryRun(result));
+        } else {
+          await writeJson?.(`${JSON.stringify(result)}\n`);
+        }
+        if ('nothingToUpload' in result && result.nothingToUpload !== undefined) {
+          console.error('[ze-cli] Error:', result.nothingToUpload);
+          process.exitCode = 1;
+        }
       } else {
         await watchCommand({
           directory: options.directory,

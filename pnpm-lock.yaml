@@ -87,6 +87,9 @@ catalogs:
     '@types/debug':
       specifier: ^4.1.13
       version: 4.1.13
+    '@types/picomatch':
+      specifier: ^4.0.3
+      version: 4.0.3
     '@vitejs/plugin-rsc':
       specifier: ^0.5.38
       version: 0.5.39
@@ -96,6 +99,9 @@ catalogs:
     acorn-walk:
       specifier: ^8.3.5
       version: 8.3.5
+    ajv:
+      specifier: ^8.20.0
+      version: 8.20.0
     astro:
       specifier: ^7.3.1
       version: 7.4.7
@@ -171,6 +177,9 @@ catalogs:
     oxlint:
       specifier: 1.81.0
       version: 1.81.0
+    picomatch:
+      specifier: ^4.0.7
+      version: 4.0.7
     publint:
       specifier: 0.3.24
       version: 0.3.24
@@ -1986,12 +1995,18 @@ importers:
 
   libs/zephyr-cli:
     dependencies:
+      ajv:
+        specifier: 'catalog:'
+        version: 8.20.0
       cosmiconfig:
         specifier: 'catalog:'
         version: 10.0.1
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
+      picomatch:
+        specifier: 'catalog:'
+        version: 4.0.7
       zephyr-agent:
         specifier: workspace:*
         version: link:../zephyr-agent
@@ -2008,6 +2023,9 @@ importers:
       '@types/node':
         specifier: catalog:typescript
         version: 24.13.3
+      '@types/picomatch':
+        specifier: 'catalog:'
+        version: 4.0.3
       typescript:
         specifier: catalog:typescript
         version: 7.0.2
@@ -8753,6 +8771,9 @@ packages:
 
   '@types/node@26.4.1':
     resolution: {integrity: sha512-k97ENvZWtvA6yqz5/FS6a7duDgOPEeOQOc2iKS/nY6mX6qJUKtLnWzQS+Xj6tXweyj6ZcTAK2Qecetnvi9nCLA==}
+
+  '@types/picomatch@4.0.3':
+    resolution: {integrity: sha512-iG0T6+nYJ9FAPmx9SsUlnwcq1ZVRuCXcVEvWnntoPlrOpwtSTKNDC9uVAxTsC3PUvJ+99n4RpAcNgBbHX3JSnQ==}
 
   '@types/qs@6.14.0':
     resolution: {integrity: sha512-eOunJqu0K1923aExK6y8p6fsihYEn/BYuQ4g0CxAAgFc4b/ZLN4CrsRZ55srTdqoiLzU2B2evC+apEIxprEzkQ==}
@@ -24517,6 +24538,8 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  '@types/picomatch@4.0.3': {}
+
   '@types/qs@6.14.0': {}
 
   '@types/range-parser@1.2.7': {}
@@ -25372,18 +25395,13 @@ snapshots:
 
   agent-base@9.0.0: {}
 
-  ajv-formats@2.1.1(ajv@8.18.0):
+  ajv-formats@2.1.1(ajv@8.20.0):
     optionalDependencies:
-      ajv: 8.18.0
+      ajv: 8.20.0
 
   ajv-formats@3.0.1(ajv@8.20.0):
     optionalDependencies:
       ajv: 8.20.0
-
-  ajv-keywords@5.1.0(ajv@8.18.0):
-    dependencies:
-      ajv: 8.18.0
-      fast-deep-equal: 3.1.3
 
   ajv-keywords@5.1.0(ajv@8.20.0):
     dependencies:
@@ -32841,16 +32859,16 @@ snapshots:
   schema-utils@4.3.0:
     dependencies:
       '@types/json-schema': 7.0.15
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
-      ajv-keywords: 5.1.0(ajv@8.18.0)
+      ajv: 8.20.0
+      ajv-formats: 2.1.1(ajv@8.20.0)
+      ajv-keywords: 5.1.0(ajv@8.20.0)
 
   schema-utils@4.3.3:
     dependencies:
       '@types/json-schema': 7.0.15
-      ajv: 8.18.0
-      ajv-formats: 2.1.1(ajv@8.18.0)
-      ajv-keywords: 5.1.0(ajv@8.18.0)
+      ajv: 8.20.0
+      ajv-formats: 2.1.1(ajv@8.20.0)
+      ajv-keywords: 5.1.0(ajv@8.20.0)
 
   schema-utils@4.5.0:
     dependencies:

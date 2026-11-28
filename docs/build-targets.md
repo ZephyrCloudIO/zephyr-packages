@@ -41,6 +41,11 @@ Example only, not guidance:
 ze-cli deploy ./dist --target worker
 ```
 
+Choose the uploaded files with a `zephyr.config.json` (see the
+[zephyr-cli README](../libs/zephyr-cli/README.md#zephyrconfigjson)). `ze-cli deploy`
+refuses a folder that holds a `wrangler.toml`, `wrangler.json` or `wrangler.jsonc`
+without one. `run` and `watch` do not apply that refusal.
+
 A bundler plugin that receives `target: 'worker'` throws a `TypeError`.
 
 Example only, not guidance:

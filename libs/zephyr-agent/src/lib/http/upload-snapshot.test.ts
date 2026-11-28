@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
-import type { Snapshot } from 'zephyr-edge-contract';
+import type { Snapshot, SnapshotAsset } from 'zephyr-edge-contract';
 import {
   UploadProviderType,
   type EnvironmentConfig,
@@ -122,6 +122,24 @@ describe('snapshot upload targets', () => {
       edgeUrl: 'https://duplicate.example.test',
       snapshot: { domain: 'https://duplicate.example.test' },
     });
+  });
+
+  it('drops store only from snapshots sent to edges other than the primary', () => {
+    const original = snapshot();
+    const asset = original.assets['assets/app.js'];
+    const store = { object: 'object-hash', size: 5, encoding: 'gzip' as const };
+    original.assets['assets/app.js'] = { ...asset, store } as SnapshotAsset;
+
+    const [primary, other] = createSnapshotUploadTargets(
+      original,
+      applicationConfig({
+        ENVIRONMENTS: { staging: environment('https://staging.example.test') },
+      })
+    );
+
+    expect(primary?.snapshot.assets['assets/app.js']?.store).toEqual(store);
+    expect(other?.snapshot.assets['assets/app.js']).toEqual(asset);
+    expect(original.assets['assets/app.js']?.store).toEqual(store);
   });
 
   it('uploads target-specific snapshot JSON while preserving primary response', async () => {

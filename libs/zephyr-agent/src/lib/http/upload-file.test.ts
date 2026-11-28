@@ -1,61 +1,12 @@
 import { beforeEach, describe, expect, it, rs } from '@rstest/core';
 
-// Importing for mocks
-import '../errors';
+import { createHttpResponseError } from './http-failure';
 import * as httpRequest from './http-request';
 import { uploadFile } from './upload-file';
 import type { UploadableAsset } from 'zephyr-edge-contract';
 
 // Mock dependencies
 rs.mock('./http-request', { spy: true });
-
-// Mock the ZeErrors and ZephyrError
-rs.mock('../errors', () => {
-  const originalModule = rs.requireActual('../errors');
-
-  // Create mock error code
-  const ZE_ERR_FAILED_UPLOAD = 'ZE40017';
-
-  return {
-    ...originalModule,
-    ZeErrors: {
-      ...originalModule.ZeErrors,
-      ERR_FAILED_UPLOAD: {
-        id: '017',
-        kind: 'deploy',
-        message: 'Failed upload',
-      },
-    },
-    ZephyrError: class MockZephyrError extends Error {
-      code: string;
-      data?: Record<string, unknown>;
-      template?: Record<string, unknown>;
-      cause?: unknown;
-
-      constructor(type: any, opts?: any) {
-        super(type.message || 'Mock Error');
-
-        // Use direct mapping for ERR_FAILED_UPLOAD
-        if (type === originalModule.ZeErrors.ERR_FAILED_UPLOAD) {
-          this.code = ZE_ERR_FAILED_UPLOAD;
-        } else {
-          this.code = 'ZE99999';
-        }
-
-        if (opts) {
-          const { cause, data, ...template } = opts;
-          this.template = template;
-          this.data = data;
-          this.cause = cause;
-        }
-      }
-
-      static is(err: unknown): boolean {
-        return err instanceof MockZephyrError;
-      }
-    },
-  };
-});
 
 describe('uploadFile', () => {
   // Create mock for makeRequest
@@ -145,5 +96,30 @@ describe('uploadFile', () => {
     }
 
     expect(errorThrown).not.toBeNull();
+  });
+
+  it('names the file and its size when the edge cannot hold it (413)', async () => {
+    mockMakeRequest.mockResolvedValueOnce([
+      false,
+      createHttpResponseError({
+        method: 'POST',
+        url: 'https://edge.example/upload',
+        status: 413,
+        content: 'File is larger than an EdgeKV value can hold.',
+      }),
+    ]);
+    const asset: UploadableAsset = {
+      path: 'assets/model.bin',
+      size: 734_003,
+      buffer: Buffer.alloc(1),
+    };
+
+    const upload = uploadFile({ hash: 'abc123', asset }, {
+      EDGE_URL: 'https://edge.example',
+      jwt: 'jwt',
+      PLATFORM: 'akamai',
+    } as never);
+
+    await expect(upload).rejects.toThrow(/assets\/model\.bin.*734003 bytes/);
   });
 });

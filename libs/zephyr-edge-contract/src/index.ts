@@ -37,7 +37,12 @@ export type {
   ZephyrLegacyModuleFederationConfig,
 } from './lib/module-federation';
 export * as ZeUtils from './lib/promise';
-export type { Snapshot, SnapshotAsset, SnapshotMetadata } from './lib/snapshot';
+export type {
+  Snapshot,
+  SnapshotAsset,
+  SnapshotAssetStore,
+  SnapshotMetadata,
+} from './lib/snapshot';
 export { createApplicationUid } from './lib/utils/create-application-uid';
 export { createSnapshotId, flatCreateSnapshotId } from './lib/utils/create-snapshot-id';
 export { normalize_js_var_name as normalize_app_name } from './lib/utils/normalize-js-var-name';

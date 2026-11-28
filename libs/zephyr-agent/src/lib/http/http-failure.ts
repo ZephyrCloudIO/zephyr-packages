@@ -1,4 +1,4 @@
-import { ZeErrors, ZephyrError } from '../errors';
+import { type ZeErrorKeys, ZeErrors, ZephyrError } from '../errors';
 
 export type UnreachableFailure =
   | 'server_error'
@@ -21,6 +21,7 @@ const HINTS: Record<UnreachableFailure, string> = {
 };
 
 const RATE_LIMITED = 429;
+const NOT_IMPLEMENTED = 501;
 const RETRY_LATER_STATUSES = new Set([408, 425, RATE_LIMITED]);
 
 /**
@@ -78,4 +79,31 @@ export function createHttpResponseError(params: {
   }
 
   return new ZephyrError(ZeErrors.ERR_HTTP_ERROR, { method, url, status, content });
+}
+
+/** Message of the error `makeHttpRequest` throws for a plain `Not Implemented` body. */
+export const NOT_IMPLEMENTED_MESSAGE =
+  'Not implemented yet. Please get in contact with our support.';
+
+function templateOf(error: ZephyrError<ZeErrorKeys>): Record<string, unknown> {
+  return (error.template ?? {}) as Record<string, unknown>;
+}
+
+/** Status of an error built by {@link createHttpResponseError}, if it has one. */
+export function getHttpErrorStatus(error: unknown): number | undefined {
+  if (!ZephyrError.is(error)) return undefined;
+  const status = error.data?.['status'] ?? templateOf(error)['status'];
+  return typeof status === 'number' ? status : undefined;
+}
+
+/**
+ * The edge does not implement the request: it answered `501`, or its router predates the
+ * request and answered the plain-text `Not Implemented` body (thrown as `ERR_UNKNOWN`).
+ */
+export function isNotImplementedError(error: unknown): boolean {
+  if (getHttpErrorStatus(error) === NOT_IMPLEMENTED) return true;
+  return (
+    ZephyrError.is(error, ZeErrors.ERR_UNKNOWN) &&
+    templateOf(error)['message'] === NOT_IMPLEMENTED_MESSAGE
+  );
 }
